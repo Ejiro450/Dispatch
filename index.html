@@ -59,6 +59,14 @@ body.gated .tabs,body.gated #qframe{display:none}
 .tabs button[aria-current="page"]{background:#fff;color:#063A80}
 #qframe{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;height:calc(100dvh - 120px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:480px;display:block}
 body:not(.quotes) #qframe{display:none}
+/* Quotes fills the whole screen: slim bar on top, the Quote Builder underneath, edge to edge */
+html,body{height:100%}
+body.quotes{overflow:hidden;background:var(--navy)}
+body.quotes .wrap{max-width:none;height:100vh;height:100dvh;gap:0;padding:env(safe-area-inset-top,0px) 0 0 0}
+body.quotes header.top{border-radius:0;padding:8px calc(12px + env(safe-area-inset-right,0px)) 8px calc(12px + env(safe-area-inset-left,0px));gap:8px;flex:none}
+body.quotes header.top>div:first-child{display:none}
+body.quotes #qframe{flex:1 1 auto;height:auto;min-height:0;width:1px;min-width:100%;border:0;border-radius:0}
+body.quotes #gate,body.quotes #overlay{display:none}
 body.quotes .daybar,body.quotes .week,body.quotes #notices,body.quotes .stats,body.quotes .board,body.quotes .legend,body.quotes #btnSheet,body.quotes #btnFleet,body.quotes header.top .sub{display:none}
 .who{font-size:12px;opacity:.85;overflow-wrap:anywhere}
 .drawer{padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
@@ -186,7 +194,8 @@ a.lnk{color:var(--royal);font-weight:700}
   .drawer{width:100%;border-left:0}
   .btn.small{padding:7px 11px;font-size:13px}
   .who{display:none}
-  #qframe{height:calc(100dvh - 150px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+  header.top>div:first-child{display:none}
+  header.top{gap:8px}
   .week{grid-template-columns:repeat(7,minmax(74px,1fr));overflow-x:auto}
   .row{grid-template-columns:118px 1fr}
   .daybar h2{font-size:18px;flex-basis:100%}
