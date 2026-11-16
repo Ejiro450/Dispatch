@@ -1,7 +1,7 @@
 {
-  "name": "EAM Dispatch Board",
-  "short_name": "Dispatch",
-  "description": "Trucks, crews and subcontractors against the day's booked jobs.",
+  "name": "EAM Global Movers",
+  "short_name": "EAM",
+  "description": "Quotes, bookings and dispatch for EAM Global Movers.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

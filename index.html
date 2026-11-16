@@ -6,12 +6,12 @@
 <meta name="theme-color" content="#063A80">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Dispatch">
+<meta name="apple-mobile-web-app-title" content="EAM">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<title>EAM Dispatch Board</title>
+<title>EAM Global Movers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
 <style>
@@ -53,6 +53,13 @@ button{cursor:pointer}
 .gate code{background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:13px;overflow-wrap:anywhere}
 body.gated .daybar,body.gated .week,body.gated .stats,body.gated .board,body.gated .legend,body.gated #btnSheet,body.gated #btnFleet{display:none}
 body:not(.gated) #gate{display:none}
+body.gated .tabs,body.gated #qframe{display:none}
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);border-radius:10px;padding:3px}
+.tabs button{border:0;background:transparent;color:#fff;font-weight:700;padding:7px 14px;border-radius:8px}
+.tabs button[aria-current="page"]{background:#fff;color:#063A80}
+#qframe{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;height:calc(100dvh - 120px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:480px;display:block}
+body:not(.quotes) #qframe{display:none}
+body.quotes .daybar,body.quotes .week,body.quotes #notices,body.quotes .stats,body.quotes .board,body.quotes .legend,body.quotes #btnSheet,body.quotes #btnFleet,body.quotes header.top .sub{display:none}
 .who{font-size:12px;opacity:.85;overflow-wrap:anywhere}
 .drawer{padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
 
@@ -178,6 +185,8 @@ a.lnk{color:var(--royal);font-weight:700}
   .legend span:last-child{display:none}
   .drawer{width:100%;border-left:0}
   .btn.small{padding:7px 11px;font-size:13px}
+  .who{display:none}
+  #qframe{height:calc(100dvh - 150px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
   .week{grid-template-columns:repeat(7,minmax(74px,1fr));overflow-x:auto}
   .row{grid-template-columns:118px 1fr}
   .daybar h2{font-size:18px;flex-basis:100%}
@@ -189,9 +198,10 @@ a.lnk{color:var(--royal);font-weight:700}
 <div class="wrap">
   <header class="top">
     <div>
-      <h1>EAM Dispatch Board</h1>
+      <h1 id="appTitle">EAM Dispatch Board</h1>
       <div class="sub">Our trucks, crews and subcontractors against the jobs in the admin Outlook calendar</div>
     </div>
+    <nav class="tabs" id="tabs" aria-label="Sections"><button type="button" id="tabDispatch" aria-current="page">Dispatch</button><button type="button" id="tabQuotes">Quotes</button></nav>
     <div class="sp"></div>
     <span class="who" id="who"></span>
     <button class="btn ghost" id="btnSheet" type="button">Copy run sheet</button>
@@ -200,6 +210,7 @@ a.lnk{color:var(--royal);font-weight:700}
   </header>
 
   <div class="gate" id="gate"></div>
+  <iframe id="qframe" title="Quote Builder"></iframe>
   <div class="daybar">
     <h2 id="dayTitle">Loading</h2>
     <button class="btn small" id="prev" type="button" aria-label="Previous day">&larr; Prev</button>
@@ -406,7 +417,8 @@ function boot(){
   pca.initialize().then(function(){return pca.handleRedirectPromise()}).then(function(r){
     account=(r&&r.account)||pca.getAllAccounts()[0]||null;
     if(!account){S.auth="out";render();return}
-    pca.setActiveAccount(account);S.auth="in";S.who=account.username||"";render();
+    pca.setActiveAccount(account);S.auth="in";S.who=account.username||"";window.EAM.who=S.who;render();
+    if(location.hash==="#quotes")setTab(true);
     loadFleet();fetchWeek(weekStart(S.day),false);
   }).catch(function(){S.auth="out";S.err="Sign-in didn't finish. Try again.";render()});
 }
@@ -638,7 +650,7 @@ function toast(m){var o=document.querySelector(".toast");if(o)o.remove();var d=d
 function go(day){S.day=day;S.sel=null;var ws=weekStart(day);render();if(!S.events[ws])fetchWeek(ws,false)}
 function findJob(k){return dayJobs(S.day).filter(function(j){return j.key===k})[0]}
 document.addEventListener("click",function(e){
-  var t=e.target.closest("[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut");
+  var t=e.target.closest("[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut,#tabDispatch,#tabQuotes");
   if(!t)return;
   if(t.dataset.close){if(e.target!==t&&t.classList.contains("scrim"))return;S.sel=null;render();return}
   if(t.dataset.day){go(t.dataset.day);return}
@@ -650,6 +662,8 @@ document.addEventListener("click",function(e){
   if(t.id==="btnFleet"||t.dataset.act==="fleet"){draft=null;S.modal="fleet";S.sel=null;render();return}
   if(t.id==="btnSheet"){copy(sheetText(),"Run sheet");return}
   if(t.id==="btnOut"){signOut();return}
+  if(t.id==="tabDispatch"){setTab(false);return}
+  if(t.id==="tabQuotes"){setTab(true);return}
   if(t.dataset.act==="signin"){signIn();return}
   if(t.dataset.rmt){readDraft();draft.trucks.splice(+t.dataset.rmt,1);redrawFleet();return}
   if(t.dataset.rmc){readDraft();draft.crew.splice(+t.dataset.rmc,1);redrawFleet();return}
@@ -684,6 +698,17 @@ document.addEventListener("drop",function(e){var l=e.target.closest&&e.target.cl
 document.addEventListener("dragend",function(){dragKey=null;document.querySelectorAll(".lane.over").forEach(function(l){l.classList.remove("over")})});
 
 if(NARROW.addEventListener)NARROW.addEventListener("change",function(){render()});
+/* ---------- sections: Dispatch and Quotes share one sign-in ---------- */
+function setTab(q){
+  document.body.classList.toggle("quotes",!!q);
+  if(q){$("tabQuotes").setAttribute("aria-current","page");$("tabDispatch").removeAttribute("aria-current")}
+  else{$("tabDispatch").setAttribute("aria-current","page");$("tabQuotes").removeAttribute("aria-current")}
+  $("appTitle").textContent=q?"EAM Quote Builder":"EAM Dispatch Board";
+  if(q&&S.auth==="in"){var f=$("qframe");if(!f.getAttribute("src"))f.setAttribute("src","quotes.html")}
+  try{if((location.hash==="#quotes")!==!!q)history.replaceState(null,"",q?"#quotes":location.pathname+location.search)}catch(e){}
+  if(!q&&S.auth==="in")fetchWeek(weekStart(S.day),true,true);
+}
+window.EAM={gfetch:gfetch,BASE:BASE,TZ:TZ,who:"",refreshBoard:function(){var ws=weekStart(S.day);delete S.busy[ws];fetchWeek(ws,true,true)}};
 /* ---------- start ---------- */
 S.day=melParts(new Date()).date;
 render();
