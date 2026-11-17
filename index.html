@@ -7,7 +7,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="EAM">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -184,7 +183,7 @@ a.lnk{color:var(--royal);font-weight:700}
 .list .job .c{flex-wrap:wrap}
 .list .chip{font-size:11px;padding:1px 6px}
 @media (max-width:760px){
-  .wrap{padding:10px;gap:10px}
+  .wrap{padding:calc(10px + env(safe-area-inset-top,0px)) calc(10px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(10px + env(safe-area-inset-left,0px));gap:10px}
   header.top{padding:12px 14px} header.top h1{font-size:17px} header.top .sub{display:none}
   header.top .btn{padding:6px 10px;font-size:13px}
   .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
