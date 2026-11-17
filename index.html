@@ -39,13 +39,14 @@
   --warn:#f3b24a; --warn-bg:#3a2a0c; --bad:#ff8a80; --bad-bg:#3d1616; --ok:#6ed39b; --ok-bg:#12301f;
   color-scheme:dark;
 }
+html{--sat:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.4;font-variant-numeric:tabular-nums}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--sky);outline-offset:2px}
-.wrap{max-width:1500px;margin:0 auto;padding:16px;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));padding-left:calc(16px + env(safe-area-inset-left,0px));padding-right:calc(16px + env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
+.wrap{max-width:1500px;margin:0 auto;padding:16px;padding-top:calc(16px + var(--sat));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));padding-left:calc(16px + env(safe-area-inset-left,0px));padding-right:calc(16px + env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:14px}
 .gate{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:28px 22px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;max-width:560px}
 .gate h2{font-family:var(--display);margin:0;font-size:20px}
 .gate p{margin:0;color:var(--muted)}
@@ -56,7 +57,7 @@ body.gated .tabs,body.gated #qframe{display:none}
 .tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);border-radius:10px;padding:3px}
 .tabs button{border:0;background:transparent;color:#fff;font-weight:700;padding:7px 14px;border-radius:8px}
 .tabs button[aria-current="page"]{background:#fff;color:#063A80}
-#qframe{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;height:calc(100dvh - 120px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:480px;display:block}
+#qframe{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;height:calc(100dvh - 120px - var(--sat) - env(safe-area-inset-bottom,0px));min-height:480px;display:block}
 body:not(.quotes) #qframe{display:none}
 body:not(.numbers) #numbers{display:none}
 body.gated #numbers{display:none}
@@ -85,14 +86,14 @@ body.numbers .daybar,body.numbers .week,body.numbers .stats,body.numbers .board,
 /* Quotes fills the whole screen: slim bar on top, the Quote Builder underneath, edge to edge */
 html,body{height:100%}
 body.quotes{overflow:hidden;background:var(--navy)}
-body.quotes .wrap{max-width:none;height:100vh;height:100dvh;gap:0;padding:env(safe-area-inset-top,0px) 0 0 0}
+body.quotes .wrap{max-width:none;height:100vh;height:100dvh;gap:0;padding:var(--sat) 0 0 0}
 body.quotes header.top{border-radius:0;padding:8px calc(12px + env(safe-area-inset-right,0px)) 8px calc(12px + env(safe-area-inset-left,0px));gap:8px;flex:none}
 body.quotes header.top>div:first-child{display:none}
 body.quotes #qframe{flex:1 1 auto;height:auto;min-height:0;width:1px;min-width:100%;border:0;border-radius:0}
 body.quotes #gate,body.quotes #overlay{display:none}
 body.quotes .daybar,body.quotes .week,body.quotes #notices,body.quotes .stats,body.quotes .board,body.quotes .legend,body.quotes #btnSheet,body.quotes #btnFleet,body.quotes header.top .sub{display:none}
 .who{font-size:12px;opacity:.85;overflow-wrap:anywhere}
-.drawer{padding-top:calc(18px + env(safe-area-inset-top,0px));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
+.scrim .drawer{padding-top:calc(18px + var(--sat));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
 
 header.top{background:var(--navy);color:#fff;border-radius:14px;padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
 header.top h1{font-family:var(--display);font-size:20px;margin:0;letter-spacing:.2px}
@@ -173,7 +174,7 @@ header.top .sp{flex:1}
 .legend i.u{background:var(--warn-bg);border-color:var(--warn)} .legend i.x{background:var(--bad-bg);border-color:var(--bad)} .legend i.p{border-style:dashed}
 
 .scrim{position:fixed;inset:0;background:rgba(6,20,45,.45);z-index:20;display:flex;justify-content:flex-end}
-.scrim.mid{justify-content:center;align-items:center;padding:16px}
+.scrim.mid{justify-content:center;align-items:center;padding:16px;padding-top:calc(16px + var(--sat))}
 .drawer{background:var(--panel);width:min(430px,100%);height:100%;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px;border-left:1px solid var(--line)}
 .modal{background:var(--panel);width:min(640px,100%);max-height:100%;overflow:auto;padding:18px;border-radius:14px;display:flex;flex-direction:column;gap:12px;border:1px solid var(--line)}
 .drawer h3,.modal h3{font-family:var(--display);margin:0;font-size:18px;overflow-wrap:anywhere}
@@ -207,7 +208,7 @@ a.lnk{color:var(--royal);font-weight:700}
 .list .job .c{flex-wrap:wrap}
 .list .chip{font-size:11px;padding:1px 6px}
 @media (max-width:760px){
-  .wrap{padding:calc(10px + env(safe-area-inset-top,0px)) calc(10px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(10px + env(safe-area-inset-left,0px));gap:10px}
+  .wrap{padding:calc(10px + var(--sat)) calc(10px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(10px + env(safe-area-inset-left,0px));gap:10px}
   header.top{padding:12px 14px} header.top h1{font-size:17px} header.top .sub{display:none}
   header.top .btn{padding:6px 10px;font-size:13px}
   .stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
@@ -420,7 +421,7 @@ function loadFleet(){
     calId=c.id;return gfetch(BASE+"/calendars/"+encodeURIComponent(calId)+"?$select=id&$expand="+expandQ(P_FLEET));
   }).then(function(c){
     var d=readProp(c);
-    S.fleet=d&&Array.isArray(d.trucks)?{trucks:d.trucks,crew:Array.isArray(d.crew)?d.crew:[],buffer:typeof d.buffer==="number"?d.buffer:30,weekHours:typeof d.weekHours==="number"?d.weekHours:60}:JSON.parse(JSON.stringify(DEFAULT_FLEET));
+    S.fleet=d&&Array.isArray(d.trucks)?{trucks:d.trucks,crew:Array.isArray(d.crew)?d.crew:[],buffer:typeof d.buffer==="number"?d.buffer:30,weekHours:typeof d.weekHours==="number"?d.weekHours:60,defRate:typeof d.defRate==="number"?d.defRate:120}:JSON.parse(JSON.stringify(DEFAULT_FLEET));
     S.fleetLoaded=true;render();
   },function(e){S.fleetLoaded=true;S.fleet=JSON.parse(JSON.stringify(DEFAULT_FLEET));if(!S.err)S.err=errText(e);render()});
 }
@@ -495,19 +496,24 @@ function bookedH(j){return j.body.hours||((j.end-j.start)/60)}
 function rateOf(j){var m=String(j.body.rate||"").match(/([\d.]+)/);return m?+m[1]:0}
 function actualH(j){var a=S.assign[j.key];return a&&a.t0!=null&&a.t1!=null&&a.t1>a.t0?(a.t1-a.t0)/60:null}
 function overMin(j){var ah=actualH(j);return ah==null?null:Math.round(ah*60-bookedH(j)*60)}
-function extraCharge(j){var o=overMin(j),r=rateOf(j);if(o==null||o<=0||!r||j.body.fixed)return null;return {min:o,amt:Math.round(o/60*r*100)/100}}
+function defRate(){return S.fleet.defRate>0?S.fleet.defRate:120}
+function extraCharge(j){var o=overMin(j),r=rateOf(j)||defRate();if(o==null||o<=0||!r||j.body.fixed)return null;return {min:o,amt:Math.round(o/60*r*100)/100}}
 function payParts(j){
   var p=j.body.pay||"",c=p.match(/collect\s*\$?\s*([\d,]+(?:\.\d+)?)/i);if(!c)return null;
   var d=p.match(/\(\s*\$?\s*([\d,]+(?:\.\d+)?)\s*\$?\s*(?:already\s*)?deposit/i),x=p.match(/and\s*\$?\s*([\d,]+(?:\.\d+)?)\s*\$?\s*for/i);
   function n(m){return m?+m[1].replace(/,/g,""):0}
   return {collect:n(c),dep:n(d),extra:n(x)};
 }
-function estValue(j){
-  var pp=payParts(j),x=extraCharge(j),base=null;
-  if(pp)base=pp.collect+pp.dep+pp.extra;
-  else if(rateOf(j)&&!j.body.fixed)base=Math.round(bookedH(j)*rateOf(j)*100)/100;
-  return base==null?null:Math.round((base+(x?x.amt:0))*100)/100;
+/* price from the booking note; when the note has no price (often Airtasker), booked hours x the default hourly value */
+function estInfo(j){
+  var pp=payParts(j),x=extraCharge(j),base,how;
+  if(pp){base=pp.collect+pp.dep+pp.extra;how="note"}
+  else if(rateOf(j)&&!j.body.fixed){base=bookedH(j)*rateOf(j);how="rate"}
+  else{base=bookedH(j)*defRate();how="assumed"}
+  return {amt:Math.round((base+(x?x.amt:0))*100)/100,how:how};
 }
+function estValue(j){return estInfo(j).amt}
+function assumed(j){var a=S.assign[j.key];return !(a&&a.val!=null)&&estInfo(j).how==="assumed"}
 function valueOf(j){var a=S.assign[j.key];return a&&a.val!=null?a.val:estValue(j)}
 function costOf(j){var a=S.assign[j.key];return a&&a.cost!=null?a.cost:null}
 function timeChip(j){
@@ -528,7 +534,7 @@ function extraHtml(j){
       +(a.t0!=null?'<button class="btn small" type="button" data-act="tclear">Clear times</button>':"")+'</div></div>';
   }
   var est=estValue(j);
-  h+='<div class="fld"><label for="jobVal">Job price ($)</label><input type="number" id="jobVal" min="0" step="1" inputmode="decimal" value="'+(a.val!=null?a.val:"")+'" placeholder="'+(est!=null?"Estimated "+money(est)+" from the calendar note":"Not in the calendar note")+'"></div>';
+  h+='<div class="fld"><label for="jobVal">Job price ($)</label><input type="number" id="jobVal" min="0" step="1" inputmode="decimal" value="'+(a.val!=null?a.val:"")+'" placeholder="'+(estInfo(j).how==="assumed"?"Estimated "+money(est)+": "+hrs(bookedH(j))+" at "+money(defRate())+"/hr, no price in the booking":"Estimated "+money(est)+" from the calendar note")+'"></div>';
   if(sb){var v=valueOf(j),c=costOf(j);
     h+='<div class="fld"><label for="subCost">Paid to '+esc(sb)+' ($)</label><input type="number" id="subCost" min="0" step="1" inputmode="decimal" value="'+(c!=null?c:"")+'" placeholder="What this job costs you">'+(v!=null&&c!=null?'<span class="fresh">Margin on this job: '+money(v-c)+(v>0?" ("+Math.round((v-c)/v*100)+"%)":"")+'</span>':"")+'</div>'}
   return h;
@@ -565,7 +571,7 @@ function renderNumbers(){
   function tile(big,label,small,cls){return '<div class="stat '+(cls||"")+'"><b>'+big+'</b><span>'+label+'</span>'+(small?'<small>'+small+'</small>':"")+'</div>'}
   var tiles='<div class="ngrid">'
     +tile(jobs.length,jobs.length===1?"job booked":"jobs booked",hrs(sum(jobs,H))+" booked")
-    +tile(money(val),"booked value",priced.length<jobs.length?(jobs.length-priced.length)+" job"+(jobs.length-priced.length===1?"":"s")+" with no price":"all jobs priced")
+    +tile(money(val),"booked value",(function(n){return n?n+" job"+(n===1?"":"s")+" estimated at "+money(defRate())+"/hr":"all from booking prices"})(jobs.filter(assumed).length))
     +tile(cap?Math.round(ownH/cap*100)+"%":"–","own truck hours used",hrs(Math.round(ownH*10)/10)+" of "+Math.round(cap)+" available")
     +tile(sub.length,sub.length===1?"job subcontracted":"jobs subcontracted",jobs.length?Math.round(sub.length/jobs.length*100)+"% of jobs":"")
     +tile(money(subCost),"paid to subcontractors",subCostKnown.length<sub.length?(sub.length-subCostKnown.length)+" job"+(sub.length-subCostKnown.length===1?"":"s")+" with no cost entered":(sub.length?"all costs entered":""))
@@ -580,9 +586,9 @@ function renderNumbers(){
   panels+=table("Subcontractors",[["Subcontractor"],["Jobs",1],["Job value",1],["Paid",1],["Margin",1]],group(sub,subOf).map(function(g){var l=g[1],kc=l.filter(function(j){return costOf(j)!=null}),b=l.filter(function(j){return valueOf(j)!=null&&costOf(j)!=null});
       return [esc(g[0]),l.length,money(sum(l.filter(function(j){return valueOf(j)!=null}),valueOf)),money(sum(kc,costOf))+(kc.length<l.length?" ("+(l.length-kc.length)+" missing)":""),b.length?money(sum(b,function(j){return valueOf(j)-costOf(j)})):"–"]}),"No jobs were subcontracted in this period.");
   panels+=table("By lead source",[["Source"],["Jobs",1],["Value",1]],group(jobs,function(j){return j.platform}).map(function(g){return [esc(g[0]),g[1].length,money(sum(g[1].filter(function(j){return valueOf(j)!=null}),valueOf))]}),"No jobs in this period.");
-  panels+=table("By sales rep",[["Rep"],["Jobs",1],["Value",1]],group(jobs,function(j){return j.reps.length?j.reps:[""]}).map(function(g){return [esc(g[0]),g[1].length,money(sum(g[1].filter(function(j){return valueOf(j)!=null}),valueOf))]}),"No jobs in this period.");
+  panels+=table("By sales rep",[["Rep"],["Jobs",1],["Hours booked",1],["Value",1]],group(jobs,function(j){return j.reps.length?j.reps:[""]}).map(function(g){return [esc(g[0]),g[1].length,hrs(Math.round(sum(g[1],bookedH)*10)/10),money(sum(g[1].filter(function(j){return valueOf(j)!=null}),valueOf))]}),"No jobs in this period.");
   panels+=table("Job times",[["Job"],["Booked",1],["Actual",1],["Over",1],["Extra",1]],timed.map(function(j){var o=overMin(j),x=extraCharge(j);return [esc(dShort(j.day)+" "+j.customer),hrs(bookedH(j)),dur(actualH(j)*60),o>0?dur(o):"–",x?money(x.amt):"–"]}),"No start and finish times recorded yet. Crews record them from the job on Dispatch.");
-  el.innerHTML=head+tiles+'<div class="npanels">'+panels+'</div><div class="fresh">Job value comes from the price entered on the job, or is estimated from the calendar note (amount to collect plus deposit, or booked hours at the hourly rate). A job shared by two reps counts for both. Quote win rates are in Quotes, Reports.</div>';
+  el.innerHTML=head+tiles+'<div class="npanels">'+panels+'</div><div class="fresh">Job value comes from the price entered on the job, or is estimated from the calendar note (amount to collect plus deposit, or booked hours at the hourly rate). When the booking has no price, each booked hour counts as '+money(defRate())+'. A job shared by two reps counts for both. Quote win rates are in Quotes, Reports.</div>';
 }
 
 /* ---------- render ---------- */
@@ -724,14 +730,14 @@ function renderOverlay(jobs,flags){
     +(j.hint?'<div class="fresh">The calendar entry says "assigned to '+esc(j.hint)+'", so the board treats this job as subcontracted unless you move it.</div>':"")
     +'<dl class="kv">'+row("Booked",b.fixed?"Fixed quote":(b.hours?"Initial "+hrs(b.hours):hrs((j.end-j.start)/60)))+row("Truck asked",[j.size,j.movers?j.movers+" men":"",j.interstate?"interstate":""].filter(Boolean).join(", "))
     +row("Payment",b.pay)+row("Rate after",b.rate)+row("Job",b.type)+row("Pickup",b.pickup)+row("Drop off",b.drop)+(b.phone?'<dt>Phone</dt><dd>'+esc(b.phone)+' <a class="lnk" href="tel:'+esc(b.phone.replace(/[^+\d]/g,""))+'">Call</a></dd>':"")+row("Source",j.platform)+row("Sales rep",j.reps.join(", "))+row("Calendar",j.subject)+'</dl>'
-    +'<div class="acts"><button class="btn primary" type="button" data-act="copyjob">Copy job sheet</button>'+(j.webLink?'<a class="btn lnk" href="'+esc(j.webLink)+'" target="_blank" rel="noopener">Open in Outlook</a>':"")+'</div>'
+    +'<div class="acts"><button class="btn primary" type="button" data-act="copyjob">Copy job sheet</button>'+(j.webLink?'<a class="btn lnk" href="'+esc(j.webLink)+'" target="_blank" rel="noopener">Open in Outlook</a>':"")+'<button class="btn" type="button" data-close="1">Close</button></div>'
     +'<div class="fresh">Details are read from the calendar entry. Open it in Outlook to see or change the original.</div>'
     +'</aside></div>';
   if(keep&&$(keep))$(keep).focus();
 }
 var draft=null;
 function fleetHtml(){
-  if(!draft)draft={trucks:S.fleet.trucks.map(function(t){return {id:t.id,name:t.name,size:t.size}}),crew:S.fleet.crew.map(function(c){return {id:c.id,name:c.name}}),buffer:S.fleet.buffer,weekHours:S.fleet.weekHours||60};
+  if(!draft)draft={trucks:S.fleet.trucks.map(function(t){return {id:t.id,name:t.name,size:t.size}}),crew:S.fleet.crew.map(function(c){return {id:c.id,name:c.name}}),buffer:S.fleet.buffer,weekHours:S.fleet.weekHours||60,defRate:defRate()};
   var tr=draft.trucks.map(function(t,i){return '<div class="rowi"><input type="text" id="tn'+i+'" data-tn="'+i+'" value="'+esc(t.name)+'" placeholder="Name or rego" aria-label="Truck name"><select id="ts'+i+'" data-ts="'+i+'" aria-label="Truck size">'+SIZES.map(function(s){return '<option value="'+s+'"'+(s===(t.size||"")?" selected":"")+'>'+(s||"Size not set")+'</option>'}).join("")+'</select><button class="btn small" type="button" data-rmt="'+i+'">Remove</button></div>'}).join("");
   var cr=draft.crew.map(function(c,i){return '<div class="rowi one"><input type="text" id="cn'+i+'" data-cn="'+i+'" value="'+esc(c.name)+'" placeholder="Name" aria-label="Crew member name"><button class="btn small" type="button" data-rmc="'+i+'">Remove</button></div>'}).join("");
   return '<div class="scrim mid"><div class="modal" role="dialog" aria-label="Trucks and crew">'
@@ -739,6 +745,7 @@ function fleetHtml(){
     +'<div class="fld"><span class="lbl">Trucks</span>'+(tr||'<span class="fresh">No trucks yet.</span>')+'<div><button class="btn small" type="button" data-act="addtruck">Add a truck</button></div></div>'
     +'<div class="fld"><span class="lbl">Drivers and movers</span>'+(cr||'<span class="fresh">No crew yet.</span>')+'<div><button class="btn small" type="button" data-act="addcrew">Add a person</button></div></div>'
     +'<div class="fld"><label for="buf">Minutes to allow between jobs on the same truck</label><input type="number" id="buf" min="0" max="180" step="5" value="'+(+draft.buffer||0)+'" style="max-width:120px"></div>'
+    +'<div class="fld"><label for="dfr">Hourly value to assume when a booking has no price ($)</label><input type="number" id="dfr" min="1" step="1" value="'+(+draft.defRate||120)+'" style="max-width:120px"></div>'
     +'<div class="fld"><label for="wkh">Hours each truck can work in a week (used for the Numbers page)</label><input type="number" id="wkh" min="1" max="168" step="1" value="'+(+draft.weekHours||60)+'" style="max-width:120px"></div>'
     +'<div class="acts"><button class="btn primary" type="button" data-act="fleetsave">Save</button></div></div></div>';
 }
@@ -749,13 +756,14 @@ function readDraft(){
   document.querySelectorAll("[data-cn]").forEach(function(e){draft.crew[+e.dataset.cn].name=e.value});
   var b=$("buf");if(b)draft.buffer=Math.max(0,Math.min(180,+b.value||0));
   var w=$("wkh");if(w)draft.weekHours=Math.max(1,Math.min(168,+w.value||60));
+  var r=$("dfr");if(r)draft.defRate=Math.max(1,+r.value||120);
 }
 function redrawFleet(){$("overlay").innerHTML=fleetHtml()}
 function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function saveFleet(){
   readDraft();
   var f={trucks:draft.trucks.filter(function(t){return t.name.trim()}).map(function(t){return {id:t.id,name:t.name.trim(),size:t.size}}),
-         crew:draft.crew.filter(function(c){return c.name.trim()}).map(function(c){return {id:c.id,name:c.name.trim()}}),buffer:draft.buffer,weekHours:draft.weekHours||60};
+         crew:draft.crew.filter(function(c){return c.name.trim()}).map(function(c){return {id:c.id,name:c.name.trim()}}),buffer:draft.buffer,weekHours:draft.weekHours||60,defRate:draft.defRate||120};
   S.fleet=f;draft=null;S.modal=null;$("overlay").innerHTML="";render();
   pushFleet(f).catch(function(e){toast("The fleet list wasn't saved. "+errText(e))});
 }
@@ -870,6 +878,18 @@ window.EAM={gfetch:gfetch,BASE:BASE,TZ:TZ,who:"",refreshBoard:function(){var ws=
         waiting:jobs.filter(function(j){return needs(j)&&overlap(j,q,buf)}).length,jobs:jobs.length};
     });
   }};
+/* ---------- iPhone home-screen app: keep content below the status bar ---------- */
+function fixTopGap(){
+  try{
+    var root=document.documentElement,ios=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+    var standalone=navigator.standalone===true||(window.matchMedia&&matchMedia("(display-mode: standalone)").matches);
+    var pr=document.createElement("div");pr.style.cssText="position:fixed;top:0;left:0;visibility:hidden;padding-top:env(safe-area-inset-top,0px)";document.body.appendChild(pr);
+    var envTop=parseFloat(getComputedStyle(pr).paddingTop)||0;pr.remove();
+    var portrait=innerHeight>innerWidth,underBar=Math.abs(screen.height-innerHeight)<20||Math.abs(screen.width-innerHeight)<20;
+    if(ios&&standalone&&portrait&&envTop<20&&underBar)root.style.setProperty("--sat","56px");else root.style.removeProperty("--sat");
+  }catch(e){}
+}
+fixTopGap();window.addEventListener("resize",fixTopGap);window.addEventListener("orientationchange",function(){setTimeout(fixTopGap,300)});
 /* ---------- start ---------- */
 S.day=melParts(new Date()).date;
 render();
