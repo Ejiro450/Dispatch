@@ -58,6 +58,30 @@ body.gated .tabs,body.gated #qframe{display:none}
 .tabs button[aria-current="page"]{background:#fff;color:#063A80}
 #qframe{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;height:calc(100dvh - 120px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:480px;display:block}
 body:not(.quotes) #qframe{display:none}
+body:not(.numbers) #numbers{display:none}
+body.gated #numbers{display:none}
+body.numbers .daybar,body.numbers .week,body.numbers .stats,body.numbers .board,body.numbers .legend,body.numbers #btnSheet{display:none}
+#numbers{display:flex;flex-direction:column;gap:14px}
+.nbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.nbar h2{font-family:var(--display);font-size:22px;margin:0 8px 0 0}
+.seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.seg button{border:0;background:var(--panel);padding:6px 12px;font-weight:600}
+.seg button[aria-pressed="true"]{background:var(--royal);color:var(--accent-ink)}
+.ngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.ngrid .stat small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.npanels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(430px,100%),1fr));gap:12px;align-items:start}
+.npanel td:first-child{white-space:nowrap}
+.npanel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto}
+.npanel h3{margin:0 0 8px;font-family:var(--display);font-size:15px}
+.npanel table{width:100%;border-collapse:collapse;font-size:13px}
+.npanel th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:700;padding:4px 8px 6px 0;border-bottom:1px solid var(--line);white-space:nowrap}
+.npanel td{padding:6px 8px 6px 0;border-bottom:1px solid var(--grid);vertical-align:top}
+.npanel th.r,.npanel td.r{text-align:right;padding-right:0;padding-left:8px;white-space:nowrap}
+.npanel tr:last-child td{border-bottom:0}
+.npanel .none{color:var(--muted);font-size:13px}
+.flag.ok{background:var(--ok-bg);color:var(--ok)}
+.tin{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+.tin input{width:auto!important}
 /* Quotes fills the whole screen: slim bar on top, the Quote Builder underneath, edge to edge */
 html,body{height:100%}
 body.quotes{overflow:hidden;background:var(--navy)}
@@ -158,7 +182,7 @@ header.top .sp{flex:1}
 .kv dt{color:var(--muted);font-weight:600} .kv dd{margin:0;overflow-wrap:anywhere}
 .fld{display:flex;flex-direction:column;gap:5px}
 .fld>label,.fld>.lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-.fld select,.fld input[type=text],.fld input[type=number],textarea{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:7px 9px;width:100%}
+.fld select,.fld input[type=text],.fld input[type=number],.fld input[type=time],textarea{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:7px 9px;width:100%}
 .crewpick{display:flex;flex-wrap:wrap;gap:6px}
 .crewpick label{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer}
 .crewpick label.busy{border-color:var(--bad);color:var(--bad)}
@@ -209,7 +233,7 @@ a.lnk{color:var(--royal);font-weight:700}
       <h1 id="appTitle">EAM Dispatch Board</h1>
       <div class="sub">Our trucks, crews and subcontractors against the jobs in the admin Outlook calendar</div>
     </div>
-    <nav class="tabs" id="tabs" aria-label="Sections"><button type="button" id="tabDispatch" aria-current="page">Dispatch</button><button type="button" id="tabQuotes">Quotes</button></nav>
+    <nav class="tabs" id="tabs" aria-label="Sections"><button type="button" id="tabDispatch" aria-current="page">Dispatch</button><button type="button" id="tabQuotes">Quotes</button><button type="button" id="tabNumbers">Numbers</button></nav>
     <div class="sp"></div>
     <span class="who" id="who"></span>
     <button class="btn ghost" id="btnSheet" type="button">Copy run sheet</button>
@@ -231,6 +255,7 @@ a.lnk{color:var(--royal);font-weight:700}
 
   <div class="week" id="week"></div>
   <div id="notices"></div>
+  <section id="numbers" aria-label="Numbers"></section>
   <div class="stats" id="stats"></div>
   <div class="board"><div class="grid" id="grid"><div class="empty">Loading the calendar&hellip;</div></div></div>
   <div class="legend">
@@ -366,6 +391,7 @@ function errText(e){
   if(!s)return "No connection. Check the internet on this device, then press Refresh.";
   return "Outlook reported a problem ("+s+((e.detail&&e.detail.code)?", "+e.detail.code:"")+").";
 }
+function numOrNull(v){return (v===undefined||v===null||v===""||!isFinite(+v))?null:+v}
 function readProp(o){var p=(o&&o.singleValueExtendedProperties)||[];if(!p.length||!p[0].value)return null;try{return JSON.parse(p[0].value)}catch(x){return null}}
 function fetchWeek(ws,force,quiet){
   if(S.auth!=="in"||S.busy[ws])return Promise.resolve();
@@ -383,7 +409,7 @@ function fetchWeek(ws,force,quiet){
       jobs.push(j);
       if(pending[j.key])return;
       var v=readProp(e);
-      if(v&&(v.truck||v.sub||v.nosub||(v.crew&&v.crew.length)))a[j.key]={truck:v.truck||"",crew:Array.isArray(v.crew)?v.crew:[],sub:v.sub||"",nosub:!!v.nosub,day:j.day};
+      if(v&&(v.truck||v.sub||v.nosub||(v.crew&&v.crew.length)||v.t0!=null||v.t1!=null||v.cost!=null||v.val!=null))a[j.key]={truck:v.truck||"",crew:Array.isArray(v.crew)?v.crew:[],sub:v.sub||"",nosub:!!v.nosub,day:j.day,t0:numOrNull(v.t0),t1:numOrNull(v.t1),cost:numOrNull(v.cost),val:numOrNull(v.val)};
       else delete a[j.key];
     });
     S.assign=a;S.events[ws]=jobs;S.fetched[ws]=Date.now();S.err=null;done();render();
@@ -394,7 +420,7 @@ function loadFleet(){
     calId=c.id;return gfetch(BASE+"/calendars/"+encodeURIComponent(calId)+"?$select=id&$expand="+expandQ(P_FLEET));
   }).then(function(c){
     var d=readProp(c);
-    S.fleet=d&&Array.isArray(d.trucks)?{trucks:d.trucks,crew:Array.isArray(d.crew)?d.crew:[],buffer:typeof d.buffer==="number"?d.buffer:30}:JSON.parse(JSON.stringify(DEFAULT_FLEET));
+    S.fleet=d&&Array.isArray(d.trucks)?{trucks:d.trucks,crew:Array.isArray(d.crew)?d.crew:[],buffer:typeof d.buffer==="number"?d.buffer:30,weekHours:typeof d.weekHours==="number"?d.weekHours:60}:JSON.parse(JSON.stringify(DEFAULT_FLEET));
     S.fleetLoaded=true;render();
   },function(e){S.fleetLoaded=true;S.fleet=JSON.parse(JSON.stringify(DEFAULT_FLEET));if(!S.err)S.err=errText(e);render()});
 }
@@ -406,12 +432,13 @@ function saveAssign(job,patch){
   var cur=S.assign[job.key]||{truck:"",crew:[],sub:"",nosub:false};
   function pk(f){return patch[f]!==undefined?patch[f]:cur[f]}
   var nx={truck:pk("truck"),crew:pk("crew"),sub:pk("sub")||"",nosub:!!pk("nosub"),day:job.day};
-  var gone=!nx.truck&&!nx.crew.length&&!nx.sub&&!nx.nosub;
+  ["t0","t1","cost","val"].forEach(function(f){nx[f]=numOrNull(pk(f))});
+  var gone=!nx.truck&&!nx.crew.length&&!nx.sub&&!nx.nosub&&nx.t0==null&&nx.t1==null&&nx.cost==null&&nx.val==null;
   var a={};for(var k in S.assign)a[k]=S.assign[k];
   if(gone)delete a[job.key];else a[job.key]=nx;
   S.assign=a;render();
   pending[job.key]=(pending[job.key]||0)+1;
-  var val=gone?"{}":JSON.stringify({truck:nx.truck,crew:nx.crew,sub:nx.sub,nosub:nx.nosub});
+  var val=gone?"{}":JSON.stringify({truck:nx.truck,crew:nx.crew,sub:nx.sub,nosub:nx.nosub,t0:nx.t0,t1:nx.t1,cost:nx.cost,val:nx.val});
   writeChain[job.key]=(writeChain[job.key]||Promise.resolve()).then(function(){
     return gfetch(BASE+"/events/"+encodeURIComponent(job.id),{method:"PATCH",body:{singleValueExtendedProperties:[{id:P_JOB,value:val}]}});
   }).catch(function(e){toast("That change wasn't saved. "+errText(e));if(S.auth!=="in")render()}).then(function(){pending[job.key]--});
@@ -426,7 +453,7 @@ function boot(){
     account=(r&&r.account)||pca.getAllAccounts()[0]||null;
     if(!account){S.auth="out";render();return}
     pca.setActiveAccount(account);S.auth="in";S.who=account.username||"";window.EAM.who=S.who;render();
-    if(location.hash==="#quotes")setTab(true);
+    if(location.hash==="#quotes")setTab("quotes");else if(location.hash==="#numbers")setTab("numbers");
     loadFleet();fetchWeek(weekStart(S.day),false);
   }).catch(function(){S.auth="out";S.err="Sign-in didn't finish. Try again.";render()});
 }
@@ -458,6 +485,105 @@ function analyse(jobs){
 function truckName(id){var t=S.fleet.trucks.filter(function(x){return x.id===id})[0];return t?t.name:"Truck"}
 function crewName(id){var c=S.fleet.crew.filter(function(x){return x.id===id})[0];return c?c.name:"Crew"}
 function stack(jobs){var rows=[];jobs.forEach(function(j){var r=0;while(rows[r]&&rows[r]>j.start)r++;rows[r]=j.end;j._row=r});return Math.max(1,rows.length)}
+
+/* ---------- job times, prices and subcontractor costs ---------- */
+function money(n){n=Math.round((+n||0)*100)/100;return (n<0?"-":"")+"$"+Math.abs(n).toLocaleString("en-AU",{minimumFractionDigits:n%1?2:0,maximumFractionDigits:2})}
+function dur(min){min=Math.round(min);var h=Math.floor(min/60),m=min%60;return ((h?h+" hr ":"")+(m||!h?m+" min":"")).trim()}
+function hhmm(m){m=((m%1440)+1440)%1440;return pad(Math.floor(m/60))+":"+pad(m%60)}
+function nowRel(day){var n=melParts(new Date());return dayDiff(day,n.date)*1440+n.min}
+function bookedH(j){return j.body.hours||((j.end-j.start)/60)}
+function rateOf(j){var m=String(j.body.rate||"").match(/([\d.]+)/);return m?+m[1]:0}
+function actualH(j){var a=S.assign[j.key];return a&&a.t0!=null&&a.t1!=null&&a.t1>a.t0?(a.t1-a.t0)/60:null}
+function overMin(j){var ah=actualH(j);return ah==null?null:Math.round(ah*60-bookedH(j)*60)}
+function extraCharge(j){var o=overMin(j),r=rateOf(j);if(o==null||o<=0||!r||j.body.fixed)return null;return {min:o,amt:Math.round(o/60*r*100)/100}}
+function payParts(j){
+  var p=j.body.pay||"",c=p.match(/collect\s*\$?\s*([\d,]+(?:\.\d+)?)/i);if(!c)return null;
+  var d=p.match(/\(\s*\$?\s*([\d,]+(?:\.\d+)?)\s*\$?\s*(?:already\s*)?deposit/i),x=p.match(/and\s*\$?\s*([\d,]+(?:\.\d+)?)\s*\$?\s*for/i);
+  function n(m){return m?+m[1].replace(/,/g,""):0}
+  return {collect:n(c),dep:n(d),extra:n(x)};
+}
+function estValue(j){
+  var pp=payParts(j),x=extraCharge(j),base=null;
+  if(pp)base=pp.collect+pp.dep+pp.extra;
+  else if(rateOf(j)&&!j.body.fixed)base=Math.round(bookedH(j)*rateOf(j)*100)/100;
+  return base==null?null:Math.round((base+(x?x.amt:0))*100)/100;
+}
+function valueOf(j){var a=S.assign[j.key];return a&&a.val!=null?a.val:estValue(j)}
+function costOf(j){var a=S.assign[j.key];return a&&a.cost!=null?a.cost:null}
+function timeChip(j){
+  var a=S.assign[j.key];if(!a||a.t0==null)return "";
+  if(a.t1==null)return '<span class="chip">Started '+tm(a.t0)+'</span>';
+  var o=overMin(j);return '<span class="chip">Done '+hrs((a.t1-a.t0)/60)+'</span>'+(o>0?'<span class="chip w">+'+dur(o)+'</span>':"");
+}
+function extraHtml(j){
+  var a=S.assign[j.key]||{},sb=subOf(j),h="";
+  if(!sb){
+    var st=a.t0==null?"Not started yet.":a.t1==null?"Started at "+tm(a.t0)+".":tm(a.t0)+" to "+tm(a.t1)+", "+dur(a.t1-a.t0)+" on the job. Booked "+hrs(bookedH(j))+".";
+    var o=overMin(j),x=extraCharge(j),fl="";
+    if(o!=null&&o>0)fl='<div class="flag w">'+dur(o)+' over the booked time.'+(x?' Extra to charge: '+money(x.amt)+' at '+money(rateOf(j))+'/hr.':(j.body.fixed?' Fixed quote, so no extra charge.':' No hourly rate in the calendar note, so work out the extra by hand.'))+'</div>';
+    else if(o!=null)fl='<div class="flag ok">Finished within the booked time.</div>';
+    h+='<div class="fld"><span class="lbl">Job times</span><div>'+esc(st)+'</div>'+fl+'<div class="acts">'
+      +(a.t0==null?'<button class="btn primary" type="button" data-act="tstart">Start job now</button>':a.t1==null?'<button class="btn primary" type="button" data-act="tfinish">Finish job now</button>':"")
+      +'<label class="tin" for="tStart">Start <input type="time" id="tStart" value="'+(a.t0!=null?hhmm(a.t0):"")+'"></label><label class="tin" for="tEnd">Finish <input type="time" id="tEnd" value="'+(a.t1!=null?hhmm(a.t1):"")+'"></label>'
+      +(a.t0!=null?'<button class="btn small" type="button" data-act="tclear">Clear times</button>':"")+'</div></div>';
+  }
+  var est=estValue(j);
+  h+='<div class="fld"><label for="jobVal">Job price ($)</label><input type="number" id="jobVal" min="0" step="1" inputmode="decimal" value="'+(a.val!=null?a.val:"")+'" placeholder="'+(est!=null?"Estimated "+money(est)+" from the calendar note":"Not in the calendar note")+'"></div>';
+  if(sb){var v=valueOf(j),c=costOf(j);
+    h+='<div class="fld"><label for="subCost">Paid to '+esc(sb)+' ($)</label><input type="number" id="subCost" min="0" step="1" inputmode="decimal" value="'+(c!=null?c:"")+'" placeholder="What this job costs you">'+(v!=null&&c!=null?'<span class="fresh">Margin on this job: '+money(v-c)+(v>0?" ("+Math.round((v-c)/v*100)+"%)":"")+'</span>':"")+'</div>'}
+  return h;
+}
+
+/* ---------- numbers ---------- */
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"],nTried={};
+function periodOf(){
+  if(S.nMode==="month"){var y=+S.day.slice(0,4),m=+S.day.slice(5,7);return {from:S.day.slice(0,8)+"01",to:new Date(Date.UTC(y,m,0)).toISOString().slice(0,10),title:MONTHS[m-1]+" "+y,days:new Date(Date.UTC(y,m,0)).getUTCDate()}}
+  var ws=weekStart(S.day);return {from:ws,to:addDays(ws,6),title:"Week of "+(+ws.slice(8))+" "+MN[+ws.slice(5,7)-1],days:7};
+}
+function periodWeeks(p){var w=[],d=weekStart(p.from);while(d<=p.to){w.push(d);d=addDays(d,7)}return w}
+function periodJobs(p){
+  var out=[],missing=false;
+  periodWeeks(p).forEach(function(ws){
+    if(!S.events[ws]){missing=true;if(S.auth==="in"&&!S.busy[ws]&&!nTried[ws]){nTried[ws]=1;fetchWeek(ws,false,true)}return}
+    for(var i=0;i<7;i++){var d=addDays(ws,i);if(d>=p.from&&d<=p.to)out=out.concat(dayJobs(d))}
+  });
+  return {jobs:out,missing:missing};
+}
+function renderNumbers(){
+  var el=$("numbers");if(!el||S.auth!=="in")return;
+  var p=periodOf(),pj=periodJobs(p),jobs=pj.jobs,loading=pj.missing&&periodWeeks(p).some(function(ws){return S.busy[ws]});
+  var head='<div class="nbar"><h2>'+esc(p.title)+'</h2><div class="seg" role="group" aria-label="Period"><button type="button" data-act="nweek" aria-pressed="'+(S.nMode!=="month")+'">Week</button><button type="button" data-act="nmonth" aria-pressed="'+(S.nMode==="month")+'">Month</button></div>'
+    +'<button class="btn small" type="button" data-act="nprev">&larr; Prev</button><button class="btn small" type="button" data-act="nnext">Next &rarr;</button><span style="flex:1"></span><button class="btn small" type="button" data-act="nrefresh">Refresh</button></div>';
+  if(pj.missing){el.innerHTML=head+'<div class="npanel"><span class="none">'+(loading?"Loading the calendar for this period…":"Part of this period couldn’t be loaded. Press Refresh.")+'</span></div>';return}
+  var H=function(j){return (j.end-j.start)/60},sum=function(a,f){return a.reduce(function(t,x){return t+(f(x)||0)},0)};
+  var own=jobs.filter(function(j){return truckOf(j)}),sub=jobs.filter(function(j){return subOf(j)}),un=jobs.filter(needs);
+  var priced=jobs.filter(function(j){return valueOf(j)!=null}),val=sum(priced,valueOf);
+  var ownH=sum(own,function(j){return actualH(j)||H(j)}),cap=S.fleet.trucks.length*(S.fleet.weekHours||60)*p.days/7;
+  var subVal=sum(sub.filter(function(j){return valueOf(j)!=null}),valueOf),subCostKnown=sub.filter(function(j){return costOf(j)!=null}),subCost=sum(subCostKnown,costOf);
+  var both=sub.filter(function(j){return valueOf(j)!=null&&costOf(j)!=null}),margin=sum(both,function(j){return valueOf(j)-costOf(j)}),bothVal=sum(both,valueOf);
+  var timed=jobs.filter(function(j){return actualH(j)!=null}),over=sum(timed,function(j){return Math.max(0,overMin(j))}),extra=sum(timed,function(j){var x=extraCharge(j);return x?x.amt:0});
+  function tile(big,label,small,cls){return '<div class="stat '+(cls||"")+'"><b>'+big+'</b><span>'+label+'</span>'+(small?'<small>'+small+'</small>':"")+'</div>'}
+  var tiles='<div class="ngrid">'
+    +tile(jobs.length,jobs.length===1?"job booked":"jobs booked",hrs(sum(jobs,H))+" booked")
+    +tile(money(val),"booked value",priced.length<jobs.length?(jobs.length-priced.length)+" job"+(jobs.length-priced.length===1?"":"s")+" with no price":"all jobs priced")
+    +tile(cap?Math.round(ownH/cap*100)+"%":"–","own truck hours used",hrs(Math.round(ownH*10)/10)+" of "+Math.round(cap)+" available")
+    +tile(sub.length,sub.length===1?"job subcontracted":"jobs subcontracted",jobs.length?Math.round(sub.length/jobs.length*100)+"% of jobs":"")
+    +tile(money(subCost),"paid to subcontractors",subCostKnown.length<sub.length?(sub.length-subCostKnown.length)+" job"+(sub.length-subCostKnown.length===1?"":"s")+" with no cost entered":(sub.length?"all costs entered":""))
+    +tile(both.length?money(margin):"–","margin on subcontracted jobs",both.length?(bothVal>0?Math.round(margin/bothVal*100)+"% on "+both.length+" job"+(both.length===1?"":"s"):""):"needs price and cost")
+    +tile(timed.length?dur(over):"–","time over booked",timed.length?timed.length+" job"+(timed.length===1?"":"s")+" timed"+(extra?", "+money(extra)+" extra to charge":""):"no job times recorded",over>0?"warn":"")
+    +(un.length?tile(un.length,"still need a truck","","warn"):"")+'</div>';
+  function table(title,cols,rows,empty){return '<div class="npanel"><h3>'+title+'</h3>'+(rows.length?'<table><thead><tr>'+cols.map(function(c){return '<th'+(c[1]?' class="r"':"")+'>'+c[0]+'</th>'}).join("")+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+r.map(function(v,i){return '<td'+(cols[i][1]?' class="r"':"")+'>'+v+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table>':'<span class="none">'+empty+'</span>')+'</div>'}
+  function group(list,keyf){var m={},order=[];list.forEach(function(j){[].concat(keyf(j)).forEach(function(k){k=k||"Not stated";if(!m[k]){m[k]=[];order.push(k)}m[k].push(j)})});return order.map(function(k){return [k,m[k]]}).sort(function(a,b){return b[1].length-a[1].length})}
+  var panels="";
+  if(S.nMode!=="month"){var rows=[];for(var i=0;i<7;i++){var d=addDays(p.from,i),dj=dayJobs(d);rows.push([dShort(d),dj.length,hrs(sum(dj,H)),dj.filter(function(j){return truckOf(j)}).length,dj.filter(function(j){return subOf(j)}).length,money(sum(dj.filter(function(j){return valueOf(j)!=null}),valueOf))])}
+    panels+=table("By day",[["Day"],["Jobs",1],["Hours",1],["Own trucks",1],["Subbed",1],["Value",1]],rows,"")}
+  panels+=table("Subcontractors",[["Subcontractor"],["Jobs",1],["Job value",1],["Paid",1],["Margin",1]],group(sub,subOf).map(function(g){var l=g[1],kc=l.filter(function(j){return costOf(j)!=null}),b=l.filter(function(j){return valueOf(j)!=null&&costOf(j)!=null});
+      return [esc(g[0]),l.length,money(sum(l.filter(function(j){return valueOf(j)!=null}),valueOf)),money(sum(kc,costOf))+(kc.length<l.length?" ("+(l.length-kc.length)+" missing)":""),b.length?money(sum(b,function(j){return valueOf(j)-costOf(j)})):"–"]}),"No jobs were subcontracted in this period.");
+  panels+=table("By lead source",[["Source"],["Jobs",1],["Value",1]],group(jobs,function(j){return j.platform}).map(function(g){return [esc(g[0]),g[1].length,money(sum(g[1].filter(function(j){return valueOf(j)!=null}),valueOf))]}),"No jobs in this period.");
+  panels+=table("By sales rep",[["Rep"],["Jobs",1],["Value",1]],group(jobs,function(j){return j.reps.length?j.reps:[""]}).map(function(g){return [esc(g[0]),g[1].length,money(sum(g[1].filter(function(j){return valueOf(j)!=null}),valueOf))]}),"No jobs in this period.");
+  panels+=table("Job times",[["Job"],["Booked",1],["Actual",1],["Over",1],["Extra",1]],timed.map(function(j){var o=overMin(j),x=extraCharge(j);return [esc(dShort(j.day)+" "+j.customer),hrs(bookedH(j)),dur(actualH(j)*60),o>0?dur(o):"–",x?money(x.amt):"–"]}),"No start and finish times recorded yet. Crews record them from the job on Dispatch.");
+  el.innerHTML=head+tiles+'<div class="npanels">'+panels+'</div><div class="fresh">Job value comes from the price entered on the job, or is estimated from the calendar note (amount to collect plus deposit, or booked hours at the hourly rate). A job shared by two reps counts for both. Quote win rates are in Quotes, Reports.</div>';
+}
 
 /* ---------- render ---------- */
 var $=function(id){return document.getElementById(id)};
@@ -504,6 +630,7 @@ function render(){
   $("grid").className=NARROW.matches?"grid list":"grid";
   $("grid").innerHTML=have?(NARROW.matches?listHtml(jobs,flags):boardHtml(jobs,flags,today)):'<div class="empty">'+(S.loading||S.auth==="wait"?"Loading the calendar…":"No calendar data yet.")+'</div>';
   renderOverlay(jobs,flags);
+  if(TAB==="numbers")renderNumbers();
 }
 function slotHtml(jobs){
   var o="";for(var t=360;t<=1200;t+=30)o+='<option value="'+t+'"'+(t===S.slotT?" selected":"")+'>'+tm(t)+'</option>';
@@ -526,7 +653,7 @@ function boardHtml(jobs,flags,today){
     list.forEach(function(j){
       var f=flags[j.key],l=(j.start-t0)/span*100,w=(Math.min(j.end,t1)-j.start)/span*100;
       var cls="job"+(tid?(tid.indexOf("sub:")===0?" sub":""):" un")+(f.clash.length?" clash":"")+(f.tight.length?" tight":"")+(j.pending?" pending":"")+(S.sel===j.key?" sel":"");
-      var chips=(j.size?'<span class="chip">'+esc(j.size)+'</span>':"")+(j.movers?'<span class="chip">'+j.movers+' men</span>':"")+(j.platform?'<span class="chip">'+esc(j.platform)+'</span>':"")
+      var chips=timeChip(j)+(j.size?'<span class="chip">'+esc(j.size)+'</span>':"")+(j.movers?'<span class="chip">'+j.movers+' men</span>':"")+(j.platform?'<span class="chip">'+esc(j.platform)+'</span>':"")
         +(j.pending?'<span class="chip w">Pending</span>':"")+(f.clash.length?'<span class="chip b">Clash</span>':"")+(f.size?'<span class="chip w">Size</span>':"");
       inner+='<button type="button" draggable="true" class="'+cls+'" data-job="'+esc(j.key)+'" style="left:'+l+'%;width:calc('+w+'% - 3px);top:'+(7+j._row*66)+'px" title="'+esc(j.customer+", "+tm(j.start)+" to "+tm(j.end))+'">'
         +'<span class="t">'+tm(j.start)+" "+esc(j.customer)+'</span><span class="r">'+esc(j.route||j.body.type||"")+'</span><span class="c">'+chips+'</span></button>';
@@ -553,7 +680,7 @@ function listHtml(jobs,flags){
   function card(j,kind){
     var f=flags[j.key],cls="job"+(kind==="un"?" un":kind==="sub"?" sub":"")+(f.clash.length?" clash":"")+(f.tight.length?" tight":"")+(j.pending?" pending":"")+(S.sel===j.key?" sel":"");
     var cr=crewOf(j).map(crewName).join(", ");
-    var chips=(j.size?'<span class="chip">'+esc(j.size)+'</span>':"")+(j.movers?'<span class="chip">'+j.movers+' men</span>':"")+(j.platform?'<span class="chip">'+esc(j.platform)+'</span>':"")
+    var chips=timeChip(j)+(j.size?'<span class="chip">'+esc(j.size)+'</span>':"")+(j.movers?'<span class="chip">'+j.movers+' men</span>':"")+(j.platform?'<span class="chip">'+esc(j.platform)+'</span>':"")
       +(j.pending?'<span class="chip w">Pending</span>':"")+(f.clash.length?'<span class="chip b">Clash</span>':"")+(f.tight.length?'<span class="chip w">Tight</span>':"")+(f.size?'<span class="chip w">Size</span>':"");
     return '<button type="button" class="'+cls+'" data-job="'+esc(j.key)+'"><span class="t">'+tm(j.start)+" to "+tm(j.end)+" · "+esc(j.customer)+'</span><span class="r">'+esc(j.route||j.body.type||"")+'</span>'+(cr?'<span class="r">Crew: '+esc(cr)+'</span>':"")+'<span class="c">'+chips+'</span></button>';
   }
@@ -593,6 +720,7 @@ function renderOverlay(jobs,flags){
     +'<div class="fld"><label for="selTruck">Truck</label><select id="selTruck">'+opts+'</select>'+(S.fleet.trucks.length?"":'<span class="fresh">No trucks set up yet.</span>')+'</div>'
     +(sb?'<div class="fld"><label for="subName">Subcontractor name</label><input type="text" id="subName" list="subList" value="'+esc(sb)+'"><datalist id="subList">'+subNames().map(function(n){return '<option value="'+esc(n)+'">'}).join("")+'</datalist></div>'
         :'<div class="fld"><span class="lbl">Crew</span><div class="crewpick">'+(crewH||'<span class="fresh">No crew set up yet.</span>')+'</div></div>')
+    +extraHtml(j)
     +(j.hint?'<div class="fresh">The calendar entry says "assigned to '+esc(j.hint)+'", so the board treats this job as subcontracted unless you move it.</div>':"")
     +'<dl class="kv">'+row("Booked",b.fixed?"Fixed quote":(b.hours?"Initial "+hrs(b.hours):hrs((j.end-j.start)/60)))+row("Truck asked",[j.size,j.movers?j.movers+" men":"",j.interstate?"interstate":""].filter(Boolean).join(", "))
     +row("Payment",b.pay)+row("Rate after",b.rate)+row("Job",b.type)+row("Pickup",b.pickup)+row("Drop off",b.drop)+(b.phone?'<dt>Phone</dt><dd>'+esc(b.phone)+' <a class="lnk" href="tel:'+esc(b.phone.replace(/[^+\d]/g,""))+'">Call</a></dd>':"")+row("Source",j.platform)+row("Sales rep",j.reps.join(", "))+row("Calendar",j.subject)+'</dl>'
@@ -603,7 +731,7 @@ function renderOverlay(jobs,flags){
 }
 var draft=null;
 function fleetHtml(){
-  if(!draft)draft={trucks:S.fleet.trucks.map(function(t){return {id:t.id,name:t.name,size:t.size}}),crew:S.fleet.crew.map(function(c){return {id:c.id,name:c.name}}),buffer:S.fleet.buffer};
+  if(!draft)draft={trucks:S.fleet.trucks.map(function(t){return {id:t.id,name:t.name,size:t.size}}),crew:S.fleet.crew.map(function(c){return {id:c.id,name:c.name}}),buffer:S.fleet.buffer,weekHours:S.fleet.weekHours||60};
   var tr=draft.trucks.map(function(t,i){return '<div class="rowi"><input type="text" id="tn'+i+'" data-tn="'+i+'" value="'+esc(t.name)+'" placeholder="Name or rego" aria-label="Truck name"><select id="ts'+i+'" data-ts="'+i+'" aria-label="Truck size">'+SIZES.map(function(s){return '<option value="'+s+'"'+(s===(t.size||"")?" selected":"")+'>'+(s||"Size not set")+'</option>'}).join("")+'</select><button class="btn small" type="button" data-rmt="'+i+'">Remove</button></div>'}).join("");
   var cr=draft.crew.map(function(c,i){return '<div class="rowi one"><input type="text" id="cn'+i+'" data-cn="'+i+'" value="'+esc(c.name)+'" placeholder="Name" aria-label="Crew member name"><button class="btn small" type="button" data-rmc="'+i+'">Remove</button></div>'}).join("");
   return '<div class="scrim mid"><div class="modal" role="dialog" aria-label="Trucks and crew">'
@@ -611,6 +739,7 @@ function fleetHtml(){
     +'<div class="fld"><span class="lbl">Trucks</span>'+(tr||'<span class="fresh">No trucks yet.</span>')+'<div><button class="btn small" type="button" data-act="addtruck">Add a truck</button></div></div>'
     +'<div class="fld"><span class="lbl">Drivers and movers</span>'+(cr||'<span class="fresh">No crew yet.</span>')+'<div><button class="btn small" type="button" data-act="addcrew">Add a person</button></div></div>'
     +'<div class="fld"><label for="buf">Minutes to allow between jobs on the same truck</label><input type="number" id="buf" min="0" max="180" step="5" value="'+(+draft.buffer||0)+'" style="max-width:120px"></div>'
+    +'<div class="fld"><label for="wkh">Hours each truck can work in a week (used for the Numbers page)</label><input type="number" id="wkh" min="1" max="168" step="1" value="'+(+draft.weekHours||60)+'" style="max-width:120px"></div>'
     +'<div class="acts"><button class="btn primary" type="button" data-act="fleetsave">Save</button></div></div></div>';
 }
 function readDraft(){
@@ -619,13 +748,14 @@ function readDraft(){
   document.querySelectorAll("[data-ts]").forEach(function(e){draft.trucks[+e.dataset.ts].size=e.value});
   document.querySelectorAll("[data-cn]").forEach(function(e){draft.crew[+e.dataset.cn].name=e.value});
   var b=$("buf");if(b)draft.buffer=Math.max(0,Math.min(180,+b.value||0));
+  var w=$("wkh");if(w)draft.weekHours=Math.max(1,Math.min(168,+w.value||60));
 }
 function redrawFleet(){$("overlay").innerHTML=fleetHtml()}
 function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function saveFleet(){
   readDraft();
   var f={trucks:draft.trucks.filter(function(t){return t.name.trim()}).map(function(t){return {id:t.id,name:t.name.trim(),size:t.size}}),
-         crew:draft.crew.filter(function(c){return c.name.trim()}).map(function(c){return {id:c.id,name:c.name.trim()}}),buffer:draft.buffer};
+         crew:draft.crew.filter(function(c){return c.name.trim()}).map(function(c){return {id:c.id,name:c.name.trim()}}),buffer:draft.buffer,weekHours:draft.weekHours||60};
   S.fleet=f;draft=null;S.modal=null;$("overlay").innerHTML="";render();
   pushFleet(f).catch(function(e){toast("The fleet list wasn't saved. "+errText(e))});
 }
@@ -658,7 +788,7 @@ function toast(m){var o=document.querySelector(".toast");if(o)o.remove();var d=d
 function go(day){S.day=day;S.sel=null;var ws=weekStart(day);render();if(!S.events[ws])fetchWeek(ws,false)}
 function findJob(k){return dayJobs(S.day).filter(function(j){return j.key===k})[0]}
 document.addEventListener("click",function(e){
-  var t=e.target.closest("[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut,#tabDispatch,#tabQuotes");
+  var t=e.target.closest("[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut,#tabDispatch,#tabQuotes,#tabNumbers");
   if(!t)return;
   if(t.dataset.close){if(e.target!==t&&t.classList.contains("scrim"))return;S.sel=null;render();return}
   if(t.dataset.day){go(t.dataset.day);return}
@@ -670,8 +800,9 @@ document.addEventListener("click",function(e){
   if(t.id==="btnFleet"||t.dataset.act==="fleet"){draft=null;S.modal="fleet";S.sel=null;render();return}
   if(t.id==="btnSheet"){copy(sheetText(),"Run sheet");return}
   if(t.id==="btnOut"){signOut();return}
-  if(t.id==="tabDispatch"){setTab(false);return}
-  if(t.id==="tabQuotes"){setTab(true);return}
+  if(t.id==="tabDispatch"){setTab("dispatch");return}
+  if(t.id==="tabQuotes"){setTab("quotes");return}
+  if(t.id==="tabNumbers"){setTab("numbers");return}
   if(t.dataset.act==="signin"){signIn();return}
   if(t.dataset.rmt){readDraft();draft.trucks.splice(+t.dataset.rmt,1);redrawFleet();return}
   if(t.dataset.rmc){readDraft();draft.crew.splice(+t.dataset.rmc,1);redrawFleet();return}
@@ -681,6 +812,10 @@ document.addEventListener("click",function(e){
   if(a==="fleetcancel"){draft=null;S.modal=null;$("overlay").innerHTML="";render();return}
   if(a==="fleetsave"){saveFleet();return}
   if(a==="textclose"){S.modal=null;$("overlay").innerHTML="";render();return}
+  if(a==="tstart"||a==="tfinish"||a==="tclear"){var tj=findJob(S.sel);if(tj)saveAssign(tj,a==="tstart"?{t0:nowRel(tj.day),t1:null}:a==="tfinish"?{t1:Math.max(nowRel(tj.day),((S.assign[tj.key]||{}).t0||0)+1)}:{t0:null,t1:null});return}
+  if(a==="nweek"||a==="nmonth"){S.nMode=a==="nmonth"?"month":"week";nTried={};render();return}
+  if(a==="nprev"||a==="nnext"){var sg=a==="nnext"?1:-1;if(S.nMode==="month"){var yy=+S.day.slice(0,4),mm=+S.day.slice(5,7)-1+sg;S.day=new Date(Date.UTC(yy,mm,1)).toISOString().slice(0,10)}else S.day=addDays(S.day,7*sg);S.sel=null;nTried={};render();return}
+  if(a==="nrefresh"){nTried={};S.err=null;periodWeeks(periodOf()).forEach(function(ws){if(!S.busy[ws])fetchWeek(ws,true,true)});render();return}
   if(a==="copyjob"){var j=findJob(S.sel);if(j){var c2=crewOf(j).map(crewName),tr=truckOf(j);copy("📅 "+dLong(j.day)+"\n"+(tr?"🚚 "+truckName(tr)+"\n":"")+(subOf(j)?"🤝 Subcontractor: "+subOf(j)+"\n":"")+(c2.length?"Crew: "+c2.join(", ")+"\n":"")+jobText(j),"Job sheet")}return}
 });
 document.addEventListener("change",function(e){
@@ -691,6 +826,11 @@ document.addEventListener("change",function(e){
     if(t.value==="__sub")saveAssign(j,{truck:"",sub:subOf(j)||j.hint||"Subcontractor",nosub:false,crew:[]});
     else if(t.value==="")saveAssign(j,{truck:"",sub:"",nosub:!!j.hint});
     else saveAssign(j,{truck:t.value,sub:"",nosub:false});return}
+  if(t.id==="jobVal"||t.id==="subCost"){var mj=findJob(S.sel);if(mj){var pv={};pv[t.id==="jobVal"?"val":"cost"]=t.value===""?null:Math.max(0,+t.value||0);saveAssign(mj,pv)}return}
+  if(t.id==="tStart"||t.id==="tEnd"){var kj=findJob(S.sel);if(!kj)return;var ka=S.assign[kj.key]||{},tv=t.value?(+t.value.slice(0,2))*60+(+t.value.slice(3,5)):null;
+    if(t.id==="tStart")saveAssign(kj,{t0:tv});
+    else{if(tv!=null&&ka.t0!=null){tv+=Math.floor(ka.t0/1440)*1440;if(tv<=ka.t0)tv+=1440}saveAssign(kj,{t1:tv})}
+    return}
   if(t.id==="subName"){var j3=findJob(S.sel);if(j3)saveAssign(j3,{truck:"",sub:tc(t.value.trim())||"Subcontractor",nosub:false});return}
   if(t.dataset&&t.dataset.crew){var j2=findJob(S.sel);if(!j2)return;var cur=crewOf(j2).slice(),id=t.dataset.crew,ix=cur.indexOf(id);if(t.checked&&ix<0)cur.push(id);if(!t.checked&&ix>=0)cur.splice(ix,1);saveAssign(j2,{crew:cur});return}
 });
@@ -707,16 +847,29 @@ document.addEventListener("dragend",function(){dragKey=null;document.querySelect
 
 if(NARROW.addEventListener)NARROW.addEventListener("change",function(){render()});
 /* ---------- sections: Dispatch and Quotes share one sign-in ---------- */
-function setTab(q){
-  document.body.classList.toggle("quotes",!!q);
-  if(q){$("tabQuotes").setAttribute("aria-current","page");$("tabDispatch").removeAttribute("aria-current")}
-  else{$("tabDispatch").setAttribute("aria-current","page");$("tabQuotes").removeAttribute("aria-current")}
-  $("appTitle").textContent=q?"EAM Quote Builder":"EAM Dispatch Board";
-  if(q&&S.auth==="in"){var f=$("qframe");if(!f.getAttribute("src"))f.setAttribute("src","quotes.html")}
-  try{if((location.hash==="#quotes")!==!!q)history.replaceState(null,"",q?"#quotes":location.pathname+location.search)}catch(e){}
-  if(!q&&S.auth==="in")fetchWeek(weekStart(S.day),true,true);
+var TAB="dispatch";
+function setTab(m){
+  if(m!=="quotes"&&m!=="numbers")m="dispatch";
+  TAB=m;document.body.classList.toggle("quotes",m==="quotes");document.body.classList.toggle("numbers",m==="numbers");
+  [["tabDispatch","dispatch"],["tabQuotes","quotes"],["tabNumbers","numbers"]].forEach(function(x){if(x[1]===m)$(x[0]).setAttribute("aria-current","page");else $(x[0]).removeAttribute("aria-current")});
+  $("appTitle").textContent=m==="quotes"?"EAM Quote Builder":m==="numbers"?"EAM Numbers":"EAM Dispatch Board";
+  if(m==="quotes"&&S.auth==="in"){var f=$("qframe");if(!f.getAttribute("src"))f.setAttribute("src","quotes.html")}
+  try{var want=m==="dispatch"?"":"#"+m;if(location.hash!==want)history.replaceState(null,"",want||location.pathname+location.search)}catch(e){}
+  S.sel=null;nTried={};
+  if(m==="dispatch"&&S.auth==="in")fetchWeek(weekStart(S.day),true,true);
+  render();
 }
-window.EAM={gfetch:gfetch,BASE:BASE,TZ:TZ,who:"",refreshBoard:function(){var ws=weekStart(S.day);delete S.busy[ws];fetchWeek(ws,true,true)}};
+window.EAM={gfetch:gfetch,BASE:BASE,TZ:TZ,who:"",refreshBoard:function(){var ws=weekStart(S.day);delete S.busy[ws];fetchWeek(ws,true,true)},
+  /* which of our trucks are free for a window on a day; used by the Quotes section */
+  availability:function(day,start,end){
+    var ws=weekStart(day),p=S.events[ws]?Promise.resolve():fetchWeek(ws,false,true);
+    return Promise.resolve(p).then(function(){
+      if(!S.events[ws]){var e=new Error("loading");e.code="loading";throw e}
+      var jobs=dayJobs(day),q={start:start,end:end},buf=S.fleet.buffer||0;
+      return {trucks:S.fleet.trucks.map(function(t){var hit=jobs.filter(function(j){return truckOf(j)===t.id&&overlap(j,q,buf)})[0];return {name:t.name,size:t.size||"",free:!hit,busy:hit?tm(hit.start)+" to "+tm(hit.end)+" "+hit.customer:""}}),
+        waiting:jobs.filter(function(j){return needs(j)&&overlap(j,q,buf)}).length,jobs:jobs.length};
+    });
+  }};
 /* ---------- start ---------- */
 S.day=melParts(new Date()).date;
 render();

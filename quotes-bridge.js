@@ -215,6 +215,47 @@
     }
   }
 
+  /* ---- truck availability beside the move date and start time ---- */
+  var availKey = "", availSeq = 0;
+  function startMin(t) {
+    var s = String(t || "").toLowerCase(), m = s.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/); if (!m) return 480;
+    var hr = +m[1], mn = +(m[2] || 0), ap = m[3] || (s.match(/(am|pm)/) || [])[1] || "am";
+    if (hr === 12) return 720 + mn; if (ap === "pm") hr += 12; return hr * 60 + mn;
+  }
+  function availBox() {
+    var el = document.getElementById("eamAvail"); if (el) return el;
+    var t = document.getElementById("m-time"), lab = t && t.closest("label"); if (!lab) return null;
+    el = document.createElement("div"); el.id = "eamAvail"; el.setAttribute("role", "status");
+    el.style.cssText = "grid-column:1/-1;border-radius:9px;padding:9px 12px;font-size:14px;font-weight:600;line-height:1.4;display:none";
+    lab.insertAdjacentElement("afterend", el); return el;
+  }
+  function paint(el, kind, text) {
+    var c = kind === "ok" ? ["#E3F5EA", "#1B7F4C"] : kind === "warn" ? ["#FFF4DD", "#8A4B00"] : ["#EEF2F8", "#5E6673"];
+    el.style.display = "block"; el.style.background = c[0]; el.style.color = c[1]; el.textContent = text;
+  }
+  function checkAvail() {
+    var d = document.getElementById("m-date"), t = document.getElementById("m-time"), h = document.getElementById("p-hours"), f = document.getElementById("m-flex");
+    if (!d || !t) return;
+    var el = availBox(); if (!el) return;
+    var key = [d.value, t.value, h ? h.value : "", f && f.checked ? 1 : 0].join("|");
+    if (key === availKey) return; availKey = key;
+    if (!d.value || (f && f.checked) || !E.availability) { el.style.display = "none"; return; }
+    var st = startMin(t.value), hours = parseFloat(h && h.value) > 0 ? parseFloat(h.value) : 2, seq = ++availSeq;
+    paint(el, "", "Checking the trucks for that time…");
+    E.availability(d.value, st, st + Math.round(hours * 60)).then(function (r) {
+      if (seq !== availSeq) return;
+      var free = r.trucks.filter(function (x) { return x.free; }), busy = r.trucks.filter(function (x) { return !x.free; });
+      var wait = r.waiting ? " " + r.waiting + " booked job" + (r.waiting === 1 ? "" : "s") + " in that window still need" + (r.waiting === 1 ? "s" : "") + " a truck." : "";
+      var nm = function (x) { return x.name + (x.size ? " (" + x.size + ")" : ""); };
+      if (!r.trucks.length) paint(el, "", "No trucks are set up on the Dispatch page yet, so availability can't be checked.");
+      else if (!free.length) paint(el, "warn", "No truck of ours is free then. " + busy.map(function (x) { return x.name + " is on " + x.busy; }).join(". ") + ". This job would need a subcontractor or another time." + wait);
+      else if (free.length <= r.waiting) paint(el, "warn", "Free then: " + free.map(nm).join(", ") + ", but" + wait.replace(/^ /, " ") + " Check Dispatch before promising this time.");
+      else paint(el, "ok", "Free then: " + free.map(nm).join(", ") + "." + (busy.length ? " " + busy.map(function (x) { return x.name + " is on " + x.busy; }).join(". ") + "." : "") + wait);
+    }, function () { if (seq !== availSeq) return; availKey = ""; paint(el, "", "Checking the trucks for that time…"); });
+  }
+  setInterval(checkAvail, 1500);
+  document.addEventListener("change", function () { setTimeout(checkAvail, 50); });
+
   loadAll();
   setInterval(poll, 120000);
   document.addEventListener("visibilitychange", function () { if (!document.hidden) poll(); });
