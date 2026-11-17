@@ -40,6 +40,9 @@
   color-scheme:dark;
 }
 html{--sat:env(safe-area-inset-top,0px)}
+:root{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--spark:#9aa6b8;--trk:#cde2fb;--q1:#cde2fb;--q2:#9ec5f4;--q3:#6da7ec;--q4:#3987e5;--q5:#256abf;--q6:#104281}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--s1:#3987e5;--s2:#d95926;--s3:#199e70;--spark:#5d6b80;--trk:#184f95;--q1:#123a6e;--q2:#184f95;--q3:#256abf;--q4:#3987e5;--q5:#6da7ec;--q6:#9ec5f4}}
+:root[data-theme="dark"]{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--spark:#5d6b80;--trk:#184f95;--q1:#123a6e;--q2:#184f95;--q3:#256abf;--q4:#3987e5;--q5:#6da7ec;--q6:#9ec5f4}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.4;font-variant-numeric:tabular-nums}
@@ -68,9 +71,55 @@ body.numbers .daybar,body.numbers .week,body.numbers .stats,body.numbers .board,
 .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .seg button{border:0;background:var(--panel);padding:6px 12px;font-weight:600}
 .seg button[aria-pressed="true"]{background:var(--royal);color:var(--accent-ink)}
+#numbers .nbar .sp{flex:1}
+#numbers .note{margin:0;font-size:12px;color:var(--muted);max-width:90ch}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(178px,1fr));gap:8px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px 8px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi.hero{grid-column:span 2}
+.kpi .l{font-size:12px;font-weight:700;color:var(--muted)}
+.kpi .v{font-family:var(--body);font-weight:800;font-size:26px;line-height:1.15;font-variant-numeric:normal;overflow-wrap:anywhere}
+.kpi.hero .v{font-size:48px}
+.kpi .d{font-size:12px;font-weight:700}
+.kpi .d.g{color:var(--ok)} .kpi .d.b{color:var(--bad)} .kpi .d.n{color:var(--muted)}
+.kpi .nt{font-size:12px;color:var(--muted)}
+.kpi .spark{width:100%;height:26px;margin-top:4px;display:block}
+.npanel.wide{grid-column:1/-1}
+.npanel .sub{margin:-4px 0 8px;font-size:12.5px;color:var(--muted)}
+.npanel details{margin-top:8px;font-size:13px} .npanel summary{cursor:pointer;color:var(--royal);font-weight:700}
+.tw{overflow-x:auto;margin-top:6px}
+.npanel table td.r,.npanel table th.r{font-variant-numeric:tabular-nums}
+.miss{color:var(--warn);font-size:11px;font-weight:700}
+.chart{width:100%;min-height:40px}
+.chart svg{display:block;overflow:visible}
+.chart .ax{font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.chart .ax.cur{fill:var(--ink);font-weight:700}
+.chart .lb{font-size:12.5px;fill:var(--ink)} .chart .vl{font-size:12px;fill:var(--muted);font-variant-numeric:tabular-nums}
+.chart .gl{stroke:var(--grid);stroke-width:1} .chart .bl{stroke:var(--line);stroke-width:1}
+.chart .hit{fill:transparent;cursor:default} .chart .hit:hover{fill:var(--ink);fill-opacity:.05}
+.chart .cell:hover{stroke:var(--ink);stroke-width:1.5}
+.lgd{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--muted);margin:0 0 6px}
+.lgd i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.scale{display:flex;align-items:center;gap:3px;font-size:11px;color:var(--muted);margin-top:6px} .scale i{width:18px;height:10px;border-radius:2px;display:inline-block} .scale span{margin:0 4px}
+.mrow{display:flex;flex-direction:column;gap:5px;margin:0 0 10px}
+.mt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:13px} .mt span{color:var(--muted)}
+.meter{height:8px;border-radius:4px;background:var(--trk);overflow:hidden} .meter i{display:block;height:100%;border-radius:4px}
+.ins{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.ins li{display:flex;gap:10px;align-items:flex-start;font-size:14px;line-height:1.45}
+.ins .ic{flex:none;width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;background:var(--grid);color:var(--muted)}
+.ins li.g .ic{background:var(--ok-bg);color:var(--ok)} .ins li.b .ic{background:var(--warn-bg);color:var(--warn)}
+.dq{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.dq li{display:flex;gap:10px;align-items:baseline;font-size:13.5px} .dq b{min-width:64px;font-size:16px} .dq li.w b{color:var(--warn)}
+#tip{position:fixed;z-index:60;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12.5px;line-height:1.45;padding:8px 10px;border-radius:8px;white-space:pre-line;max-width:280px;box-shadow:0 6px 18px rgba(0,0,0,.22);display:none}
+.lockbox{max-width:440px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px;display:flex;flex-direction:column;gap:10px}
+.lockbox h2{font-family:var(--display);font-size:19px;margin:0} .lockbox p{margin:0;color:var(--muted)}
+.lockbox form,.lockform{display:flex;flex-direction:column;gap:8px}
+.lockbox input,.lockform input{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:10px;width:100%;font-size:16px}
+.lockbox .lbl,.lockform .lbl{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.lmsg{margin:0;min-height:1.2em;font-weight:700;color:var(--bad)}
+@media (max-width:760px){.kpi.hero{grid-column:1/-1}.kpi.hero .v{font-size:40px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi .v{font-size:21px}}
 .ngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
 .ngrid .stat small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
-.npanels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(430px,100%),1fr));gap:12px;align-items:start}
+.npanels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr));gap:12px;align-items:start}
 .npanel td:first-child{white-space:nowrap}
 .npanel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;overflow-x:auto}
 .npanel h3{margin:0 0 8px;font-family:var(--display);font-size:15px}
@@ -402,18 +451,8 @@ function fetchWeek(ws,force,quiet){
   function page(u,n){return gfetch(u).then(function(d){out=out.concat((d&&d.value)||[]);if(d&&d["@odata.nextLink"]&&n<10)return page(d["@odata.nextLink"],n+1)})}
   function done(){delete S.busy[ws];S.loading=Object.keys(S.busy).length>0}
   return page(url,0).then(function(){
-    var seen={},jobs=[],a={};for(var k in S.assign)a[k]=S.assign[k];
-    out.forEach(function(e){
-      if(seen[e.id]||e.isCancelled||e.isAllDay)return;seen[e.id]=1;
-      e.summary=(e.body&&e.body.content)||e.bodyPreview||"";
-      var j;try{j=parseEvent(e)}catch(x){return}
-      jobs.push(j);
-      if(pending[j.key])return;
-      var v=readProp(e);
-      if(v&&(v.truck||v.sub||v.nosub||(v.crew&&v.crew.length)||v.t0!=null||v.t1!=null||v.cost!=null||v.val!=null))a[j.key]={truck:v.truck||"",crew:Array.isArray(v.crew)?v.crew:[],sub:v.sub||"",nosub:!!v.nosub,day:j.day,t0:numOrNull(v.t0),t1:numOrNull(v.t1),cost:numOrNull(v.cost),val:numOrNull(v.val)};
-      else delete a[j.key];
-    });
-    S.assign=a;S.events[ws]=jobs;S.fetched[ws]=Date.now();S.err=null;done();render();
+    var jobs=absorbJobs(out);
+    S.events[ws]=jobs;S.fetched[ws]=Date.now();S.err=null;done();render();
   },function(e){done();S.err=errText(e);render()});
 }
 function loadFleet(){
@@ -535,60 +574,407 @@ function extraHtml(j){
   }
   var est=estValue(j);
   h+='<div class="fld"><label for="jobVal">Job price ($)</label><input type="number" id="jobVal" min="0" step="1" inputmode="decimal" value="'+(a.val!=null?a.val:"")+'" placeholder="'+(estInfo(j).how==="assumed"?"Estimated "+money(est)+": "+hrs(bookedH(j))+" at "+money(defRate())+"/hr, no price in the booking":"Estimated "+money(est)+" from the calendar note")+'"></div>';
-  if(sb){var v=valueOf(j),c=costOf(j);
+  if(sb&&!LOCK.unlocked)h+='<div class="fld"><span class="lbl">Paid to '+esc(sb)+'</span><span class="fresh">Partners only. Unlock the Numbers tab to see or enter what this job costs.</span></div>';
+  else if(sb){var v=valueOf(j),c=costOf(j);
     h+='<div class="fld"><label for="subCost">Paid to '+esc(sb)+' ($)</label><input type="number" id="subCost" min="0" step="1" inputmode="decimal" value="'+(c!=null?c:"")+'" placeholder="What this job costs you">'+(v!=null&&c!=null?'<span class="fresh">Margin on this job: '+money(v-c)+(v>0?" ("+Math.round((v-c)/v*100)+"%)":"")+'</span>':"")+'</div>'}
   return h;
 }
 
-/* ---------- numbers ---------- */
-var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"],nTried={};
-function periodOf(){
-  if(S.nMode==="month"){var y=+S.day.slice(0,4),m=+S.day.slice(5,7);return {from:S.day.slice(0,8)+"01",to:new Date(Date.UTC(y,m,0)).toISOString().slice(0,10),title:MONTHS[m-1]+" "+y,days:new Date(Date.UTC(y,m,0)).getUTCDate()}}
-  var ws=weekStart(S.day);return {from:ws,to:addDays(ws,6),title:"Week of "+(+ws.slice(8))+" "+MN[+ws.slice(5,7)-1],days:7};
+/* ---------- partner lock (Numbers and subcontractor costs) ---------- */
+var P_LOCK="String "+NS+" Name eamPartnerLock";
+var LOCK={state:"unknown",rec:null,unlocked:false,last:0,fails:0,waitUntil:0,busy:false,hiddenAt:0};
+var gateKey="";
+function b64u8(u){var s="";for(var i=0;i<u.length;i++)s+=String.fromCharCode(u[i]);return btoa(s)}
+function u8b64(s){var b=atob(s),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u}
+function derive(pw,salt,iter){
+  if(!window.crypto||!crypto.subtle||!window.TextEncoder)return Promise.reject(new Error("nocrypto"));
+  return crypto.subtle.importKey("raw",new TextEncoder().encode(pw),"PBKDF2",false,["deriveBits"])
+    .then(function(k){return crypto.subtle.deriveBits({name:"PBKDF2",salt:salt,iterations:iter,hash:"SHA-256"},k,256)})
+    .then(function(b){return b64u8(new Uint8Array(b))});
 }
-function periodWeeks(p){var w=[],d=weekStart(p.from);while(d<=p.to){w.push(d);d=addDays(d,7)}return w}
-function periodJobs(p){
-  var out=[],missing=false;
-  periodWeeks(p).forEach(function(ws){
-    if(!S.events[ws]){missing=true;if(S.auth==="in"&&!S.busy[ws]&&!nTried[ws]){nTried[ws]=1;fetchWeek(ws,false,true)}return}
-    for(var i=0;i<7;i++){var d=addDays(ws,i);if(d>=p.from&&d<=p.to)out=out.concat(dayJobs(d))}
+function calIdP(){return calId?Promise.resolve(calId):gfetch(BASE+"/calendar?$select=id").then(function(c){calId=c.id;return calId})}
+function readLock(){return calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id)+"?$select=id&$expand="+expandQ(P_LOCK))}).then(function(c){var d=readProp(c);return d&&d.hash&&d.salt?d:null})}
+function loadLock(){
+  if(LOCK.state==="loading")return;
+  LOCK.state="loading";
+  readLock().then(function(r){LOCK.rec=r;LOCK.state=r?"set":"none";render()},function(e){LOCK.state="error";LOCK.err=errText(e);render()});
+}
+function writeLock(pw){
+  var salt=crypto.getRandomValues(new Uint8Array(16)),iter=210000;
+  return derive(pw,salt,iter).then(function(h){
+    var rec={v:1,salt:b64u8(salt),iter:iter,hash:h,at:new Date().toISOString()};
+    return calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id),{method:"PATCH",body:{singleValueExtendedProperties:[{id:P_LOCK,value:JSON.stringify(rec)}]}})})
+      .then(function(){LOCK.rec=rec;LOCK.state="set"});
   });
-  return {jobs:out,missing:missing};
+}
+function testLock(pw){var r=LOCK.rec;return derive(pw,u8b64(r.salt),r.iter||210000).then(function(h){return h===r.hash})}
+function lockNow(){LOCK.unlocked=false;LOCK.state="unknown";gateKey="";if(S.modal==="lockchange"){S.modal=null;$("overlay").innerHTML=""}render()}
+function lockSay(m){var el=document.getElementById("lockMsg");if(el)el.textContent=m}
+["pointerdown","keydown"].forEach(function(t){document.addEventListener(t,function(){if(LOCK.unlocked)LOCK.last=Date.now()},true)});
+setInterval(function(){if(LOCK.unlocked&&Date.now()-LOCK.last>15*60000)lockNow()},30000);
+document.addEventListener("visibilitychange",function(){if(document.hidden)LOCK.hiddenAt=Date.now();else if(LOCK.unlocked&&LOCK.hiddenAt&&Date.now()-LOCK.hiddenAt>5*60000)lockNow()});
+function gateHtml(){
+  var st=LOCK.state,b='<div class="lockbox"><h2>Numbers is for partners only</h2>';
+  if(st==="set")return b+'<p>Enter the partner password to see the numbers and subcontractor costs. It locks again after 15 minutes without use, or when the app has been in the background for 5 minutes.</p><form id="lockOpen" autocomplete="off"><label class="lbl" for="pw">Partner password</label><input type="password" id="pw" autocomplete="current-password"><div class="acts"><button class="btn primary" type="submit">Unlock</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
+  if(st==="none")return b+'<p>No partner password has been set yet. Set one now. Only the partners should know it: anyone with it can see Numbers and what is paid to subcontractors.</p><form id="lockSet" autocomplete="off"><label class="lbl" for="pw1">New partner password (at least 8 characters)</label><input type="password" id="pw1" autocomplete="new-password"><label class="lbl" for="pw2">Type it again</label><input type="password" id="pw2" autocomplete="new-password"><div class="acts"><button class="btn primary" type="submit">Set password and open Numbers</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
+  if(st==="error")return b+'<p>'+esc(LOCK.err||"The lock couldn’t be checked.")+'</p><div class="acts"><button class="btn" type="button" data-act="lockretry">Try again</button></div></div>';
+  return b+'<p>Checking…</p></div>';
+}
+function changeHtml(){
+  return '<div class="scrim mid"><div class="modal" role="dialog" aria-label="Change partner password"><div class="hd"><h3>Change partner password</h3><button class="btn small" type="button" data-act="lockcancel">Cancel</button></div>'
+    +'<form id="lockChange" autocomplete="off" class="lockform"><label class="lbl" for="pwc">Current password</label><input type="password" id="pwc" autocomplete="current-password"><label class="lbl" for="pwn1">New password (at least 8 characters)</label><input type="password" id="pwn1" autocomplete="new-password"><label class="lbl" for="pwn2">Type the new password again</label><input type="password" id="pwn2" autocomplete="new-password"><div class="acts"><button class="btn primary" type="submit">Change password</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div></div>';
+}
+document.addEventListener("submit",function(e){
+  var f=e.target;if(!f||["lockSet","lockOpen","lockChange"].indexOf(f.id)<0)return;
+  e.preventDefault();if(LOCK.busy)return;
+  var v=function(id){var x=f.querySelector("#"+id);return x?x.value:""},open=function(){LOCK.unlocked=true;LOCK.fails=0;LOCK.last=Date.now();gateKey="";render()};
+  var fail=function(m){LOCK.busy=false;lockSay(m)};
+  if(f.id==="lockSet"){
+    var a=v("pw1"),b=v("pw2");
+    if(a.length<8)return lockSay("Use at least 8 characters.");
+    if(a!==b)return lockSay("The two passwords don’t match.");
+    LOCK.busy=true;lockSay("Saving…");
+    readLock().then(function(r){if(r){LOCK.rec=r;LOCK.state="set";LOCK.busy=false;gateKey="";render();return}
+      return writeLock(a).then(function(){LOCK.busy=false;open()})}).catch(function(e){fail(e&&e.message==="nocrypto"?"This browser can’t set a password. Use Safari or Chrome.":"Couldn’t save the password. "+errText(e))});
+  }else if(f.id==="lockOpen"){
+    if(Date.now()<LOCK.waitUntil)return lockSay("Too many tries. Wait a minute, then try again.");
+    var p=v("pw");if(!p)return;
+    LOCK.busy=true;lockSay("Checking…");
+    readLock().then(function(r){if(r)LOCK.rec=r;return testLock(p)}).then(function(ok){
+      LOCK.busy=false;
+      if(ok)return open();
+      LOCK.fails++;if(LOCK.fails>=5){LOCK.fails=0;LOCK.waitUntil=Date.now()+60000;lockSay("That password is wrong. Too many tries, so wait a minute.")}else lockSay("That password is wrong.");
+      var i=f.querySelector("#pw");if(i){i.value="";i.focus()}
+    },function(e){fail(e&&e.message==="nocrypto"?"This browser can’t check the password. Use Safari or Chrome.":"Couldn’t check the password. "+errText(e))});
+  }else{
+    var c=v("pwc"),n1=v("pwn1"),n2=v("pwn2");
+    if(n1.length<8)return lockSay("Use at least 8 characters for the new password.");
+    if(n1!==n2)return lockSay("The new passwords don’t match.");
+    LOCK.busy=true;lockSay("Saving…");
+    testLock(c).then(function(ok){if(!ok)return fail("The current password is wrong.");
+      return writeLock(n1).then(function(){LOCK.busy=false;S.modal=null;$("overlay").innerHTML="";toast("Partner password changed.")})}).catch(function(e){fail("Couldn’t change the password. "+errText(e))});
+  }
+});
+
+/* ---------- Numbers: data ---------- */
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"],DAYL=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],nTried={},NCH={};
+function absorbJobs(out){
+  var seen={},jobs=[],a={};for(var k in S.assign)a[k]=S.assign[k];
+  out.forEach(function(e){
+    if(seen[e.id]||e.isCancelled||e.isAllDay)return;seen[e.id]=1;
+    e.summary=(e.body&&e.body.content)||e.bodyPreview||"";
+    var j;try{j=parseEvent(e)}catch(x){return}
+    jobs.push(j);
+    if(pending[j.key])return;
+    var v=readProp(e);
+    if(v&&(v.truck||v.sub||v.nosub||(v.crew&&v.crew.length)||v.t0!=null||v.t1!=null||v.cost!=null||v.val!=null))a[j.key]={truck:v.truck||"",crew:Array.isArray(v.crew)?v.crew:[],sub:v.sub||"",nosub:!!v.nosub,day:j.day,t0:numOrNull(v.t0),t1:numOrNull(v.t1),cost:numOrNull(v.cost),val:numOrNull(v.val)};
+    else delete a[j.key];
+  });
+  S.assign=a;return jobs;
+}
+function fetchSpan(ws0,n){
+  if(S.auth!=="in")return Promise.resolve();
+  var wk=[];for(var i=0;i<n;i++)wk.push(addDays(ws0,7*i));
+  wk.forEach(function(w){S.busy[w]=1});S.loading=true;
+  var out=[],url=BASE+"/calendarView?startDateTime="+ws0+"T00:00:00&endDateTime="+addDays(ws0,7*n)+"T00:00:00&$top=100&$orderby=start/dateTime&$select=id,subject,body,bodyPreview,start,end,isAllDay,isCancelled,webLink&$expand="+expandQ(P_JOB);
+  function page(u,k){return gfetch(u).then(function(d){out=out.concat((d&&d.value)||[]);if(d&&d["@odata.nextLink"]&&k<80)return page(d["@odata.nextLink"],k+1)})}
+  function done(){wk.forEach(function(w){delete S.busy[w]});S.loading=Object.keys(S.busy).length>0}
+  return page(url,0).then(function(){
+    var jobs=absorbJobs(out),by={},now=Date.now();wk.forEach(function(w){by[w]=[]});
+    jobs.forEach(function(j){var w=weekStart(j.day);if(by[w])by[w].push(j)});
+    wk.forEach(function(w){S.events[w]=by[w];S.fetched[w]=now});S.nErr="";done();render();
+  },function(e){done();S.nErr=errText(e);render()});
+}
+function ensureRange(from,to){
+  var w=weekStart(from),last=weekStart(to),run=[],runs=[];
+  while(w<=last){if(!S.events[w]&&!S.busy[w]){run.push(w);if(run.length===13){runs.push(run);run=[]}}else if(run.length){runs.push(run);run=[]}w=addDays(w,7)}
+  if(run.length)runs.push(run);
+  runs.forEach(function(r){var k=r[0]+"+"+r.length;if(nTried[k])return;nTried[k]=1;fetchSpan(r[0],r.length)});
+}
+function haveRange(from,to){for(var w=weekStart(from);w<=weekStart(to);w=addDays(w,7))if(!S.events[w])return false;return true}
+function unpackQ(ev){
+  var t=(ev&&ev.body&&ev.body.content)||"",i=t.indexOf("-----EAM-DATA-BEGIN-----"),j=t.indexOf("-----EAM-DATA-END-----");
+  if(i<0||j<i)return null;
+  try{return JSON.parse(decodeURIComponent(escape(atob(t.slice(i+24,j).replace(/[^A-Za-z0-9+/=]/g,"")))))}catch(x){return null}
+}
+function srcName(s){s=String(s||"");var hit="",at=-1;PLAT.forEach(function(p){var m=s.match(p[1]);if(m&&(at<0||m.index<at)){hit=p[0];at=m.index}});return hit||tc(s)||"Not stated"}
+function loadQuotes(){
+  if(S.qBusy)return;S.qBusy=1;
+  gfetch(BASE+"/calendars?$select=id,name&$top=100").then(function(r){
+    var c=((r&&r.value)||[]).filter(function(x){return x.name==="EAM Quotes"})[0];if(!c){S.quotes=[];return}
+    var out=[];
+    function page(u,k){return gfetch(u).then(function(d){((d&&d.value)||[]).forEach(function(ev){var p=unpackQ(ev);if(p&&p.kind==="quote"&&p.data)out.push(p.data)});if(d&&d["@odata.nextLink"]&&k<40)return page(d["@odata.nextLink"],k+1)})}
+    return page(BASE+"/calendars/"+encodeURIComponent(c.id)+"/events?$top=50&$select=id,body",0).then(function(){
+      var by={};out.forEach(function(q){if(q.no&&(!by[q.no]||String(q.updatedAt||"")>String(by[q.no].updatedAt||"")))by[q.no]=q});
+      S.quotes=Object.keys(by).map(function(k){var q=by[k],d=q.createdAt?new Date(q.createdAt):null;
+        return {day:d&&!isNaN(d)?melParts(d).date:"",status:q.status||"Sent",total:+q.total||0,rep:tc(q.rep||"")||"Not stated",src:srcName(q.data&&q.data.customer&&q.data.customer.source)}});
+    });
+  }).catch(function(){S.quotes=S.quotes||[];S.qErr=true}).then(function(){S.qBusy=0;render()});
+}
+
+/* ---------- Numbers: maths ---------- */
+function pBounds(mode,anchor,off){
+  if(mode==="month"){var y=+anchor.slice(0,4),m=+anchor.slice(5,7)-1+off,d0=new Date(Date.UTC(y,m,1)),d1=new Date(Date.UTC(y,m+1,0));
+    return {from:d0.toISOString().slice(0,10),to:d1.toISOString().slice(0,10),title:MONTHS[d0.getUTCMonth()]+" "+d0.getUTCFullYear(),short:MN[d0.getUTCMonth()]+(d0.getUTCMonth()===0?" "+String(d0.getUTCFullYear()).slice(2):"")}}
+  if(mode==="quarter"){var y2=+anchor.slice(0,4),q=Math.floor((+anchor.slice(5,7)-1)/3)+off,a=new Date(Date.UTC(y2,q*3,1)),b=new Date(Date.UTC(y2,q*3+3,0)),qq=Math.floor(a.getUTCMonth()/3)+1;
+    return {from:a.toISOString().slice(0,10),to:b.toISOString().slice(0,10),title:"Q"+qq+" "+a.getUTCFullYear()+" ("+MN[a.getUTCMonth()]+" to "+MN[b.getUTCMonth()]+")",short:"Q"+qq+" "+String(a.getUTCFullYear()).slice(2)}}
+  var ws=addDays(weekStart(anchor),7*off);
+  return {from:ws,to:addDays(ws,6),title:"Week of "+(+ws.slice(8))+" "+MN[+ws.slice(5,7)-1]+" "+ws.slice(0,4),short:(+ws.slice(8))+" "+MN[+ws.slice(5,7)-1]};
+}
+function jobsIn(from,to){var out=[],d=from;while(d<=to){out=out.concat(dayJobs(d));d=addDays(d,1)}return out}
+function sumF(a,f){return a.reduce(function(t,x){var v=f(x);return t+(v||0)},0)}
+function durH(j){return (j.end-j.start)/60}
+function workH(j){return actualH(j)||durH(j)}
+function M(from,to){
+  var J=jobsIn(from,to),days=dayDiff(from,to)+1,tr=S.fleet.trucks,wh=S.fleet.weekHours||60,capT=wh*days/7;
+  var own=J.filter(function(j){return truckOf(j)}),sub=J.filter(function(j){return subOf(j)}),un=J.filter(needs);
+  var rev=sumF(J,valueOf),hours=sumF(J,bookedH),ownH=sumF(own,workH),cap=tr.length*capT;
+  var perT={};tr.forEach(function(t){var l=own.filter(function(j){return truckOf(j)===t.id});perT[t.id]={name:t.name,jobs:l.length,h:sumF(l,workH),util:capT?sumF(l,workH)/capT:null}});
+  var subC=sub.filter(function(j){return costOf(j)!=null}),both=subC,margin=sumF(both,function(j){return valueOf(j)-costOf(j)}),bothRev=sumF(both,valueOf);
+  var timed=J.filter(function(j){return actualH(j)!=null}),over=timed.filter(function(j){return overMin(j)>0});
+  var assumedL=J.filter(assumed);
+  return {J:J,jobs:J.length,rev:rev,hours:hours,avg:J.length?rev/J.length:null,rph:hours?rev/hours:null,own:own,sub:sub,un:un,ownH:ownH,cap:cap,util:cap?ownH/cap:null,perT:perT,
+    subShare:J.length?sub.length/J.length:null,subRev:sumF(sub,valueOf),subPaid:sumF(subC,costOf),subMissing:sub.length-subC.length,margin:both.length?margin:null,marginPct:bothRev?margin/bothRev:null,
+    timed:timed,over:over,overMin:sumF(over,overMin),extra:sumF(timed,function(j){var x=extraCharge(j);return x?x.amt:0}),assumed:assumedL,assumedRev:sumF(assumedL,valueOf)};
+}
+function quoteStats(from,to,filt){
+  var L=(S.quotes||[]).filter(function(q){return q.day&&q.day>=from&&q.day<=to&&(!filt||filt(q))}),won=L.filter(function(q){return q.status==="Accepted"}),lost=L.filter(function(q){return q.status==="Declined"});
+  return {n:L.length,won:won.length,lost:lost.length,open:L.length-won.length-lost.length,rate:L.length?won.length/L.length:null,val:sumF(L,function(q){return q.total}),wonVal:sumF(won,function(q){return q.total})};
+}
+function groupBy(list,keyf){var m={};list.forEach(function(j){[].concat(keyf(j)).forEach(function(k){k=k||"Not stated";(m[k]=m[k]||[]).push(j)})});return m}
+function avoidable(subJobs){
+  var buf=S.fleet.buffer||0;
+  return subJobs.filter(function(j){var dj=dayJobs(j.day);return S.fleet.trucks.some(function(t){return !dj.some(function(o){return o.key!==j.key&&truckOf(o)===t.id&&overlap(o,j,buf)})})});
+}
+
+/* ---------- Numbers: formatting ---------- */
+function fM(n){if(n==null||isNaN(n))return "–";var a=Math.abs(n),s=n<0?"-":"";if(a>=1e6)return s+"$"+(a/1e6).toFixed(1)+"M";if(a>=1e5)return s+"$"+Math.round(a/1000)+"K";if(a>=1e4)return s+"$"+(a/1000).toFixed(1)+"K";return s+"$"+Math.round(a).toLocaleString("en-AU")}
+function fM0(n){return n==null||isNaN(n)?"–":(n<0?"-":"")+"$"+Math.round(Math.abs(n)).toLocaleString("en-AU")}
+function fP(x,d){return x==null||isNaN(x)?"–":(x*100).toFixed(d==null?0:d)+"%"}
+function fH(h){return h==null?"–":(Math.round(h*10)/10).toLocaleString("en-AU")}
+function plural(n,w){return n+" "+w+(n===1?"":"s")}
+function dlt(cur,prev,kind,goodUp){
+  if(cur==null||prev==null||isNaN(cur)||isNaN(prev))return {t:"no comparison",c:"n"};
+  var col=function(up){return goodUp==null?"n":(up===goodUp?"g":"b")};
+  if(kind==="pts"){var d=(cur-prev)*100;if(Math.abs(d)<0.05)return {t:"no change",c:"n"};return {t:(d>0?"▲ ":"▼ ")+Math.abs(d).toFixed(1)+" pts",c:col(d>0)}}
+  if(!prev)return cur?{t:"▲ up from 0",c:col(true)}:{t:"no change",c:"n"};
+  var r=(cur-prev)/Math.abs(prev)*100;if(Math.abs(r)<0.5)return {t:"no change",c:"n"};
+  return {t:(r>0?"▲ ":"▼ ")+Math.abs(r).toFixed(Math.abs(r)>=10?0:1)+"%",c:col(r>0)};
+}
+function chgTxt(cur,prev){if(!prev)return cur?"new":"–";var r=(cur-prev)/Math.abs(prev)*100;return Math.abs(r)<0.5?"0%":(r>0?"+":"−")+Math.abs(r).toFixed(0)+"%"}
+
+/* ---------- Numbers: charts (SVG, sized to their container) ---------- */
+function niceStep(x){if(!(x>0))return 1;var e=Math.pow(10,Math.floor(Math.log10(x))),f=x/e;return (f<=1?1:f<=2?2:f<=2.5?2.5:f<=5?5:10)*e}
+function topRound(x,y,w,h,r){r=Math.min(r,h,w/2);return "M"+x+","+(y+h)+"V"+(y+r)+"Q"+x+","+y+" "+(x+r)+","+y+"H"+(x+w-r)+"Q"+(x+w)+","+y+" "+(x+w)+","+(y+r)+"V"+(y+h)+"Z"}
+function rightRound(x,y,w,h,r){r=Math.min(r,w,h/2);return "M"+x+","+y+"H"+(x+w-r)+"Q"+(x+w)+","+y+" "+(x+w)+","+(y+r)+"V"+(y+h-r)+"Q"+(x+w)+","+(y+h)+" "+(x+w-r)+","+(y+h)+"H"+x+"Z"}
+function svgWrap(w,h,body,label){return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 '+w+' '+h+'" role="img" aria-label="'+esc(label||"")+'">'+body+'</svg>'}
+function yAxis(pl,pw,pt,ph,top,st,fmt){var g="";for(var t=0;t<=top+1e-9;t+=st){var y=pt+ph-t/top*ph;g+='<line x1="'+pl+'" x2="'+(pl+pw)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" class="gl"/><text x="'+(pl-6)+'" y="'+(y+4).toFixed(1)+'" text-anchor="end" class="ax">'+esc(fmt(t))+'</text>'}return g}
+function colChart(w,cats,series,fmt,label){
+  var H=230,pl=50,pr=6,pt=10,pb=26,pw=Math.max(60,w-pl-pr),ph=H-pt-pb,n=cats.length,band=pw/n,bw=Math.min(24,Math.max(6,band*0.6));
+  var mx=Math.max.apply(null,cats.map(function(_,i){return series.reduce(function(s,se){return s+(se.vals[i]||0)},0)}).concat([0]));
+  var st=niceStep((mx||1)/4),top=Math.ceil((mx||1)/st)*st,Y=function(v){return pt+ph-v/top*ph};
+  var every=Math.max(1,Math.ceil(n/Math.max(1,Math.floor(pw/56)))),bars="",labs="",hits="";
+  cats.forEach(function(c,i){
+    var cx=pl+band*(i+0.5),x=cx-bw/2,base=0,segs=[];
+    series.forEach(function(se){var v=se.vals[i]||0;if(v>0){segs.push({v:v,c:se.color,b:base});base+=v}});
+    segs.forEach(function(sg,k){var y0=Y(sg.b),y1=Y(sg.b+sg.v),top1=k===segs.length-1;if(k>0)y0-=1;if(!top1)y1+=1;var h=y0-y1;if(h<0.6)return;
+      bars+=top1?'<path d="'+topRound(x,y1,bw,h,4)+'" style="fill:'+sg.c+'"/>':'<rect x="'+x.toFixed(1)+'" y="'+y1.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" style="fill:'+sg.c+'"/>'});
+    if((n-1-i)%every===0)labs+='<text x="'+cx.toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" class="ax'+(c.cur?" cur":"")+'">'+esc(c.label)+'</text>';
+    hits+='<rect x="'+(pl+band*i).toFixed(1)+'" y="'+pt+'" width="'+band.toFixed(1)+'" height="'+ph+'" class="hit" data-tip="'+esc(c.tip)+'"/>';
+  });
+  return svgWrap(w,H,yAxis(pl,pw,pt,ph,top,st,fmt)+'<line x1="'+pl+'" x2="'+(pl+pw)+'" y1="'+(pt+ph)+'" y2="'+(pt+ph)+'" class="bl"/>'+bars+labs+hits,label);
+}
+function lineChart(w,cats,series,fmt,minTop,label){
+  var H=200,pl=44,pr=10,pt=10,pb=26,pw=Math.max(60,w-pl-pr),ph=H-pt-pb,n=cats.length;
+  var mx=Math.max.apply(null,[minTop||0].concat(series.map(function(s){return Math.max.apply(null,s.vals.map(function(v){return v||0}))})));
+  var st=niceStep((mx||1)/4),top=Math.ceil((mx||1)/st)*st,X=function(i){return n>1?pl+pw*i/(n-1):pl+pw/2},Y=function(v){return pt+ph-v/top*ph};
+  var every=Math.max(1,Math.ceil(n/Math.max(1,Math.floor(pw/56)))),body=yAxis(pl,pw,pt,ph,top,st,fmt)+'<line x1="'+pl+'" x2="'+(pl+pw)+'" y1="'+(pt+ph)+'" y2="'+(pt+ph)+'" class="bl"/>';
+  series.forEach(function(s){var pts=[];s.vals.forEach(function(v,i){if(v!=null)pts.push(X(i).toFixed(1)+","+Y(v).toFixed(1))});
+    if(pts.length>1)body+='<polyline points="'+pts.join(" ")+'" style="fill:none;stroke:'+s.color+';stroke-width:2;stroke-linejoin:round;stroke-linecap:round"/>';
+    var li=-1;s.vals.forEach(function(v,i){if(v!=null)li=i});if(li>=0)body+='<circle cx="'+X(li).toFixed(1)+'" cy="'+Y(s.vals[li]).toFixed(1)+'" r="4.5" style="fill:'+s.color+';stroke:var(--panel);stroke-width:2"/>'});
+  cats.forEach(function(c,i){if((n-1-i)%every===0)body+='<text x="'+X(i).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" class="ax'+(c.cur?" cur":"")+'">'+esc(c.label)+'</text>';
+    var bw=n>1?pw/(n-1):pw,x0=Math.max(pl,X(i)-bw/2),x1=Math.min(pl+pw,X(i)+bw/2);
+    body+='<rect x="'+x0.toFixed(1)+'" y="'+pt+'" width="'+(x1-x0).toFixed(1)+'" height="'+ph+'" class="hit" data-tip="'+esc(c.tip)+'"/>'});
+  return svgWrap(w,H,body,label);
+}
+function hbarChart(w,rows,fmt,label){
+  var lw=Math.round(Math.min(150,Math.max(76,w*0.3))),vw=70,bw=Math.max(40,w-lw-vw-8),rh=30,H=rows.length*rh+4,mx=Math.max.apply(null,rows.map(function(r){return r.val}).concat([0]))||1,body="";
+  var maxCh=Math.floor((lw-8)/7);
+  rows.forEach(function(r,i){var y=i*rh+8,len=r.val>0?Math.max(3,r.val/mx*bw):0,nm=r.label.length>maxCh?r.label.slice(0,maxCh-1)+"…":r.label;
+    body+='<text x="0" y="'+(y+11)+'" class="lb">'+esc(nm)+'</text>';
+    if(len)body+='<path d="'+rightRound(lw,y,len,14,4)+'" style="fill:var(--s1)"/>';
+    body+='<text x="'+(lw+len+6).toFixed(1)+'" y="'+(y+11)+'" class="vl">'+esc(fmt(r.val))+'</text>';
+    body+='<rect x="0" y="'+(i*rh)+'" width="'+w+'" height="'+rh+'" class="hit" data-tip="'+esc(r.tip)+'"/>'});
+  return svgWrap(w,H,body,label);
+}
+function heatChart(w,grid,rows,cols,tipf,label){
+  var lw=38,cw=Math.max(12,(w-lw)/cols.length),ch=26,H=rows.length*ch+22,mx=0,body="";
+  grid.forEach(function(r){r.forEach(function(v){if(v>mx)mx=v})});
+  grid.forEach(function(r,ri){body+='<text x="0" y="'+(ri*ch+17)+'" class="ax" text-anchor="start">'+rows[ri]+'</text>';
+    r.forEach(function(v,ci){var lvl=v?Math.max(1,Math.ceil(v/mx*6)):0,x=lw+ci*cw;
+      body+='<rect x="'+(x+1).toFixed(1)+'" y="'+(ri*ch+1)+'" width="'+(cw-2).toFixed(1)+'" height="'+(ch-2)+'" rx="3" style="fill:'+(lvl?"var(--q"+lvl+")":"var(--grid)")+'" class="cell" data-tip="'+esc(tipf(ri,ci,v))+'"/>'})});
+  var every=cw<26?3:cw<40?2:1;
+  cols.forEach(function(c,ci){if(ci%every===0)body+='<text x="'+(lw+ci*cw+cw/2).toFixed(1)+'" y="'+(rows.length*ch+15)+'" text-anchor="middle" class="ax">'+c+'</text>'});
+  return svgWrap(w,H,body,label);
+}
+function drawCharts(){
+  document.querySelectorAll("#numbers [data-chart]").forEach(function(el){var f=NCH[el.getAttribute("data-chart")];if(!f)return;var w=Math.floor(el.clientWidth);if(w<80)return;if(el._w===w&&el.firstChild)return;el._w=w;el.innerHTML=f(w)});
+}
+var rzT=null;window.addEventListener("resize",function(){clearTimeout(rzT);rzT=setTimeout(function(){if(TAB==="numbers"){document.querySelectorAll("#numbers [data-chart]").forEach(function(el){el._w=0});drawCharts()}},150)});
+
+/* tooltip for every [data-tip] mark */
+var tipEl=null;
+function showTip(t,x,y){if(!tipEl){tipEl=document.createElement("div");tipEl.id="tip";tipEl.setAttribute("role","tooltip");document.body.appendChild(tipEl)}
+  tipEl.textContent=t;tipEl.style.display="block";var r=tipEl.getBoundingClientRect(),px=x+14,py=y+14;if(px+r.width>innerWidth-8)px=x-r.width-14;if(px<8)px=8;if(py+r.height>innerHeight-8)py=y-r.height-14;tipEl.style.left=px+"px";tipEl.style.top=py+"px"}
+function hideTip(){if(tipEl)tipEl.style.display="none"}
+document.addEventListener("pointermove",function(e){var t=e.target&&e.target.closest&&e.target.closest("#numbers [data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else hideTip()});
+document.addEventListener("pointerdown",function(e){var t=e.target&&e.target.closest&&e.target.closest("#numbers [data-tip]");if(t&&e.pointerType!=="mouse")showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else if(!t)hideTip()});
+document.addEventListener("scroll",hideTip,true);
+
+/* ---------- Numbers: page ---------- */
+function kpi(label,val,d,trend,note,hero){
+  return '<div class="kpi'+(hero?" hero":"")+'"><span class="l">'+label+'</span><span class="v">'+val+'</span>'+(d?'<span class="d '+d.c+'">'+esc(d.t)+'</span>':"")+(note?'<span class="nt">'+note+'</span>':"")+(trend?sparkSvg(trend):"")+'</div>';
+}
+function sparkSvg(vals){
+  var v=vals.map(function(x){return x==null||isNaN(x)?null:+x}),f=v.filter(function(x){return x!=null});if(f.length<2)return "";
+  var mn=Math.min.apply(null,f),mx=Math.max.apply(null,f);if(mx===mn){mx+=1;mn-=1}
+  var n=v.length,P=[];v.forEach(function(x,i){if(x!=null)P.push([i/(n-1)*100,25-(x-mn)/(mx-mn)*22])});
+  var pl=function(a){return a.map(function(p){return p[0].toFixed(1)+","+p[1].toFixed(1)}).join(" ")};
+  return '<svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true"><polyline points="'+pl(P)+'" style="fill:none;stroke:var(--spark);stroke-width:1.5;vector-effect:non-scaling-stroke;stroke-linejoin:round"/><polyline points="'+pl(P.slice(-2))+'" style="fill:none;stroke:var(--s1);stroke-width:2.5;vector-effect:non-scaling-stroke;stroke-linecap:round"/></svg>';
+}
+function panel(title,sub,inner,wide){return '<section class="npanel'+(wide?" wide":"")+'"><h3>'+title+'</h3>'+(sub?'<p class="sub">'+sub+'</p>':"")+inner+'</section>'}
+function legend(items){return '<div class="lgd">'+items.map(function(i){return '<span><i style="background:'+i[1]+'"></i>'+esc(i[0])+'</span>'}).join("")+'</div>'}
+function tbl(cols,rows,empty){
+  if(!rows.length)return '<p class="none">'+empty+'</p>';
+  return '<div class="tw"><table><thead><tr>'+cols.map(function(c){return '<th'+(c[1]?' class="r"':"")+'>'+c[0]+'</th>'}).join("")+'</tr></thead><tbody>'+rows.map(function(r){return '<tr'+(r.cls?' class="'+r.cls+'"':"")+'>'+r.map(function(v,i){return '<td'+(cols[i][1]?' class="r"':"")+'>'+v+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table></div>';
+}
+function headHtml(mode,P){
+  var cap=function(s){return s.charAt(0).toUpperCase()+s.slice(1)};
+  return '<div class="nbar"><h2>'+esc(P.title)+'</h2><div class="seg" role="group" aria-label="Period">'+["week","month","quarter"].map(function(m){return '<button type="button" data-act="nmode" data-m="'+m+'" aria-pressed="'+(mode===m)+'">'+cap(m)+'</button>'}).join("")+'</div>'
+    +'<button class="btn small" type="button" data-act="nprev">&larr; Prev</button><button class="btn small" type="button" data-act="nthis">This '+mode+'</button><button class="btn small" type="button" data-act="nnext">Next &rarr;</button><span class="sp"></span>'
+    +'<button class="btn small" type="button" data-act="ncsv">Export CSV</button><button class="btn small" type="button" data-act="nrefresh">Refresh</button><button class="btn small" type="button" data-act="lockpw">Change password</button><button class="btn small" type="button" data-act="lock">Lock</button></div>';
 }
 function renderNumbers(){
   var el=$("numbers");if(!el||S.auth!=="in")return;
-  var p=periodOf(),pj=periodJobs(p),jobs=pj.jobs,loading=pj.missing&&periodWeeks(p).some(function(ws){return S.busy[ws]});
-  var head='<div class="nbar"><h2>'+esc(p.title)+'</h2><div class="seg" role="group" aria-label="Period"><button type="button" data-act="nweek" aria-pressed="'+(S.nMode!=="month")+'">Week</button><button type="button" data-act="nmonth" aria-pressed="'+(S.nMode==="month")+'">Month</button></div>'
-    +'<button class="btn small" type="button" data-act="nprev">&larr; Prev</button><button class="btn small" type="button" data-act="nnext">Next &rarr;</button><span style="flex:1"></span><button class="btn small" type="button" data-act="nrefresh">Refresh</button></div>';
-  if(pj.missing){el.innerHTML=head+'<div class="npanel"><span class="none">'+(loading?"Loading the calendar for this period…":"Part of this period couldn’t be loaded. Press Refresh.")+'</span></div>';return}
-  var H=function(j){return (j.end-j.start)/60},sum=function(a,f){return a.reduce(function(t,x){return t+(f(x)||0)},0)};
-  var own=jobs.filter(function(j){return truckOf(j)}),sub=jobs.filter(function(j){return subOf(j)}),un=jobs.filter(needs);
-  var priced=jobs.filter(function(j){return valueOf(j)!=null}),val=sum(priced,valueOf);
-  var ownH=sum(own,function(j){return actualH(j)||H(j)}),cap=S.fleet.trucks.length*(S.fleet.weekHours||60)*p.days/7;
-  var subVal=sum(sub.filter(function(j){return valueOf(j)!=null}),valueOf),subCostKnown=sub.filter(function(j){return costOf(j)!=null}),subCost=sum(subCostKnown,costOf);
-  var both=sub.filter(function(j){return valueOf(j)!=null&&costOf(j)!=null}),margin=sum(both,function(j){return valueOf(j)-costOf(j)}),bothVal=sum(both,valueOf);
-  var timed=jobs.filter(function(j){return actualH(j)!=null}),over=sum(timed,function(j){return Math.max(0,overMin(j))}),extra=sum(timed,function(j){var x=extraCharge(j);return x?x.amt:0});
-  function tile(big,label,small,cls){return '<div class="stat '+(cls||"")+'"><b>'+big+'</b><span>'+label+'</span>'+(small?'<small>'+small+'</small>':"")+'</div>'}
-  var tiles='<div class="ngrid">'
-    +tile(jobs.length,jobs.length===1?"job booked":"jobs booked",hrs(sum(jobs,H))+" booked")
-    +tile(money(val),"booked value",(function(n){return n?n+" job"+(n===1?"":"s")+" estimated at "+money(defRate())+"/hr":"all from booking prices"})(jobs.filter(assumed).length))
-    +tile(cap?Math.round(ownH/cap*100)+"%":"–","own truck hours used",hrs(Math.round(ownH*10)/10)+" of "+Math.round(cap)+" available")
-    +tile(sub.length,sub.length===1?"job subcontracted":"jobs subcontracted",jobs.length?Math.round(sub.length/jobs.length*100)+"% of jobs":"")
-    +tile(money(subCost),"paid to subcontractors",subCostKnown.length<sub.length?(sub.length-subCostKnown.length)+" job"+(sub.length-subCostKnown.length===1?"":"s")+" with no cost entered":(sub.length?"all costs entered":""))
-    +tile(both.length?money(margin):"–","margin on subcontracted jobs",both.length?(bothVal>0?Math.round(margin/bothVal*100)+"% on "+both.length+" job"+(both.length===1?"":"s"):""):"needs price and cost")
-    +tile(timed.length?dur(over):"–","time over booked",timed.length?timed.length+" job"+(timed.length===1?"":"s")+" timed"+(extra?", "+money(extra)+" extra to charge":""):"no job times recorded",over>0?"warn":"")
-    +(un.length?tile(un.length,"still need a truck","","warn"):"")+'</div>';
-  function table(title,cols,rows,empty){return '<div class="npanel"><h3>'+title+'</h3>'+(rows.length?'<table><thead><tr>'+cols.map(function(c){return '<th'+(c[1]?' class="r"':"")+'>'+c[0]+'</th>'}).join("")+'</tr></thead><tbody>'+rows.map(function(r){return '<tr>'+r.map(function(v,i){return '<td'+(cols[i][1]?' class="r"':"")+'>'+v+'</td>'}).join("")+'</tr>'}).join("")+'</tbody></table>':'<span class="none">'+empty+'</span>')+'</div>'}
-  function group(list,keyf){var m={},order=[];list.forEach(function(j){[].concat(keyf(j)).forEach(function(k){k=k||"Not stated";if(!m[k]){m[k]=[];order.push(k)}m[k].push(j)})});return order.map(function(k){return [k,m[k]]}).sort(function(a,b){return b[1].length-a[1].length})}
-  var panels="";
-  if(S.nMode!=="month"){var rows=[];for(var i=0;i<7;i++){var d=addDays(p.from,i),dj=dayJobs(d);rows.push([dShort(d),dj.length,hrs(sum(dj,H)),dj.filter(function(j){return truckOf(j)}).length,dj.filter(function(j){return subOf(j)}).length,money(sum(dj.filter(function(j){return valueOf(j)!=null}),valueOf))])}
-    panels+=table("By day",[["Day"],["Jobs",1],["Hours",1],["Own trucks",1],["Subbed",1],["Value",1]],rows,"")}
-  panels+=table("Subcontractors",[["Subcontractor"],["Jobs",1],["Job value",1],["Paid",1],["Margin",1]],group(sub,subOf).map(function(g){var l=g[1],kc=l.filter(function(j){return costOf(j)!=null}),b=l.filter(function(j){return valueOf(j)!=null&&costOf(j)!=null});
-      return [esc(g[0]),l.length,money(sum(l.filter(function(j){return valueOf(j)!=null}),valueOf)),money(sum(kc,costOf))+(kc.length<l.length?" ("+(l.length-kc.length)+" missing)":""),b.length?money(sum(b,function(j){return valueOf(j)-costOf(j)})):"–"]}),"No jobs were subcontracted in this period.");
-  panels+=table("By lead source",[["Source"],["Jobs",1],["Value",1]],group(jobs,function(j){return j.platform}).map(function(g){return [esc(g[0]),g[1].length,money(sum(g[1].filter(function(j){return valueOf(j)!=null}),valueOf))]}),"No jobs in this period.");
-  panels+=table("By sales rep",[["Rep"],["Jobs",1],["Hours booked",1],["Value",1]],group(jobs,function(j){return j.reps.length?j.reps:[""]}).map(function(g){return [esc(g[0]),g[1].length,hrs(Math.round(sum(g[1],bookedH)*10)/10),money(sum(g[1].filter(function(j){return valueOf(j)!=null}),valueOf))]}),"No jobs in this period.");
-  panels+=table("Job times",[["Job"],["Booked",1],["Actual",1],["Over",1],["Extra",1]],timed.map(function(j){var o=overMin(j),x=extraCharge(j);return [esc(dShort(j.day)+" "+j.customer),hrs(bookedH(j)),dur(actualH(j)*60),o>0?dur(o):"–",x?money(x.amt):"–"]}),"No start and finish times recorded yet. Crews record them from the job on Dispatch.");
-  el.innerHTML=head+tiles+'<div class="npanels">'+panels+'</div><div class="fresh">Job value comes from the price entered on the job, or is estimated from the calendar note (amount to collect plus deposit, or booked hours at the hourly rate). When the booking has no price, each booked hour counts as '+money(defRate())+'. A job shared by two reps counts for both. Quote win rates are in Quotes, Reports.</div>';
+  if(!LOCK.unlocked){
+    if(LOCK.state==="unknown")loadLock();
+    var gk="g:"+LOCK.state;if(gateKey!==gk){gateKey=gk;el.innerHTML=gateHtml();var f=el.querySelector("input");if(f)try{f.focus()}catch(e){}}
+    return;
+  }
+  var mode=S.nMode||"week",an=S.nAnchor||(S.nAnchor=melParts(new Date()).date),P=pBounds(mode,an,0),PP=pBounds(mode,an,-1),NB=mode==="week"?12:mode==="month"?6:4,B=[];
+  for(var i=NB-1;i>=0;i--)B.push(pBounds(mode,an,-i));
+  var today=melParts(new Date()).date,fw0=weekStart(today),fwEnd=addDays(fw0,27),need0=B[0].from<fw0?B[0].from:fw0,need1=P.to>fwEnd?P.to:fwEnd;
+  if(S.quotes===undefined&&!S.qBusy)loadQuotes();
+  ensureRange(need0,need1);
+  var head=headHtml(mode,P);
+  if(!haveRange(need0,need1)){el.innerHTML=head+'<div class="npanel"><p class="none">'+(S.nErr?esc(S.nErr)+" Press Refresh.":"Loading the calendar for this period and the "+NB+" "+mode+"s before it…")+'</p></div>';return}
+  var vs={week:"previous week",month:"previous month",quarter:"previous quarter"}[mode];
+  var C=M(P.from,P.to),R=M(PP.from,PP.to),T=B.map(function(b){return M(b.from,b.to)}),hasQ=(S.quotes||[]).length>0,Q=quoteStats(P.from,P.to),QR=quoteStats(PP.from,PP.to),QT=B.map(function(b){return quoteStats(b.from,b.to)});
+  var tf=function(f){return T.map(f)},running=P.from<=today&&P.to>=today;
+  var html=head;
+  if(running)html+='<p class="note">This '+mode+' is still running. Figures count every job booked in it, including jobs still to come.</p>';
+
+  /* KPIs */
+  var ownPctRev=C.rev?(C.rev-C.subRev-sumF(C.un,valueOf))/C.rev:null;
+  html+='<div class="kpis">'
+    +kpi("Booked revenue",fM0(C.rev),dlt(C.rev,R.rev,"pct",true),tf(function(t){return t.rev}),C.assumed.length?fP(C.rev?C.assumedRev/C.rev:0)+" estimated at "+fM0(defRate())+"/hr":"all from booking prices",true)
+    +kpi("Jobs",C.jobs,dlt(C.jobs,R.jobs,"pct",true),tf(function(t){return t.jobs}),C.un.length?plural(C.un.length,"job")+" still need a truck":"")
+    +kpi("Booked hours",fH(C.hours),dlt(C.hours,R.hours,"pct",true),tf(function(t){return t.hours}))
+    +kpi("Average job",fM0(C.avg),dlt(C.avg,R.avg,"pct",true),tf(function(t){return t.avg}))
+    +kpi("Revenue per booked hour",fM0(C.rph),dlt(C.rph,R.rph,"pct",true),tf(function(t){return t.rph}))
+    +kpi("Own-truck utilisation",fP(C.util),dlt(C.util,R.util,"pts",true),tf(function(t){return t.util}),fH(C.ownH)+" of "+fH(C.cap)+" truck hours")
+    +kpi("Jobs subcontracted",fP(C.subShare),dlt(C.subShare,R.subShare,"pts",null),tf(function(t){return t.subShare}),plural(C.sub.length,"job")+", "+fM0(C.subPaid)+" paid out")
+    +kpi("Subcontract margin",C.marginPct==null?"–":fP(C.marginPct),dlt(C.marginPct,R.marginPct,"pts",true),tf(function(t){return t.marginPct}),C.margin==null?(C.sub.length?"enter costs on subcontracted jobs":"no subcontracted jobs"):fM0(C.margin)+" kept"+(C.subMissing?", "+C.subMissing+" missing a cost":""))
+    +(hasQ?kpi("Quote win rate",Q.n?fP(Q.rate):"–",dlt(Q.rate,QR.rate,"pts",true),QT.map(function(q){return q.rate}),plural(Q.n,"quote")+", "+Q.won+" won, "+fM0(Q.wonVal)+" won"):"")
+    +kpi("Overtime to charge",fM0(C.extra),null,null,C.timed.length?C.over.length+" of "+plural(C.timed.length,"timed job")+" ran over":"no job times recorded")
+    +'</div><p class="note">Arrows compare with the '+vs+' ('+esc(PP.title)+'). Small lines show the last '+NB+' '+mode+'s.</p>';
+
+  /* insights */
+  var ins=[];
+  if(R.rev||C.rev){var bySrc=groupBy(C.J,function(j){return j.platform}),bySrcR=groupBy(R.J,function(j){return j.platform}),keys={};Object.keys(bySrc).concat(Object.keys(bySrcR)).forEach(function(k){keys[k]=1});
+    var mv=Object.keys(keys).map(function(k){return [k,sumF(bySrc[k]||[],valueOf)-sumF(bySrcR[k]||[],valueOf)]}).sort(function(a,b){return Math.abs(b[1])-Math.abs(a[1])})[0];
+    var d=C.rev-R.rev;ins.push({k:d>=0?"g":"b",t:"Booked revenue is "+fM0(C.rev)+", "+(R.rev?(d>=0?"up ":"down ")+fP(Math.abs(d)/R.rev)+" ("+(d>=0?"+":"−")+fM0(Math.abs(d))+")":"with nothing booked")+" on the "+vs+"."+(mv&&Math.abs(mv[1])>=1&&R.rev?" The biggest change was "+mv[0]+" ("+(mv[1]>=0?"+":"−")+fM0(Math.abs(mv[1]))+").":"")})}
+  var av=avoidable(C.sub);
+  if(av.length)ins.push({k:"b",t:plural(av.length,"job")+" went to subcontractors while one of our trucks was free at that time, worth "+fM0(sumF(av,valueOf))+" in job value"+(sumF(av,function(j){return costOf(j)})?" and "+fM0(sumF(av,function(j){return costOf(j)||0}))+" paid out":"")+". Check these before subcontracting the next one."});
+  var tl=Object.keys(C.perT).map(function(k){return C.perT[k]});
+  if(tl.length&&C.cap){var lo=tl.slice().sort(function(a,b){return a.util-b.util})[0];ins.push({k:lo.util<0.5?"b":"i",t:"Truck use: "+tl.map(function(t){return t.name+" "+fP(t.util)}).join(", ")+" of available hours."+(lo.util<0.5?" "+lo.name+" has the most spare time to fill.":"")})}
+  var hm=[0,1,2,3,4,5,6].map(function(){return new Array(15).fill(0)}),winJ=jobsIn(B[0].from,P.to);
+  winJ.forEach(function(j){var r=(dow(j.day)+6)%7,c=Math.min(14,Math.max(0,Math.floor(j.start/60)-6));hm[r][c]++});
+  var dayTot=hm.map(function(r){return r.reduce(function(a,b){return a+b},0)});
+  if(winJ.length>=8){var best={v:-1},q=dayTot.slice(0,5).indexOf(Math.min.apply(null,dayTot.slice(0,5)));hm.forEach(function(r,ri){r.forEach(function(v,ci){if(v>best.v)best={v:v,r:ri,c:ci}})});
+    ins.push({k:"i",t:"Over the last "+NB+" "+mode+"s the busiest start slot is "+DL[(best.r+1)%7]+" "+tm((best.c+6)*60)+" ("+plural(best.v,"job")+"). The quietest weekday is "+DL[(q+1)%7]+", a good day to push off-peak deals."})}
+  var timedAll=C.timed;if(timedAll.length){ins.push({k:C.over.length?"b":"g",t:C.over.length?C.over.length+" of "+plural(timedAll.length,"timed job")+" ran over the booked time, by "+dur(C.overMin/C.over.length)+" on average. "+fM0(C.extra)+" in extra time should be charged.":"Every timed job finished within its booked time."})}
+  else ins.push({k:"i",t:"No start and finish times were recorded in this "+mode+". Ask crews to tap Start and Finish on each job to see where time is lost."});
+  if(C.rev&&C.assumedRev/C.rev>0.25)ins.push({k:"i",t:fP(C.assumedRev/C.rev)+" of revenue is estimated at "+fM0(defRate())+" per booked hour because the booking had no price. Typing the real price on those jobs makes every figure here exact."});
+  var byRep=groupBy(C.J,function(j){return j.reps.length?j.reps:[""]}),reps=Object.keys(byRep).filter(function(k){return k!=="Not stated"});
+  if(reps.length>1){var rh=reps.map(function(k){var l=byRep[k];return {k:k,h:sumF(l,bookedH),r:sumF(l,valueOf)}}).sort(function(a,b){return b.h-a.h});ins.push({k:"i",t:rh[0].k+" booked the most hours ("+fH(rh[0].h)+" hrs, "+fM0(rh[0].r)+"), then "+rh[1].k+" ("+fH(rh[1].h)+" hrs)."})}
+  var srcRph=Object.keys(groupBy(C.J,function(j){return j.platform})).map(function(k){var l=C.J.filter(function(j){return (j.platform||"Not stated")===k});var h=sumF(l,bookedH);return {k:k,n:l.length,v:h?sumF(l,valueOf)/h:0}}).filter(function(s){return s.n>=2}).sort(function(a,b){return b.v-a.v});
+  if(srcRph.length>1&&srcRph[0].v-srcRph[srcRph.length-1].v>=10)ins.push({k:"i",t:srcRph[0].k+" jobs earn "+fM0(srcRph[0].v)+" per booked hour, against "+fM0(srcRph[srcRph.length-1].v)+" for "+srcRph[srcRph.length-1].k+"."});
+  html+=panel("What stands out","",'<ul class="ins">'+ins.map(function(x){return '<li class="'+x.k+'"><span class="ic" aria-hidden="true">'+(x.k==="g"?"▲":x.k==="b"?"!":"•")+'</span><span>'+esc(x.t)+'</span></li>'}).join("")+'</ul>',true);
+
+  /* charts */
+  html+='<div class="npanels">';
+  var cats=B.map(function(b,i){var t=T[i],ownR=t.rev-t.subRev-sumF(t.un,valueOf);return {label:b.short,cur:i===B.length-1,tip:b.title+"\nOwn trucks: "+fM0(ownR)+"\nSubcontracted: "+fM0(t.subRev)+"\nNo truck yet: "+fM0(sumF(t.un,valueOf))+"\nTotal: "+fM0(t.rev)+", "+plural(t.jobs,"job")+", "+fH(t.hours)+" hrs"}});
+  NCH.rev=function(w){return colChart(w,cats,[{color:"var(--s1)",vals:T.map(function(t){return t.rev-t.subRev-sumF(t.un,valueOf)})},{color:"var(--s2)",vals:T.map(function(t){return t.subRev})},{color:"var(--s3)",vals:T.map(function(t){return sumF(t.un,valueOf)})}],fM,"Booked revenue by "+mode)};
+  html+=panel("Booked revenue by "+mode,"Last "+NB+" "+mode+"s, split by who did the job. Tap a "+mode+" for the figures.",legend([["Own trucks","var(--s1)"],["Subcontracted","var(--s2)"],["No truck yet","var(--s3)"]])+'<div class="chart" data-chart="rev"></div>'
+    +'<details><summary>Show as a table</summary>'+tbl([[mode.charAt(0).toUpperCase()+mode.slice(1)],["Jobs",1],["Hours",1],["Own trucks",1],["Subcontracted",1],["No truck",1],["Total",1]],B.map(function(b,i){var t=T[i];return [esc(b.short),t.jobs,fH(t.hours),fM0(t.rev-t.subRev-sumF(t.un,valueOf)),fM0(t.subRev),fM0(sumF(t.un,valueOf)),fM0(t.rev)]}).reverse(),"")+'</details>',true);
+  var trucks=S.fleet.trucks;
+  if(trucks.length){var tcol=["var(--s1)","var(--s2)","var(--s3)"];
+    NCH.util=function(w){return lineChart(w,B.map(function(b,i){var t=T[i];return {label:b.short,cur:i===B.length-1,tip:b.title+"\n"+trucks.map(function(tr){var p=t.perT[tr.id];return tr.name+": "+fP(p&&p.util)+" ("+fH(p&&p.h)+" hrs)"}).join("\n")}}),trucks.slice(0,3).map(function(tr,k){return {color:tcol[k],vals:T.map(function(t){var p=t.perT[tr.id];return p&&p.util!=null?p.util*100:null})}}),function(v){return Math.round(v)+"%"},100,"Own-truck utilisation")};
+    html+=panel("Own-truck utilisation","Hours each truck worked out of "+(S.fleet.weekHours||60)+" available a week. Change the available hours in Trucks and crew.",legend(trucks.slice(0,3).map(function(tr,k){return [tr.name,tcol[k]]}))+'<div class="chart" data-chart="util"></div>')}
+  var hours=[];for(var h=6;h<=20;h++)hours.push(h<12?h+"a":h===12?"12p":(h-12)+"p");
+  NCH.heat=function(w){return heatChart(w,hm,DAYL,hours,function(r,c,v){return DL[(r+1)%7]+" "+tm((c+6)*60)+(c===14?" or later":"")+": "+plural(v,"job")},"Jobs by day and start time")};
+  html+=panel("When jobs start","Jobs by day and start time over the last "+NB+" "+mode+"s. Darker means more jobs.",'<div class="chart" data-chart="heat"></div><div class="scale"><span>Fewer</span>'+[1,2,3,4,5,6].map(function(k){return '<i style="background:var(--q'+k+')"></i>'}).join("")+'<span>More</span></div>');
+  /* forward book */
+  var wcap=trucks.length*(S.fleet.weekHours||60),fwd="";
+  for(var k=0;k<4;k++){var a=addDays(fw0,7*k),b=addDays(a,6),fj=jobsIn(a,b),bh=sumF(fj,durH),p=wcap?bh/wcap:0,un=fj.filter(needs).length;
+    fwd+='<div class="mrow"><div class="mt"><b>'+(k===0?"This week":k===1?"Next week":"Week of "+(+a.slice(8))+" "+MN[+a.slice(5,7)-1])+'</b><span>'+fH(bh)+" of "+fH(wcap)+" hrs, "+fP(p)+(un?", "+un+" need a truck":"")+'</span></div><div class="meter" role="meter" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+Math.round(p*100)+'" aria-label="'+esc((k===0?"This week":"Week "+(k+1))+" booked "+fP(p))+'"><i style="width:'+Math.min(100,p*100).toFixed(1)+'%;background:'+(p>1?"var(--warn)":"var(--s1)")+'"></i></div></div>'}
+  var dcap=wcap/6,quiet=[];for(var dd=1;dd<=14;dd++){var dy=addDays(today,dd),bhd=sumF(dayJobs(dy),durH);if(dcap&&bhd<dcap*0.5)quiet.push(dShort(dy)+" ("+fH(bhd)+" hrs booked)")}
+  html+=panel("Forward bookings","Booked hours against what our trucks can do, for the next four weeks.",fwd+(quiet.length?'<p class="sub" style="margin-top:10px"><b>Quiet days in the next two weeks:</b> '+esc(quiet.slice(0,8).join(", "))+'. Fill them with off-peak deals.</p>':''));
+  html+='</div>';
+
+  /* lead sources */
+  var srcG=groupBy(C.J,function(j){return j.platform}),srcGR=groupBy(R.J,function(j){return j.platform});
+  var srcRows=Object.keys(srcG).map(function(k){var l=srcG[k],v=sumF(l,valueOf),h=sumF(l,bookedH),qs=quoteStats(P.from,P.to,function(q){return q.src===k});return {k:k,n:l.length,v:v,h:h,qs:qs,pv:sumF(srcGR[k]||[],valueOf)}}).sort(function(a,b){return b.v-a.v});
+  NCH.src=function(w){return hbarChart(w,srcRows.map(function(s){return {label:s.k,val:s.v,tip:s.k+": "+fM0(s.v)+", "+plural(s.n,"job")+", "+fH(s.h)+" hrs, "+fM0(s.h?s.v/s.h:0)+" per hour"}}),fM,"Revenue by lead source")};
+  html+='<div class="npanels">'+panel("Lead sources","Where this "+mode+"’s revenue came from.",'<div class="chart" data-chart="src"></div>'+tbl([["Source"],["Jobs",1],["Hours",1],["Revenue",1],["Share",1],["Avg job",1],["Per hour",1],["vs prev",1]].concat(hasQ?[["Quotes",1],["Won",1]]:[]),srcRows.map(function(s){return [esc(s.k),s.n,fH(s.h),fM0(s.v),fP(C.rev?s.v/C.rev:0),fM0(s.v/s.n),fM0(s.h?s.v/s.h:0),chgTxt(s.v,s.pv)].concat(hasQ?[s.qs.n,s.qs.n?fP(s.qs.rate):"–"]:[])}),"No jobs in this "+mode+"."));
+  /* sales reps */
+  var repG=groupBy(C.J,function(j){return j.reps.length?j.reps:[""]}),repGR=groupBy(R.J,function(j){return j.reps.length?j.reps:[""]});
+  var repRows=Object.keys(repG).map(function(k){var l=repG[k],v=sumF(l,valueOf),h=sumF(l,bookedH),qs=quoteStats(P.from,P.to,function(q){return q.rep===k});return {k:k,n:l.length,v:v,h:h,qs:qs,ph:sumF(repGR[k]||[],bookedH)}}).sort(function(a,b){return b.h-a.h});
+  NCH.rep=function(w){return hbarChart(w,repRows.map(function(r){return {label:r.k,val:r.h,tip:r.k+": "+fH(r.h)+" hrs booked, "+plural(r.n,"job")+", "+fM0(r.v)}}),function(v){return fH(v)+" hrs"},"Hours booked by sales rep")};
+  html+=panel("Sales reps","Hours booked this "+mode+". A job with two reps counts for both.",'<div class="chart" data-chart="rep"></div>'+tbl([["Rep"],["Jobs",1],["Hours booked",1],["Hours vs prev",1],["Revenue",1],["Avg job",1],["Per hour",1]].concat(hasQ?[["Quotes",1],["Won",1]]:[]),repRows.map(function(r){return [esc(r.k),r.n,fH(r.h),chgTxt(r.h,r.ph),fM0(r.v),fM0(r.v/r.n),fM0(r.h?r.v/r.h:0)].concat(hasQ?[r.qs.n,r.qs.n?fP(r.qs.rate):"–"]:[])}),"No jobs in this "+mode+"."))+'</div>';
+  /* subcontractors */
+  var subG=groupBy(C.sub,subOf),avK={};av.forEach(function(j){avK[j.key]=1});
+  var subRows=Object.keys(subG).map(function(k){var l=subG[k],kc=l.filter(function(j){return costOf(j)!=null}),v=sumF(l,valueOf),vk=sumF(kc,valueOf),pd=sumF(kc,costOf);return [esc(k),l.length,fH(sumF(l,bookedH)),fM0(v),fM0(pd)+(kc.length<l.length?' <span class="miss">'+(l.length-kc.length)+' missing</span>':""),kc.length?fM0(vk-pd):"–",kc.length&&vk?fP((vk-pd)/vk):"–",l.filter(function(j){return avK[j.key]}).length||"–"]});
+  html+='<div class="npanels">'+panel("Subcontractors","Margin counts only jobs with a cost entered. “Truck free” means one of our trucks had no job at that time.",tbl([["Subcontractor"],["Jobs",1],["Hours",1],["Job value",1],["Paid",1],["Margin",1],["Margin %",1],["Truck free",1]],subRows,"No jobs were subcontracted in this "+mode+"."));
+  /* job size */
+  var bk=[["Up to 1.5 hrs",0,1.5],["2 hrs",1.5,2],["2.5 to 3 hrs",2,3],["3.5 to 4 hrs",3,4],["4.5 to 6 hrs",4,6],["Over 6 hrs",6,999]];
+  var bl=bk.map(function(b){var l=C.J.filter(function(j){var h=bookedH(j);return h>b[1]&&h<=b[2]});return {b:b,n:l.length,v:sumF(l,valueOf)}});
+  NCH.mix=function(w){return colChart(w,bl.map(function(x){return {label:x.b[0].replace(" hrs","").replace("Up to ","≤").replace("Over ",">").replace(" to ","–"),tip:x.b[0]+": "+plural(x.n,"job")+", "+fM0(x.v)+(x.n?", "+fM0(x.v/x.n)+" average":"")}}),[{color:"var(--s1)",vals:bl.map(function(x){return x.n})}],function(v){return String(Math.round(v*10)/10)},"Jobs by booked hours")};
+  html+=panel("Job sizes","Number of jobs by hours booked this "+mode+".",'<div class="chart" data-chart="mix"></div>')+'</div>';
+  /* job times */
+  var ov=C.timed.slice().sort(function(a,b){return overMin(b)-overMin(a)}).slice(0,10);
+  html+='<div class="npanels">'+panel("Job times","Booked against actual time for jobs with start and finish recorded.",tbl([["Job"],["Booked",1],["Actual",1],["Over",1],["Extra to charge",1]],ov.map(function(j){var o=overMin(j),x=extraCharge(j);return [esc(dShort(j.day)+" "+j.customer),fH(bookedH(j))+" hrs",dur(actualH(j)*60),o>0?dur(o):"–",x?fM0(x.amt):"–"]}),"No job times recorded in this "+mode+"."));
+  /* data quality */
+  var past=C.J.filter(function(j){return j.day<today}),pastTimed=past.filter(function(j){return actualH(j)!=null}).length,pastUn=past.filter(needs).length;
+  var dq=[[C.jobs?fP((C.jobs-C.assumed.length)/C.jobs):"–","of jobs priced from the booking or entered by hand",C.assumed.length/Math.max(1,C.jobs)>0.25],
+    [String(C.assumed.length),"jobs estimated at "+fM0(defRate())+"/hr ("+fM0(C.assumedRev)+")",false],
+    [String(C.subMissing),"subcontracted jobs with no cost entered",C.subMissing>0],
+    [past.length?pastTimed+" of "+past.length:"–","finished jobs with start and finish times",past.length&&pastTimed<past.length/2],
+    [String(pastUn),"finished jobs never given a truck or subcontractor",pastUn>0]];
+  html+=panel("How complete the data is","The more of this is filled in, the more exact the figures above.",'<ul class="dq">'+dq.map(function(d){return '<li class="'+(d[2]?"w":"")+'"><b>'+d[0]+'</b><span>'+esc(d[1])+'</span></li>'}).join("")+'</ul>')+'</div>';
+  html+='<p class="note">Revenue is the price typed on a job, or the amount in the booking note (to collect plus deposit), or booked hours at the note’s hourly rate. With no price in the booking, each booked hour counts as '+fM0(defRate())+'. Overtime is added when a job ran over. Quote figures come from quotes saved in the Quotes section'+(S.qErr?" (they couldn’t be loaded this time)":"")+'.</p>';
+  el.innerHTML=html;
+  drawCharts();
+}
+function exportCsv(){
+  var mode=S.nMode||"week",P=pBounds(mode,S.nAnchor||melParts(new Date()).date,0),J=jobsIn(P.from,P.to);
+  var q=function(v){v=v==null?"":String(v);return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  var rows=[["Date","Start","End","Customer","Source","Sales reps","Truck","Subcontractor","Booked hours","Actual hours","Revenue","Revenue basis","Subcontractor cost","Margin","Pickup","Drop off","Calendar entry"]];
+  J.forEach(function(j){var v=valueOf(j),c=costOf(j),a=S.assign[j.key],ah=actualH(j);
+    rows.push([j.day,hhmm(j.start),hhmm(j.end),j.customer,j.platform||"",j.reps.join(" & "),truckOf(j)?truckName(truckOf(j)):"",subOf(j),bookedH(j),ah==null?"":Math.round(ah*100)/100,v==null?"":Math.round(v*100)/100,a&&a.val!=null?"entered":estInfo(j).how==="assumed"?"estimated at "+defRate()+"/hr":"booking note",c==null?"":c,c==null||v==null?"":Math.round((v-c)*100)/100,j.body.pickup,j.body.drop,j.subject])});
+  var csv="﻿"+rows.map(function(r){return r.map(q).join(",")}).join("\r\n"),blob=new Blob([csv],{type:"text/csv"}),u=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=u;a.download="EAM jobs "+P.from+" to "+P.to+".csv";document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u)},30000);
 }
 
 /* ---------- render ---------- */
@@ -706,6 +1092,7 @@ function listHtml(jobs,flags){
 /* ---------- drawer and dialogs ---------- */
 function renderOverlay(jobs,flags){
   var el=$("overlay"),keep=document.activeElement&&document.activeElement.id;
+  if(S.modal==="lockchange"){if(!el.querySelector("#lockChange")){el.innerHTML=changeHtml();var pf=el.querySelector("input");if(pf)try{pf.focus()}catch(e){}}return}
   if(S.modal==="fleet"){if(!el.querySelector(".modal"))el.innerHTML=fleetHtml();return}
   if(S.modal==="text"){return}
   var j=jobs.filter(function(x){return x.key===S.sel})[0];
@@ -821,9 +1208,16 @@ document.addEventListener("click",function(e){
   if(a==="fleetsave"){saveFleet();return}
   if(a==="textclose"){S.modal=null;$("overlay").innerHTML="";render();return}
   if(a==="tstart"||a==="tfinish"||a==="tclear"){var tj=findJob(S.sel);if(tj)saveAssign(tj,a==="tstart"?{t0:nowRel(tj.day),t1:null}:a==="tfinish"?{t1:Math.max(nowRel(tj.day),((S.assign[tj.key]||{}).t0||0)+1)}:{t0:null,t1:null});return}
-  if(a==="nweek"||a==="nmonth"){S.nMode=a==="nmonth"?"month":"week";nTried={};render();return}
-  if(a==="nprev"||a==="nnext"){var sg=a==="nnext"?1:-1;if(S.nMode==="month"){var yy=+S.day.slice(0,4),mm=+S.day.slice(5,7)-1+sg;S.day=new Date(Date.UTC(yy,mm,1)).toISOString().slice(0,10)}else S.day=addDays(S.day,7*sg);S.sel=null;nTried={};render();return}
-  if(a==="nrefresh"){nTried={};S.err=null;periodWeeks(periodOf()).forEach(function(ws){if(!S.busy[ws])fetchWeek(ws,true,true)});render();return}
+  if(a==="nmode"){S.nMode=t.dataset.m;nTried={};render();return}
+  if(a==="nprev"||a==="nnext"){var pb=pBounds(S.nMode||"week",S.nAnchor||melParts(new Date()).date,a==="nnext"?1:-1);S.nAnchor=pb.from;render();return}
+  if(a==="nthis"){S.nAnchor=melParts(new Date()).date;render();return}
+  if(a==="nrefresh"){var mb=S.nMode||"week",ab=S.nAnchor||melParts(new Date()).date,nb=mb==="week"?12:mb==="month"?6:4,f0=pBounds(mb,ab,1-nb).from,td=melParts(new Date()).date,f1=pBounds(mb,ab,0).to;if(addDays(weekStart(td),27)>f1)f1=addDays(weekStart(td),27);if(weekStart(td)<f0)f0=weekStart(td);
+    for(var rw=weekStart(f0);rw<=weekStart(f1);rw=addDays(rw,7))if(!S.busy[rw])delete S.events[rw];nTried={};S.nErr="";S.quotes=undefined;render();return}
+  if(a==="ncsv"){exportCsv();return}
+  if(a==="lock"){lockNow();return}
+  if(a==="lockretry"){LOCK.state="unknown";gateKey="";render();return}
+  if(a==="lockpw"){S.modal="lockchange";render();return}
+  if(a==="lockcancel"){S.modal=null;$("overlay").innerHTML="";render();return}
   if(a==="copyjob"){var j=findJob(S.sel);if(j){var c2=crewOf(j).map(crewName),tr=truckOf(j);copy("📅 "+dLong(j.day)+"\n"+(tr?"🚚 "+truckName(tr)+"\n":"")+(subOf(j)?"🤝 Subcontractor: "+subOf(j)+"\n":"")+(c2.length?"Crew: "+c2.join(", ")+"\n":"")+jobText(j),"Job sheet")}return}
 });
 document.addEventListener("change",function(e){
