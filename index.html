@@ -991,6 +991,17 @@ function finRead(buf){
   });
 }
 /* --- turn the workbook into shifts and jobs --- */
+function finLev(a,b){var m=a.length,n=b.length,d=[],i,j;for(i=0;i<=m;i++){d[i]=[i]}for(j=0;j<=n;j++)d[0][j]=j;
+  for(i=1;i<=m;i++)for(j=1;j<=n;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[m][n]}
+/* rates written in a note: "2.67 Hours @ 8 Ton Rate 2 Hours @ 4.5 Ton Rate", "2.5 Hour 4.5 Rate 4.5 Hours 8 Ton Rate",
+   "8 Ton Rate at 155 Per hour Plus 120$ for Call Out", "$40/hr" */
+function finNoteRates(t){
+  t=String(t||"");var out={h8:0,h45:0,sp:0,co:0,found:false},m,re=/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?)\.?\s*(?:@|at)?\s*(4\.5|8)\s*(?:tonnes?|tons?|t)?\s*rate/gi;
+  while((m=re.exec(t))){if(m[2]==="8")out.h8+=+m[1];else out.h45+=+m[1];out.found=true}
+  m=t.match(/\$?\s*(\d+(?:\.\d+)?)\s*\$?\s*(?:\/\s*h(?:ou)?rs?\b|per\s*h(?:ou)?rs?\b)/i);if(m){out.sp=+m[1];out.found=true}
+  m=t.match(/\$?\s*(\d+(?:\.\d+)?)\s*\$?\s*(?:for\s+)?(?:an?\s+|the\s+)?call[\s-]*outs?/i)||t.match(/call[\s-]*outs?\D{0,15}?\$?\s*(\d+(?:\.\d+)?)/i);if(m){out.co=+m[1];out.found=true}
+  return out;
+}
 function finDate(v){
   if(typeof v==="number"&&v>20000)return new Date(Date.UTC(1899,11,30)+Math.round(v)*864e5).toISOString().slice(0,10);
   if(typeof v==="string"){var m=v.trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);if(m){var y=+m[3];if(y<100)y+=2000;return y+"-"+pad(+m[2])+"-"+pad(+m[1])}
@@ -1020,10 +1031,22 @@ function finModel(W){
   var SR=finSheet(W,"Subcontractor rates");
   if(SR)SR.slice(1).forEach(function(r){var n=finTxt(r&&r[0]);if(!n)return;var sz=finNum(r[1]),rt=finNum(r[2]);rates[n]=rates[n]||{r45:0,r8:0};
     if(sz>=7){if(!rates[n].r8)rates[n].r8=rt}else if(!rates[n].r45)rates[n].r45=rt});
-  Object.keys(rates).forEach(function(n){if(!rates[n].r8){rates[n].r8=rates[n].r45;issues.push("The file has no 8T rate for "+n+", so the 4.5T rate is used for his 8T hours.")}});
-  var std=function(x){x=finTxt(x);return alias[x]||x};
+  var notes=[];
+  /* a subcontractor with no 8T rate in the file gets the 8T rate most of the others charge */
+  var r8s={};Object.keys(rates).forEach(function(n){if(rates[n].r8)r8s[rates[n].r8]=(r8s[rates[n].r8]||0)+1});
+  var common8=+(Object.keys(r8s).sort(function(a,b){return r8s[b]-r8s[a]})[0]||0);
+  Object.keys(rates).forEach(function(n){if(rates[n].r8)return;
+    if(common8){rates[n].r8=common8;notes.push(n+"\u2019s 8T hours priced at "+fM0(common8)+"/hr, the 8T rate the other subcontractors charge (his 8T rate isn\u2019t on the rates tab).")}
+    else{rates[n].r8=rates[n].r45;issues.push("The file has no 8T rate for "+n+", so the 4.5T rate is used for his 8T hours.")}});
   var SP=finSheet(W,"Staff Salary pay"),pc=finCols(SP,[["name","staff"],["old","old"],["new","new"]]),pay={};
   if(pc)SP.slice(pc.row+1).forEach(function(r){var n=finTxt(r&&r[pc.map.name]);if(n)pay[n]={old:finNum(r[pc.map.old]),nw:finNum(r[pc.map["new"]])}});
+  /* names: the Settings list first, then a spelling within two letters of exactly one name on the pay list or rates tab */
+  var known=Object.keys(pay).concat(Object.keys(rates)),fuzzy={},fuzzyNoted={};
+  var std=function(x){x=finTxt(x);if(!x)return "";if(alias[x])return alias[x];if(pay[x]||rates[x])return x;
+    if(fuzzy[x]===undefined){var lx=x.toLowerCase(),hit=known.filter(function(k){var lk=k.toLowerCase();return lk===lx||(lk[0]===lx[0]&&Math.min(lk.length,lx.length)>=4&&finLev(lk,lx)<=2)});
+      fuzzy[x]=hit.length===1?hit[0]:""}
+    if(fuzzy[x]){if(!fuzzyNoted[x]){fuzzyNoted[x]=1;notes.push("\u201c"+x+"\u201d read as "+fuzzy[x]+".")}return fuzzy[x]}
+    return x};
   /* jobs */
   var JTr=finSheet(W,"Job Tracker"),jc=finCols(JTr,[["date","date"],["cust","job"],["src","source"],["lead","shift lead"],["sec","second"],["third","third"],["tot","total"]]);
   var JBr=finSheet(W,"Job Breakdown"),bc=finCols(JBr,[["date","date"],["cust","job"],["hrs","total job time"]]),jt={};
@@ -1040,11 +1063,14 @@ function finModel(W){
   if(!cc)throw new Error("Couldn’t find the column headings in Cash Flow.");
   CFr.slice(cc.row+1).forEach(function(r){if(!r)return;var d=finDate(r[cc.map.date]),nm=std(r[cc.map.name]);if(!d||!nm)return;
     var h=finNum(r[cc.map.hrs]),note=(finTxt(r[cc.map.notes])+" "+finTxt(cc.map.pnotes!=null?r[cc.map.pnotes]:"")).trim(),sh={day:d,name:nm,hrs:h,note:note,pay:0,role:"",flag:""};
-    if(rates[nm]){sh.role="sub";var e=exc[d+"|"+nm],rt=rates[nm];
+    if(rates[nm]){sh.role="sub";var e=exc[d+"|"+nm],rt=rates[nm],pn=e?null:finNoteRates(note);
+      if(pn&&pn.found){e=pn;sh.flag="note"}else if(e)sh.flag="applied";
       if(e&&e.sp)sh.pay=h*e.sp+(e.co||0);
       else{var h8=e&&e.h8?Math.min(h,e.h8):(/8\s*ton/i.test(note)?h:0);sh.pay=(h-h8)*rt.r45+h8*rt.r8+(e&&e.co||0)}
-      if(e)sh.flag="applied";else if((/4\.5/.test(note)&&/8/.test(note))||/per hour|call|@/i.test(note))sh.flag="check";
-    }else if(pay[nm]){sh.role="staff";var o=ovr[d+"|"+nm];sh.pay=h*(o||(d>=newFrom?pay[nm].nw:pay[nm].old))}
+      if(!sh.flag&&((/4\.5/.test(note)&&/\b8\b/.test(note))||/per hour|call|@/i.test(note)))sh.flag="check";
+    }else if(pay[nm]){sh.role="staff";var o=ovr[d+"|"+nm],pr=cc.map.pnotes!=null?finNoteRates(finTxt(r[cc.map.pnotes])):null;
+      if(!o&&pr&&pr.sp){o=pr.sp;sh.flag="note"}
+      sh.pay=h*(o||(d>=newFrom?pay[nm].nw:pay[nm].old))}
     else{sh.role="unknown";issues.push(nm+" on "+dShort(d)+" "+MN[+d.slice(5,7)-1]+" isn’t on the pay list or the subcontractor rates.")}
     shifts.push(sh)});
   /* cost each job: each person's day pay shared across their jobs that day by job time; staff with hours but no job = 3rd mover */
@@ -1059,7 +1085,9 @@ function finModel(W){
     j.cost=c;j.profit=j.rev-c;j.margin=j.rev?j.profit/j.rev:null;
     j.verdict=!j.hrs?"No job time":!c?"No pay found":j.profit<0?"Loss":j.margin<low?"Low margin":"Profitable"});
   var days=jobs.map(function(j){return j.day}).concat(shifts.map(function(s){return s.day})).sort();
-  return {jobs:jobs,shifts:shifts,issues:issues,first:days[0],last:days[days.length-1],low:low,hasSettings:!!ST,
+  var fromNote=shifts.filter(function(s){return s.flag==="note"});
+  if(fromNote.length)notes.push(fromNote.length+" shift"+(fromNote.length>1?"s":"")+" priced from the hours and rates written in the Cash Flow note ("+fromNote.map(function(s){return s.name+" "+dShort(s.day)+" "+MN[+s.day.slice(5,7)-1]}).join(", ")+").");
+  return {jobs:jobs,shifts:shifts,issues:issues,notes:notes,first:days[0],last:days[days.length-1],low:low,hasSettings:!!ST,
     checks:shifts.filter(function(s){return s.flag==="check"}).length,noTime:jobs.filter(function(j){return !j.hrs}).length};
 }
 function finOpen(file){
@@ -1096,8 +1124,9 @@ function finHtml(P,PP,B,mode,vs){
   }
   var C=finPeriod(P.from,P.to),R0=finPeriod(PP.from,PP.to),R=C&&R0&&!C.partial&&!R0.partial?R0:null,T=B.map(function(b){return finPeriod(b.from,b.to)}),tf=function(f){return T.map(function(t){return t?f(t):null})};
   var top='<div class="finfile"><span>'+esc(D.file)+' · '+esc(dShort(D.first)+" "+MN[+D.first.slice(5,7)-1])+' to '+esc(dShort(D.last)+" "+MN[+D.last.slice(5,7)-1])+'</span>'+opener
-    +'<button class="btn small" type="button" data-act="finopen">Open a newer file</button><button class="btn small" type="button" data-act="finclear">Close file</button></div>';
-  if(D.issues.length||D.checks||D.noTime)top+='<div class="notice warn"><p>'+esc([D.checks?D.checks+" subcontractor day"+(D.checks>1?"s have":" has")+" a mixed or special rate in the note. Add "+(D.checks>1?"them":"it")+" to the Settings tab of the spreadsheet (until then the truck rate is used).":"",D.noTime?D.noTime+" job"+(D.noTime>1?"s have":" has")+" no time in Job Breakdown.":""].concat(D.issues.slice(0,4)).filter(Boolean).join(" "))+'</p></div>';
+    +'<button class="btn primary small" type="button" data-act="finpdf" data-ws="'+(mode==="week"?P.from:weekStart(P.to<D.last?P.to:D.last))+'">Weekly financial report (PDF)</button><button class="btn small" type="button" data-act="finopen">Open a newer file</button><button class="btn small" type="button" data-act="finclear">Close file</button></div>';
+  if(D.notes&&D.notes.length)top+='<p class="note">How the file was read: '+esc(D.notes.join(" "))+'</p>';
+  if(D.issues.length||D.checks||D.noTime)top+='<div class="notice warn"><p>'+esc([D.checks?D.checks+" subcontractor day"+(D.checks>1?"s have":" has")+" a note that looks like a mixed or special rate but couldn\u2019t be read. Write it like \u201c2 hours @ 8 Ton Rate, 3 hours @ 4.5 Ton Rate\u201d or \u201c$155 per hour plus $120 call out\u201d (until then the truck rate is used).":"",D.noTime?D.noTime+" job"+(D.noTime>1?"s have":" has")+" no time in Job Breakdown.":""].concat(D.issues.slice(0,4)).filter(Boolean).join(" "))+'</p></div>';
   if(!C)return panel("Finances","",top+'<p class="none">The file has nothing for '+esc(P.title)+'. It covers '+esc(dLong(D.first))+' to '+esc(dLong(D.last))+'.</p>'+costLine,true);
   var k='<div class="kpis">'
     +kpi("Net profit",fM0(C.net),R?dlt(C.net,R.net,"pct",true):null,tf(function(t){return t.net}),(noCost?"after wages and subcontractors (running costs not set)":"after wages, subcontractors and running costs")+(C.margin!=null?" · "+fP(C.margin)+" of revenue":""),true)
@@ -1135,6 +1164,113 @@ function finHtml(P,PP,B,mode,vs){
     +'<div class="npanels">'+panel("Own-crew jobs","",ownT,true)+'</div>';
 }
 document.addEventListener("change",function(e){if(e.target&&e.target.id==="finFile"){var f=e.target.files&&e.target.files[0];e.target.value="";finOpen(f)}});
+/* --- weekly financial report (PDF) for the partners --- */
+function finPdf(ws){
+  if(!FIN.data){toast("Open the finance spreadsheet first.");return}
+  toast("Making the report…");
+  Promise.all([needPdf(),logoData()]).then(function(r){finBuildPdf(ws,r[1])}).catch(function(){toast("The report couldn’t be made. Check the connection and try again.")});
+}
+function finBuildPdf(ws,logo){
+  var D=FIN.data,we=addDays(ws,6),C=finPeriod(ws,we);
+  if(!C){toast("The spreadsheet has nothing for that week.");return}
+  var R0=finPeriod(addDays(ws,-7),addDays(ws,-1)),R=R0&&!C.partial&&!R0.partial?R0:null,noCost=!(FIN.cfg&&FIN.cfg.daily&&FIN.cfg.daily.length);
+  var J=window.jspdf.jsPDF,doc=new J({unit:"mm",format:"a4"}),W=210,M=14,y=0;
+  var NAVY=[6,58,128],ROYAL=[0,74,173],SKY=[56,182,255],INK=[29,36,48],MUT=[93,104,120],LINE=[217,225,236],GOOD=[27,127,76],GOODB=[227,245,234],WARN=[180,83,9],WARNB=[255,244,221],BAD=[198,40,40],BADB=[253,232,232],SOFT=[243,246,251];
+  var col=function(c){doc.setTextColor(c[0],c[1],c[2])},fill=function(c){doc.setFillColor(c[0],c[1],c[2])},draw=function(c){doc.setDrawColor(c[0],c[1],c[2])};
+  var $0=function(n){return n==null||isNaN(n)?"-":(n<0?"-":"")+"$"+Math.round(Math.abs(n)).toLocaleString("en-AU")},pc=function(x){return x==null||isNaN(x)?"-":Math.round(x*100)+"%"};
+  var range=(+ws.slice(8))+" "+MONTHS[+ws.slice(5,7)-1]+" to "+(+we.slice(8))+" "+MONTHS[+we.slice(5,7)-1]+" "+we.slice(0,4);
+  fill(NAVY);doc.rect(0,0,W,34,"F");if(logo)try{doc.addImage(logo,"PNG",M,6,22,22)}catch(e){}
+  col([255,255,255]);doc.setFont("helvetica","bold");doc.setFontSize(18);doc.text("Weekly financial report",M+27,16);
+  doc.setFont("helvetica","normal");doc.setFontSize(10.5);doc.text(pdfTxt("Week of "+range+(C.partial?" (spreadsheet covers "+dLong(C.from)+" to "+dLong(C.to)+")":"")),M+27,23);
+  doc.setFontSize(8.5);doc.text("EAM Global Movers  |  Confidential: partners only",M+27,28.5);y=42;
+  function need(h){if(y+h>282){doc.addPage();y=16}}
+  function TA(o){var cs=o.columnStyles||{},prev=o.didParseCell;o.didParseCell=function(d){if(d.section==="head"&&cs[d.column.index]&&cs[d.column.index].halign==="left")d.cell.styles.halign="left";if(prev)prev(d)};doc.autoTable(o)}
+  function h2(s){need(14);col(NAVY);doc.setFont("helvetica","bold");doc.setFontSize(13);doc.text(pdfTxt(s),M,y);y+=2.5;draw(SKY);doc.setLineWidth(0.8);doc.line(M,y,M+18,y);y+=6}
+  function bullets(list){list.forEach(function(b){doc.setFont("helvetica","normal");doc.setFontSize(9.5);var lines=doc.splitTextToSize(pdfTxt(b.t),W-2*M-7);need(lines.length*4.4+2);
+    var c=b.k==="g"?GOOD:b.k==="b"?BAD:b.k==="w"?WARN:ROYAL;fill(c);doc.circle(M+1.6,y-1.2,1.2,"F");col(INK);doc.text(lines,M+5,y);y+=lines.length*4.4+1.6})}
+  var vs=function(cur,prev,goodUp){if(!R||prev==null)return "";var d=cur-prev;if(Math.abs(d)<0.5)return "same as last week";var up=d>0,good=goodUp?up:!up;return {t:(up?"+":"-")+$0(Math.abs(d))+" on last week",g:good}};
+  /* tiles */
+  var tiles=[["Revenue",$0(C.rev),plural(C.jobs.length,"job"),vs(C.rev,R&&R.rev,true)],["Staff pay",$0(C.staff),fH(C.staffH)+" hours",vs(C.staff,R&&R.staff,false)],
+    ["Subcontractors",$0(C.subs),plural(C.subJ.length,"job"),vs(C.subs,R&&R.subs,false)],["Running costs",noCost?"Not set":$0(C.run),noCost?"set it in the app":C.days+" days",""],
+    ["Net profit",$0(C.net),C.margin==null?"":pc(C.margin)+" of revenue",vs(C.net,R&&R.net,true)]];
+  var tw=(W-2*M-12)/5;tiles.forEach(function(x,i){var tx=M+i*(tw+3),hero=i===4,neg=hero&&C.net<0;fill(hero?(neg?BADB:GOODB):SOFT);draw(LINE);doc.setLineWidth(0.2);doc.roundedRect(tx,y,tw,27,2,2,"FD");
+    col(MUT);doc.setFont("helvetica","bold");doc.setFontSize(7.2);doc.text(x[0].toUpperCase(),tx+3,y+5.5);col(hero?(neg?BAD:GOOD):INK);doc.setFontSize(15);doc.text(pdfTxt(x[1]),tx+3,y+13.5);
+    doc.setFont("helvetica","normal");doc.setFontSize(7.5);col(MUT);doc.text(pdfTxt(x[2]),tx+3,y+18.5);if(x[3]&&x[3].t){col(x[3].g?GOOD:BAD);doc.text(pdfTxt(x[3].t),tx+3,y+23)}else if(x[3]){doc.text(pdfTxt(x[3]),tx+3,y+23)}});
+  y+=35;
+  /* summary */
+  var S2=[],lab=C.rev?C.labour/C.rev:null,daily=finDaily(C.to),be=lab!=null&&lab<1&&daily?daily/(1-lab):null,perDay=C.rev/C.days;
+  S2.push({k:C.net>=0?"g":"b",t:(C.net>=0?"Net profit was ":"The week lost ")+$0(Math.abs(C.net))+(C.margin!=null?" ("+pc(C.margin)+" of revenue)":"")+(noCost?" before running costs, which aren't set in the app yet.":" after wages, subcontractors and running costs.")+(R?" Last week: "+$0(R.net)+".":"")});
+  if(be)S2.push({k:perDay>=be?"g":"w",t:"Wages and subcontractors took "+pc(lab)+" of revenue. At that rate the business needs about "+$0(be)+" of revenue a day to cover the "+$0(daily)+" daily running cost. This week averaged "+$0(perDay)+" a day"+(perDay>=be?".":", short of break-even.")});
+  var quiet=[0,1,2,3,4,5,6].map(function(i){return addDays(ws,i)}).filter(function(d){return d>=C.from&&d<=C.to&&!C.jobs.some(function(j){return j.day===d})});
+  if(quiet.length&&daily)S2.push({k:"w",t:plural(quiet.length,"day")+" with no jobs ("+quiet.map(function(d){return DN[dow(d)]}).join(", ")+"), costing "+$0(quiet.length*daily)+" in running costs with nothing coming in."});
+  if(C.subJ.length){var loss=C.subJ.filter(function(j){return j.verdict==="Loss"}),thin=C.subJ.filter(function(j){return j.verdict==="Low margin"}),best=C.subJ.slice().sort(function(a,b){return b.profit-a.profit})[0];
+    S2.push({k:C.subRev&&C.subProfit/C.subRev<D.low?"w":"n",t:plural(C.subJ.length,"job")+" went to subcontractors: "+$0(C.subRev)+" from customers, "+$0(C.subProfit)+" kept ("+pc(C.subRev?C.subProfit/C.subRev:null)+")."+(loss.length?" Lost money on "+loss.map(function(j){return j.cust+" ("+$0(j.profit)+")"}).join(", ")+".":"")+(thin.length?" "+plural(thin.length,"job")+" kept under "+pc(D.low)+".":"")+(best&&best.profit>0?" Best: "+best.cust+" with "+best.lead+", "+$0(best.profit)+" kept.":"")})}
+  var own=C.jobs.filter(function(j){return !j.sub}),ownRev=own.reduce(function(t,j){return t+j.rev},0),ownP=own.reduce(function(t,j){return t+j.profit},0),weak=own.filter(function(j){return j.verdict==="Loss"||j.verdict==="Low margin"});
+  if(own.length)S2.push({k:weak.length?"w":"g",t:plural(own.length,"own-crew job")+" kept "+pc(ownRev?ownP/ownRev:null)+" after crew wages (before running costs)."+(weak.length?" Weak: "+weak.map(function(j){return j.cust+" ("+(j.profit<0?"lost "+$0(-j.profit):$0(j.profit)+" kept")+")"}).join(", ")+".":" None lost money.")});
+  var thirdH=C.shifts.filter(function(s){return s.third}).reduce(function(t,s){return t+s.hrs},0);
+  if(thirdH)S2.push({k:"n",t:fH(thirdH)+" staff hours were on days the person wasn't named on any job; counted as a 3rd mover on that day's own-crew jobs."});
+  if(C.partial)S2.push({k:"w",t:"The spreadsheet only covers "+dLong(C.from)+" to "+dLong(C.to)+" of this week. Running costs are counted for those "+C.days+" days only."});
+  h2("Summary");bullets(S2);y+=3;
+  /* daily table */
+  h2("Day by day");
+  var days=[0,1,2,3,4,5,6].map(function(i){return addDays(ws,i)}),dRows=days.map(function(d){var p=d>=C.from&&d<=C.to?finPeriod(d,d):null;return p?[DN[dow(d)]+" "+(+d.slice(8)),String(p.jobs.length),$0(p.rev),$0(p.staff),$0(p.subs),noCost?"-":$0(p.run),$0(p.net)]:[DN[dow(d)]+" "+(+d.slice(8)),"-","-","-","-","-","not in file"]});
+  dRows.push(["Week",String(C.jobs.length),$0(C.rev),$0(C.staff),$0(C.subs),noCost?"-":$0(C.run),$0(C.net)]);
+  TA({startY:y,margin:{left:M,right:M},head:[["Day","Jobs","Revenue","Staff pay","Subcontractors","Running cost","Net"]],body:dRows,theme:"grid",
+    styles:{fontSize:9,cellPadding:2,halign:"right",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"},6:{fontStyle:"bold"}},
+    didParseCell:function(d){if(d.section!=="body")return;if(d.row.index===7)d.cell.styles.fillColor=SOFT;if(d.column.index===6&&/^-\$/.test(String(d.cell.raw)))d.cell.styles.textColor=BAD}});
+  y=doc.lastAutoTable.finalY+8;
+  /* six-week trend */
+  var weeks=[5,4,3,2,1,0].map(function(k){var a=addDays(ws,-7*k);return {ws:a,p:finPeriod(a,addDays(a,6))}}).filter(function(x){return x.p});
+  if(weeks.length>1){need(66+weeks.length*7.5);h2("Last "+weeks.length+" weeks");
+    var cx=M+12,cw=W-2*M-14,ch=34,cy=y+2,vals=weeks.map(function(x){return x.p.net}),mx=Math.max.apply(null,vals.concat([0])),mn=Math.min.apply(null,vals.concat([0])),span=(mx-mn)||1;
+    var YP=function(v){return cy+ch-(v-mn)/span*ch},bw=Math.min(16,cw/weeks.length*0.55);
+    doc.setLineWidth(0.2);draw(LINE);doc.line(cx,YP(0),cx+cw,YP(0));doc.setFontSize(7);col(MUT);doc.text("$0",cx-2,YP(0)+1,{align:"right"});doc.text($0(mx),cx-2,YP(mx)+1,{align:"right"});if(mn<0)doc.text($0(mn),cx-2,YP(mn)+1,{align:"right"});
+    weeks.forEach(function(x,i){var bx=cx+cw*(i+0.5)/weeks.length-bw/2,v=x.p.net,y0=YP(Math.max(v,0)),hgt=Math.abs(YP(v)-YP(0));fill(v>=0?GOOD:BAD);if(hgt>0.3)doc.rect(bx,y0,bw,hgt,"F");
+      col(INK);doc.setFontSize(7.5);doc.text(pdfTxt($0(v)),bx+bw/2,v>=0?y0-1.5:YP(v)+3.5,{align:"center"});col(i===weeks.length-1?INK:MUT);doc.setFontSize(7.2);
+      doc.text(pdfTxt((+x.ws.slice(8))+" "+MN[+x.ws.slice(5,7)-1]+(x.p.partial?"*":"")),bx+bw/2,cy+ch+5,{align:"center"})});
+    y=cy+ch+9;doc.setFontSize(7.5);col(MUT);doc.text("Net profit each week (Monday to Sunday)."+(weeks.some(function(x){return x.p.partial})?" * = the spreadsheet covers only part of that week.":""),M,y);y+=4;
+    TA({startY:y,margin:{left:M,right:M},head:[["Week of","Revenue","Staff pay","Subcontractors","Running costs","Net","Margin"]],
+      body:weeks.map(function(x){var p=x.p;return [(+x.ws.slice(8))+" "+MN[+x.ws.slice(5,7)-1]+(p.partial?"*":""),$0(p.rev),$0(p.staff),$0(p.subs),noCost?"-":$0(p.run),$0(p.net),pc(p.margin)]}),theme:"grid",
+      styles:{fontSize:8.8,cellPadding:1.8,halign:"right",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"},5:{fontStyle:"bold"}},
+      didParseCell:function(d){if(d.section==="body"&&d.row.index===weeks.length-1)d.cell.styles.fillColor=SOFT;if(d.section==="body"&&d.column.index===5&&/^-\$/.test(String(d.cell.raw)))d.cell.styles.textColor=BAD}});
+    y=doc.lastAutoTable.finalY+8}
+  /* pay per person */
+  var per={};C.shifts.forEach(function(s){var p=per[s.name]=per[s.name]||{name:s.name,role:s.role,h:0,pay:0,third:0};p.h+=s.hrs;p.pay+=s.pay;if(s.third)p.third+=s.hrs});
+  var pl=Object.keys(per).map(function(k){return per[k]}).sort(function(a,b){return (a.role===b.role?0:a.role==="staff"?-1:1)||b.pay-a.pay});
+  need(30);h2("Pay per person");
+  TA({startY:y,margin:{left:M,right:M},head:[["Name","Type","Hours","Estimated pay","Average per hour","Hours as 3rd mover"]],
+    body:pl.map(function(p){return [p.name,p.role==="sub"?"Subcontractor":p.role==="staff"?"Staff":"Not on pay list",fH(p.h),$0(p.pay),p.h?$0(p.pay/p.h):"-",p.third?fH(p.third):""]}).concat([["Total","",fH(C.staffH+C.subH),$0(C.staff+C.subs),"",""]]),theme:"grid",
+    styles:{fontSize:9,cellPadding:2,halign:"right",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"},1:{halign:"left"},3:{fontStyle:"bold"}},
+    didParseCell:function(d){if(d.section==="body"&&d.row.index===pl.length){d.cell.styles.fillColor=SOFT;d.cell.styles.fontStyle="bold"}}});
+  y=doc.lastAutoTable.finalY+8;
+  /* subcontracted jobs */
+  var VC={Profitable:[GOODB,GOOD],"Low margin":[WARNB,WARN],Loss:[BADB,BAD]};
+  if(C.subJ.length){need(30);h2("Subcontracted jobs");
+    TA({startY:y,margin:{left:M,right:M},head:[["Day","Customer","Subcontractor","Paid","Job hrs","Cost","Profit","Margin","Verdict"]],
+      body:C.subJ.slice().sort(function(a,b){return a.day<b.day?-1:1}).map(function(j){return [DN[dow(j.day)]+" "+(+j.day.slice(8)),j.cust,j.lead,$0(j.rev),fH(j.hrs),$0(j.cost),$0(j.profit),pc(j.margin),j.verdict]}),theme:"grid",
+      styles:{fontSize:8.8,cellPadding:1.8,halign:"right",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"right"},columnStyles:{0:{halign:"left"},1:{halign:"left",fontStyle:"bold"},2:{halign:"left"},8:{halign:"left",fontStyle:"bold"}},
+      didParseCell:function(d){if(d.section==="body"&&d.column.index===8){var c=VC[d.cell.raw];if(c){d.cell.styles.fillColor=c[0];d.cell.styles.textColor=c[1]}}}});
+    y=doc.lastAutoTable.finalY+8}
+  /* own-crew jobs */
+  need(30);h2("Own-crew jobs");
+  doc.setFont("helvetica","normal");doc.setFontSize(9);col(INK);
+  var ownTxt=plural(own.length,"job")+", "+$0(ownRev)+" from customers, "+$0(ownP)+" kept after crew wages ("+pc(ownRev?ownP/ownRev:null)+"), before running costs."+(weak.length?" These lost money or kept under "+pc(D.low)+":":" None lost money or kept under "+pc(D.low)+".");
+  var ol=doc.splitTextToSize(pdfTxt(ownTxt),W-2*M);doc.text(ol,M,y);y+=ol.length*4.3+2;
+  if(weak.length){TA({startY:y,margin:{left:M,right:M},head:[["Day","Customer","Crew","Paid","Job hrs","Crew wages","Profit","Verdict"]],
+    body:weak.sort(function(a,b){return a.profit-b.profit}).map(function(j){return [DN[dow(j.day)]+" "+(+j.day.slice(8)),j.cust,j.crew.join(", "),$0(j.rev),fH(j.hrs),$0(j.cost),$0(j.profit),j.verdict]}),theme:"grid",
+    styles:{fontSize:8.8,cellPadding:1.8,halign:"right",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"right"},columnStyles:{0:{halign:"left"},1:{halign:"left",fontStyle:"bold"},2:{halign:"left"},7:{halign:"left",fontStyle:"bold"}},
+    didParseCell:function(d){if(d.section==="body"&&d.column.index===7){var c=VC[d.cell.raw];if(c){d.cell.styles.fillColor=c[0];d.cell.styles.textColor=c[1]}}}});
+    y=doc.lastAutoTable.finalY+8}
+  /* how it's worked out */
+  need(30);doc.setFont("helvetica","bold");doc.setFontSize(9);col(NAVY);doc.text("How this is worked out",M,y);y+=4.5;doc.setFont("helvetica","normal");doc.setFontSize(8);col(MUT);
+  var how="From the finance spreadsheet ("+D.file+"). Revenue is the Total column in Job Tracker. Staff pay is hours in Cash Flow x pay rate from Staff Salary pay. Subcontractor pay is hours x truck rate (8T when the note says 8 Ton), or the hours and rates written in the note. A job's cost is each person's pay for the day shared across their jobs that day by job time; staff with hours on a day they aren't on any job count as a 3rd mover on that day's own-crew jobs. Running costs are "+(noCost?"not set in the app yet.":$0(daily)+" a day, every day whether we work or not.")+" Own-crew figures leave out fuel, trucks and other running costs, which sit in the running cost."+(D.notes&&D.notes.length?" Notes: "+D.notes.join(" "):"");
+  var hl=doc.splitTextToSize(pdfTxt(how),W-2*M);need(hl.length*3.6);doc.text(hl,M,y);y+=hl.length*3.6;
+  var n=doc.getNumberOfPages();for(var p=1;p<=n;p++){doc.setPage(p);doc.setFontSize(7.5);col(MUT);doc.text(pdfTxt("EAM Global Movers  |  Weekly financial report  |  "+range+"  |  Confidential: partners only"),M,292);doc.text("Page "+p+" of "+n,W-M,292,{align:"right"})}
+  var name="EAM financial report "+ws+" to "+we+".pdf",blob=doc.output("blob"),file=null;try{file=new File([blob],name,{type:"application/pdf"})}catch(e){}
+  if(file&&navigator.canShare&&/iPhone|iPad|iPod/.test(navigator.userAgent)&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:name}).catch(function(){})}
+  else{var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u)},60000)}
+  toast("Report ready: "+name);
+}
 
 /* ---------- Numbers: page ---------- */
 function kpi(label,val,d,trend,note,hero){
@@ -2147,6 +2283,7 @@ document.addEventListener("click",function(e){
   if(a==="textclose"){S.modal=null;$("overlay").innerHTML="";render();return}
   if(a==="tstart"||a==="tfinish"||a==="tclear"){var tj=findJob(S.sel);if(tj)saveAssign(tj,a==="tstart"?{t0:nowRel(tj.day),t1:null}:a==="tfinish"?{t1:Math.max(nowRel(tj.day),((S.assign[tj.key]||{}).t0||0)+1)}:{t0:null,t1:null});return}
   if(a==="finopen"){var ff=$("finFile");if(ff)ff.click();return}
+  if(a==="finpdf"){finPdf(t.dataset.ws);return}
   if(a==="finclear"){FIN.data=null;FIN.err="";render();return}
   if(a==="finedit"){FIN.edit=!FIN.edit;render();return}
   if(a==="finsave"){var fd=($("finFrom")||{}).value,fa=+(($("finAmt")||{}).value);if(!/^\d{4}-\d{2}-\d{2}$/.test(fd||"")||!(fa>=0)){toast("Enter a start date and an amount.");return}

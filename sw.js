@@ -1,5 +1,5 @@
 // Keeps the app shell available offline. Calendar data always comes live from Microsoft.
-const VERSION = "eam-app-v20";
+const VERSION = "eam-app-v21";
 const SHELL = ["./", "index.html", "quotes.html", "quotes-bridge.js", "config.js", "msal-browser.min.js", "manifest.webmanifest", "pdf-lib.js", "logo.png", "icons/icon-192.png", "icons/icon-512.png"];
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
