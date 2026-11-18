@@ -248,9 +248,9 @@
       var wait = r.waiting ? " " + r.waiting + " booked job" + (r.waiting === 1 ? "" : "s") + " in that window still need" + (r.waiting === 1 ? "s" : "") + " a truck." : "";
       var nm = function (x) { return x.name + (x.size ? " (" + x.size + ")" : ""); };
       if (!r.trucks.length) paint(el, "", "No trucks are set up on the Dispatch page yet, so availability can't be checked.");
-      else if (!free.length) paint(el, "warn", "No truck of ours is free then. " + busy.map(function (x) { return x.name + " is on " + x.busy; }).join(". ") + ". This job would need a subcontractor or another time." + wait);
+      else if (!free.length) paint(el, "warn", "No truck of ours is free then. " + busy.map(function (x) { return x.off ? x.name + " is out of service" : x.name + " is on " + x.busy; }).join(". ") + ". This job would need a subcontractor or another time." + wait);
       else if (free.length <= r.waiting) paint(el, "warn", "Free then: " + free.map(nm).join(", ") + ", but" + wait.replace(/^ /, " ") + " Check Dispatch before promising this time.");
-      else paint(el, "ok", "Free then: " + free.map(nm).join(", ") + "." + (busy.length ? " " + busy.map(function (x) { return x.name + " is on " + x.busy; }).join(". ") + "." : "") + wait);
+      else paint(el, "ok", "Free then: " + free.map(nm).join(", ") + "." + (busy.length ? " " + busy.map(function (x) { return x.off ? x.name + " is out of service" : x.name + " is on " + x.busy; }).join(". ") + "." : "") + wait);
     }, function () { if (seq !== availSeq) return; availKey = ""; paint(el, "", "Checking the trucks for that time…"); });
   }
   setInterval(checkAvail, 1500);

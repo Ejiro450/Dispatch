@@ -69,6 +69,14 @@ body:not(.sales) #sales{display:none}
 body:not(.changes) #changes{display:none}
 body.gated #changes{display:none}
 #changes{display:flex;flex-direction:column;gap:14px}
+.oos{margin-top:6px;align-self:flex-start;font:inherit;font-size:11.5px;font-weight:700;border:1px solid var(--line);background:var(--card,transparent);color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer}
+.oos:hover{color:var(--ink);border-color:var(--muted)}
+.oos[aria-pressed="true"]{background:var(--warn-bg);color:var(--warn);border-color:transparent}
+.lab .oos{display:block}
+.lane.off{background:repeating-linear-gradient(135deg,var(--grid) 0 8px,transparent 8px 16px)}
+.offmsg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.3px;pointer-events:none;white-space:nowrap}
+.offrow .lab .nm{text-decoration:line-through;text-decoration-thickness:1.5px;color:var(--muted)}
+.sec.offsec{opacity:.9}.sec.offsec h4 span{text-decoration:line-through;color:var(--muted)}.sec .oos{margin:0 0 8px}
 body.changes .daybar,body.changes .week,body.changes .stats,body.changes .board,body.changes .legend,body.changes #btnSheet{display:none}
 #changes .nbar .sp{flex:1}
 #changes .note{margin:0;font-size:12px;color:var(--muted);max-width:100ch}
@@ -518,7 +526,7 @@ function loadFleet(){
     calId=c.id;return gfetch(BASE+"/calendars/"+encodeURIComponent(calId)+"?$select=id&$expand="+expandQ(P_FLEET));
   }).then(function(c){
     var d=readProp(c);
-    S.fleet=d&&Array.isArray(d.trucks)?{trucks:d.trucks,crew:Array.isArray(d.crew)?d.crew:[],buffer:typeof d.buffer==="number"?d.buffer:30,weekHours:typeof d.weekHours==="number"?d.weekHours:60,defRate:typeof d.defRate==="number"?d.defRate:120}:JSON.parse(JSON.stringify(DEFAULT_FLEET));
+    S.fleet=d&&Array.isArray(d.trucks)?{trucks:d.trucks,crew:Array.isArray(d.crew)?d.crew:[],buffer:typeof d.buffer==="number"?d.buffer:30,weekHours:typeof d.weekHours==="number"?d.weekHours:60,defRate:typeof d.defRate==="number"?d.defRate:120,off:d.off&&typeof d.off==="object"?d.off:{}}:JSON.parse(JSON.stringify(DEFAULT_FLEET));
     S.fleetLoaded=true;render();
   },function(e){S.fleetLoaded=true;S.fleet=JSON.parse(JSON.stringify(DEFAULT_FLEET));if(!S.err)S.err=errText(e);render()});
 }
@@ -578,7 +586,23 @@ function analyse(jobs){
   }
   jobs.forEach(function(j){var t=truckOf(j);if(!t||!j.size)return;var tr=S.fleet.trucks.filter(function(x){return x.id===t})[0];
     if(tr&&tr.size&&tr.size!=="Other"&&tr.size!==j.size)flags[j.key].size="Booked as "+j.size+", "+tr.name+" is "+tr.size});
+  jobs.forEach(function(j){var t=truckOf(j);if(t&&isOff(j.day,t))flags[j.key].clash.push(truckName(t)+" is out of service on this day. Move this job to another truck or a subcontractor.")});
   return flags;
+}
+/* trucks out of service on a given day: S.fleet.off = {"YYYY-MM-DD": {truckId: 1}} */
+function isOff(day,tid){var o=S.fleet.off&&S.fleet.off[day];return !!(o&&tid&&o[tid])}
+function offList(day){return S.fleet.trucks.filter(function(t){return isOff(day,t.id)})}
+function onRoad(day){return S.fleet.trucks.filter(function(t){return !isOff(day,t.id)})}
+function offDays(tid,from,to){var n=0;Object.keys(S.fleet.off||{}).forEach(function(d){if(d>=from&&d<=to&&S.fleet.off[d][tid])n++});return n}
+function setOff(day,tid,off){
+  var name=truckName(tid),apply=function(f){f.off=f.off&&typeof f.off==="object"?f.off:{};var o=f.off[day]||{};if(off)o[tid]=1;else delete o[tid];if(Object.keys(o).length)f.off[day]=o;else delete f.off[day];
+    var cut=addDays(melParts(new Date()).date,-400);Object.keys(f.off).forEach(function(d){if(d<cut)delete f.off[d]});return f};
+  apply(S.fleet);render();
+  /* re-read the saved fleet first so another device's changes aren't overwritten */
+  gfetch(BASE+"/calendars/"+encodeURIComponent(calId)+"?$select=id&$expand="+expandQ(P_FLEET)).then(function(c){
+    var d=readProp(c);if(!d||!Array.isArray(d.trucks))d=JSON.parse(JSON.stringify(S.fleet));
+    apply(d);return pushFleet(d).then(function(){S.fleet.off=d.off;render()});
+  }).then(function(){toast(name+(off?" is out of service on ":" is back in service on ")+dLong(day)+".")},function(e){apply(S.fleet);off=!off;apply(S.fleet);render();toast("That wasn\u2019t saved. "+errText(e))});
 }
 function truckName(id){var t=S.fleet.trucks.filter(function(x){return x.id===id})[0];return t?t.name:"Truck"}
 function crewName(id){var c=S.fleet.crew.filter(function(x){return x.id===id})[0];return c?c.name:"Crew"}
@@ -786,8 +810,8 @@ function workH(j){return actualH(j)||durH(j)}
 function M(from,to){
   var J=jobsIn(from,to),days=dayDiff(from,to)+1,tr=S.fleet.trucks,wh=S.fleet.weekHours||60,capT=wh*days/7;
   var own=J.filter(function(j){return truckOf(j)}),sub=J.filter(function(j){return subOf(j)}),un=J.filter(needs);
-  var rev=sumF(J,valueOf),hours=sumF(J,bookedH),ownH=sumF(own,workH),cap=tr.length*capT;
-  var perT={};tr.forEach(function(t){var l=own.filter(function(j){return truckOf(j)===t.id});perT[t.id]={name:t.name,jobs:l.length,h:sumF(l,workH),util:capT?sumF(l,workH)/capT:null}});
+  var rev=sumF(J,valueOf),hours=sumF(J,bookedH),ownH=sumF(own,workH),cap=0;
+  var perT={};tr.forEach(function(t){var l=own.filter(function(j){return truckOf(j)===t.id}),c=Math.max(0,capT-offDays(t.id,from,to)*wh/7);cap+=c;perT[t.id]={name:t.name,jobs:l.length,h:sumF(l,workH),util:c?sumF(l,workH)/c:null,offDays:offDays(t.id,from,to)}});
   var subC=sub.filter(function(j){return costOf(j)!=null}),both=subC,margin=sumF(both,function(j){return valueOf(j)-costOf(j)}),bothRev=sumF(both,valueOf);
   var timed=J.filter(function(j){return actualH(j)!=null}),over=timed.filter(function(j){return overMin(j)>0});
   var assumedL=J.filter(assumed);
@@ -802,7 +826,7 @@ function quoteStats(from,to,filt){
 function groupBy(list,keyf){var m={};list.forEach(function(j){[].concat(keyf(j)).forEach(function(k){k=k||"Not stated";(m[k]=m[k]||[]).push(j)})});return m}
 function avoidable(subJobs){
   var buf=S.fleet.buffer||0;
-  return subJobs.filter(function(j){var dj=dayJobs(j.day);return S.fleet.trucks.some(function(t){return !dj.some(function(o){return o.key!==j.key&&truckOf(o)===t.id&&overlap(o,j,buf)})})});
+  return subJobs.filter(function(j){var dj=dayJobs(j.day);return onRoad(j.day).some(function(t){return !dj.some(function(o){return o.key!==j.key&&truckOf(o)===t.id&&overlap(o,j,buf)})})});
 }
 
 /* ---------- Numbers: formatting ---------- */
@@ -1693,7 +1717,8 @@ function render(){
     +(warnN?'<div class="stat warn"><b>'+warnN+'</b><span>to check</span></div>':"")
     +(pend?'<div class="stat"><b>'+pend+'</b><span>pending</span></div>':"")
     +(subN?'<div class="stat"><b>'+subN+'</b><span>subcontracted</span></div>':"")
-    +'<div class="stat"><b>'+Object.keys(out).length+'/'+S.fleet.trucks.length+'</b><span>trucks out</span></div>'
+    +'<div class="stat"><b>'+Object.keys(out).filter(function(t){return !isOff(S.day,t)}).length+'/'+onRoad(S.day).length+'</b><span>trucks out</span></div>'
+    +(offList(S.day).length?'<div class="stat warn"><b>'+offList(S.day).length+'</b><span>out of service</span></div>':"")
     +slotHtml(jobs);
   $("stats").innerHTML=st;
 
@@ -1707,13 +1732,14 @@ function render(){
 function slotHtml(jobs){
   var o="";for(var t=360;t<=1200;t+=30)o+='<option value="'+t+'"'+(t===S.slotT?" selected":"")+'>'+tm(t)+'</option>';
   var buf=S.fleet.buffer||0,q={start:S.slotT,end:S.slotT+S.slotH*60},free=[],ans;
-  S.fleet.trucks.forEach(function(t){if(!jobs.some(function(j){return truckOf(j)===t.id&&overlap(j,q,buf)}))free.push(t)});
+  onRoad(S.day).forEach(function(t){if(!jobs.some(function(j){return truckOf(j)===t.id&&overlap(j,q,buf)}))free.push(t)});
   var wait=jobs.filter(function(j){return needs(j)&&overlap(j,q,buf)}).length;
   if(!S.fleet.trucks.length)ans=jobs.filter(function(j){return overlap(j,q,0)}).length+" job(s) already booked in that window. Add your trucks to see which are free.";
-  else if(!free.length)ans="No truck of ours is free then. A new job in that window would need a subcontractor.";
+  else if(!free.length)ans=(onRoad(S.day).length?"No truck of ours is free then.":"All our trucks are out of service this day.")+" A new job in that window would need a subcontractor.";
   else ans="Free: "+free.map(function(t){return t.name+(t.size?" ("+t.size+")":"")}).join(", ")+(wait?". "+wait+" unassigned job"+(wait===1?"":"s")+" in that window still need"+(wait===1?"s":"")+" one.":".");
   return '<div class="slot"><label for="slotT">Can we take a job at</label><select id="slotT">'+o+'</select><label for="slotH">for</label><input id="slotH" type="number" min="0.5" max="14" step="0.5" value="'+S.slotH+'"><label for="slotH">hours?</label><span class="ans">'+esc(ans)+'</span></div>';
 }
+function oosBtn(tid,off){return '<button type="button" class="oos" data-oos="'+esc(tid)+'" aria-pressed="'+off+'">'+(off?"Put back in service":"Out of service")+'</button>'}
 function boardHtml(jobs,flags,today){
   var t0=360,t1=1260;jobs.forEach(function(j){t0=Math.min(t0,Math.floor(j.start/60)*60);t1=Math.max(t1,Math.min(1440,Math.ceil(j.end/60)*60))});
   var span=t1-t0,hourPct=6000/span;
@@ -1730,7 +1756,9 @@ function boardHtml(jobs,flags,today){
       inner+='<button type="button" draggable="true" class="'+cls+'" data-job="'+esc(j.key)+'" style="left:'+l+'%;width:calc('+w+'% - 3px);top:'+(7+j._row*66)+'px" title="'+esc(j.customer+", "+tm(j.start)+" to "+tm(j.end))+'">'
         +'<span class="t">'+tm(j.start)+" "+esc(j.customer)+'</span><span class="r">'+esc(j.route||j.body.type||"")+'</span><span class="c">'+chips+'</span></button>';
     });
-    return '<div class="lane" data-truck="'+esc(tid)+'" style="--hour:'+hourPct+'%;height:'+(8+rows*66)+'px">'+inner+'</div>';
+    var off=tid&&tid.indexOf("sub:")!==0&&isOff(S.day,tid);
+    if(off)inner='<span class="offmsg">Out of service</span>'+inner;
+    return '<div class="lane'+(off?" off":"")+'" data-truck="'+esc(tid)+'" style="--hour:'+hourPct+'%;height:'+(8+rows*66)+'px">'+inner+'</div>';
   }
   var un=jobs.filter(needs);
   h+='<div class="row un'+(un.length?"":" empty")+'"><div class="lab"><span class="nm">'+(un.length?"Needs a truck":"All assigned")+'</span><span class="meta">'+un.length+" job"+(un.length===1?"":"s")+'</span></div>'+lane(un,"")+'</div>';
@@ -1738,8 +1766,9 @@ function boardHtml(jobs,flags,today){
     var list=jobs.filter(function(j){return truckOf(j)===t.id}),crew={};
     list.forEach(function(j){crewOf(j).forEach(function(c){crew[c]=1})});
     var bh=list.reduce(function(s,j){return s+(j.end-j.start)/60},0);
-    h+='<div class="row"><div class="lab"><span class="nm">'+esc(t.name)+'</span><span class="meta">'+esc(t.size||"")+(t.size?", ":"")+(list.length?list.length+" job"+(list.length===1?"":"s")+", "+hrs(bh):"free all day")+'</span>'
-      +(Object.keys(crew).length?'<span class="crew">'+esc(Object.keys(crew).map(crewName).join(", "))+'</span>':"")+'</div>'+lane(list,t.id)+'</div>';
+    var off=isOff(S.day,t.id);
+    h+='<div class="row'+(off?" offrow":"")+'"><div class="lab"><span class="nm">'+esc(t.name)+'</span><span class="meta">'+esc(t.size||"")+(t.size?", ":"")+(off?(list.length?list.length+" job"+(list.length===1?"":"s")+" to move":"not running"):list.length?list.length+" job"+(list.length===1?"":"s")+", "+hrs(bh):"free all day")+'</span>'
+      +(Object.keys(crew).length?'<span class="crew">'+esc(Object.keys(crew).map(crewName).join(", "))+'</span>':"")+oosBtn(t.id,off)+'</div>'+lane(list,t.id)+'</div>';
   });
   var sn={};jobs.forEach(function(j){var s=subOf(j);if(s)(sn[s]=sn[s]||[]).push(j)});
   Object.keys(sn).sort().forEach(function(n){var list=sn[n];
@@ -1761,8 +1790,9 @@ function listHtml(jobs,flags){
   }
   var un=jobs.filter(needs),h="";
   if(un.length)h+=sec("un","Needs a truck",un.length+" job"+(un.length===1?"":"s"),un,"un","");
-  S.fleet.trucks.forEach(function(t){var list=jobs.filter(function(j){return truckOf(j)===t.id}),bh=list.reduce(function(s,j){return s+(j.end-j.start)/60},0);
-    h+=sec("",t.name+(t.size?" ("+t.size+")":""),list.length?list.length+" job"+(list.length===1?"":"s")+", "+hrs(bh):"",list,"own","Free all day")});
+  S.fleet.trucks.forEach(function(t){var list=jobs.filter(function(j){return truckOf(j)===t.id}),bh=list.reduce(function(s,j){return s+(j.end-j.start)/60},0),off=isOff(S.day,t.id);
+    var s=sec(off?"offsec":"",t.name+(t.size?" ("+t.size+")":""),off?"Out of service"+(list.length?", "+list.length+" job"+(list.length===1?"":"s")+" to move":""):list.length?list.length+" job"+(list.length===1?"":"s")+", "+hrs(bh):"",list,"own",off?"Not running this day":"Free all day");
+    h+=s.replace(/<\/h4>/,"</h4>"+oosBtn(t.id,off))});
   var sn={};jobs.forEach(function(j){var s=subOf(j);if(s)(sn[s]=sn[s]||[]).push(j)});
   Object.keys(sn).sort().forEach(function(n){h+=sec("subrow",n,"Subcontractor, "+sn[n].length+" job"+(sn[n].length===1?"":"s"),sn[n],"sub","")});
   if(!jobs.length)h='<div class="empty">No jobs in the calendar for this day.</div>'+h;
@@ -1780,8 +1810,8 @@ function renderOverlay(jobs,flags){
   if(!j){el.innerHTML="";return}
   var f=flags[j.key],b=j.body,tr=truckOf(j),cr=crewOf(j),buf=S.fleet.buffer||0,sb=subOf(j);
   var opts='<option value="">Not assigned</option>'+S.fleet.trucks.map(function(t){
-    var busy=jobs.some(function(o){return o.key!==j.key&&truckOf(o)===t.id&&overlap(o,j,buf)});
-    return '<option value="'+esc(t.id)+'"'+(t.id===tr?" selected":"")+'>'+esc(t.name+(t.size?" ("+t.size+")":"")+(busy?" - busy then":""))+'</option>'}).join("")+'<option value="__sub"'+(sb?" selected":"")+'>Subcontractor</option>';
+    var busy=jobs.some(function(o){return o.key!==j.key&&truckOf(o)===t.id&&overlap(o,j,buf)}),off=isOff(j.day,t.id);
+    return '<option value="'+esc(t.id)+'"'+(t.id===tr?" selected":"")+(off&&t.id!==tr?" disabled":"")+'>'+esc(t.name+(t.size?" ("+t.size+")":"")+(off?" - out of service":busy?" - busy then":""))+'</option>'}).join("")+'<option value="__sub"'+(sb?" selected":"")+'>Subcontractor</option>';
   var crewH=S.fleet.crew.map(function(c){
     var busy=jobs.some(function(o){return o.key!==j.key&&crewOf(o).indexOf(c.id)>=0&&overlap(o,j,0)});
     return '<label class="'+(busy?"busy":"")+'"><input type="checkbox" data-crew="'+esc(c.id)+'"'+(cr.indexOf(c.id)>=0?" checked":"")+'>'+esc(c.name)+(busy?" (on another job)":"")+'</label>'}).join("");
@@ -1831,7 +1861,7 @@ function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slic
 function saveFleet(){
   readDraft();
   var f={trucks:draft.trucks.filter(function(t){return t.name.trim()}).map(function(t){return {id:t.id,name:t.name.trim(),size:t.size}}),
-         crew:draft.crew.filter(function(c){return c.name.trim()}).map(function(c){return {id:c.id,name:c.name.trim()}}),buffer:draft.buffer,weekHours:draft.weekHours||60,defRate:draft.defRate||120};
+         crew:draft.crew.filter(function(c){return c.name.trim()}).map(function(c){return {id:c.id,name:c.name.trim()}}),buffer:draft.buffer,weekHours:draft.weekHours||60,defRate:draft.defRate||120,off:S.fleet.off||{}};
   S.fleet=f;draft=null;S.modal=null;$("overlay").innerHTML="";render();
   pushFleet(f).catch(function(e){toast("The fleet list wasn't saved. "+errText(e))});
 }
@@ -1847,7 +1877,8 @@ function jobText(j){
 function sheetText(){
   var jobs=dayJobs(S.day),out=["📅 "+dLong(S.day)+" run sheet",""];
   function block(title,list){if(!list.length)return;out.push(title);list.forEach(function(j){var c=crewOf(j).map(crewName);out.push("");if(c.length)out.push("Crew: "+c.join(", "));out.push(jobText(j))});out.push("")}
-  S.fleet.trucks.forEach(function(t){block("🚚 "+t.name+(t.size?" ("+t.size+")":""),jobs.filter(function(j){return truckOf(j)===t.id}))});
+  S.fleet.trucks.forEach(function(t){block("🚚 "+t.name+(t.size?" ("+t.size+")":"")+(isOff(S.day,t.id)?" (OUT OF SERVICE)":""),jobs.filter(function(j){return truckOf(j)===t.id}))});
+  if(offList(S.day).length)out.push("Out of service today: "+offList(S.day).map(function(t){return t.name}).join(", "),"");
   var sn={};jobs.forEach(function(j){var s=subOf(j);if(s)(sn[s]=sn[s]||[]).push(j)});
   Object.keys(sn).sort().forEach(function(n){block("🤝 Subcontractor: "+n,sn[n])});
   block("⚠️ Not assigned to a truck yet",jobs.filter(needs));
@@ -1864,9 +1895,10 @@ function toast(m){var o=document.querySelector(".toast");if(o)o.remove();var d=d
 function go(day){S.day=day;S.sel=null;var ws=weekStart(day);render();if(!S.events[ws])fetchWeek(ws,false)}
 function findJob(k){return dayJobs(S.day).filter(function(j){return j.key===k})[0]}
 document.addEventListener("click",function(e){
-  var t=e.target.closest("[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut,#tabDispatch,#tabQuotes,#tabNumbers,#tabSales,#tabChanges");
+  var t=e.target.closest("[data-oos],[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut,#tabDispatch,#tabQuotes,#tabNumbers,#tabSales,#tabChanges");
   if(!t)return;
   if(t.dataset.close){if(e.target!==t&&t.classList.contains("scrim"))return;S.sel=null;render();return}
+  if(t.dataset.oos!=null){setOff(S.day,t.dataset.oos,!isOff(S.day,t.dataset.oos));return}
   if(t.dataset.day){go(t.dataset.day);return}
   if(t.dataset.job){S.sel=t.dataset.job;render();return}
   if(t.id==="prev"){go(addDays(S.day,-1));return}
@@ -1938,6 +1970,7 @@ document.addEventListener("dragstart",function(e){var j=e.target.closest&&e.targ
 document.addEventListener("dragover",function(e){var l=e.target.closest&&e.target.closest(".lane");if(!l||!dragKey)return;e.preventDefault();l.classList.add("over")});
 document.addEventListener("dragleave",function(e){var l=e.target.closest&&e.target.closest(".lane");if(l&&!l.contains(e.relatedTarget))l.classList.remove("over")});
 document.addEventListener("drop",function(e){var l=e.target.closest&&e.target.closest(".lane");if(!l||!dragKey)return;e.preventDefault();var j=findJob(dragKey);dragKey=null;var to=l.dataset.truck;if(!j){render();return}
+  if(to&&to.indexOf("sub:")!==0&&isOff(j.day,to)){toast(truckName(to)+" is out of service on this day.");render();return}
   if(to.indexOf("sub:")===0){if(subOf(j)!==to.slice(4))saveAssign(j,{truck:"",sub:to.slice(4),nosub:false,crew:[]});else render()}
   else if(to===""){if(!needs(j))saveAssign(j,{truck:"",sub:"",nosub:!!j.hint});else render()}
   else if(truckOf(j)!==to)saveAssign(j,{truck:to,sub:"",nosub:false});else render()});
@@ -1964,7 +1997,7 @@ window.EAM={gfetch:gfetch,BASE:BASE,TZ:TZ,who:"",refreshBoard:function(){var ws=
     return Promise.resolve(p).then(function(){
       if(!S.events[ws]){var e=new Error("loading");e.code="loading";throw e}
       var jobs=dayJobs(day),q={start:start,end:end},buf=S.fleet.buffer||0;
-      return {trucks:S.fleet.trucks.map(function(t){var hit=jobs.filter(function(j){return truckOf(j)===t.id&&overlap(j,q,buf)})[0];return {name:t.name,size:t.size||"",free:!hit,busy:hit?tm(hit.start)+" to "+tm(hit.end)+" "+hit.customer:""}}),
+      return {trucks:S.fleet.trucks.map(function(t){if(isOff(day,t.id))return {name:t.name,size:t.size||"",free:false,off:true,busy:"out of service"};var hit=jobs.filter(function(j){return truckOf(j)===t.id&&overlap(j,q,buf)})[0];return {name:t.name,size:t.size||"",free:!hit,busy:hit?tm(hit.start)+" to "+tm(hit.end)+" "+hit.customer:""}}),
         waiting:jobs.filter(function(j){return needs(j)&&overlap(j,q,buf)}).length,jobs:jobs.length};
     });
   }};
