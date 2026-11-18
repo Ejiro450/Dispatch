@@ -60,11 +60,28 @@ body.gated .tabs,body.gated #qframe{display:none}
 .tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);border-radius:10px;padding:3px}
 .tabs button{border:0;background:transparent;color:#fff;font-weight:700;padding:7px 14px;border-radius:8px}
 @media (max-width:420px){.tabs button{padding:7px 9px;font-size:13.5px}}
+@media (max-width:440px){.tabs{gap:1px}.tabs button{padding:7px 6px;font-size:12.5px}}
 .tabs button[aria-current="page"]{background:#fff;color:#063A80}
 #qframe{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;height:calc(100dvh - 120px - var(--sat) - env(safe-area-inset-bottom,0px));min-height:480px;display:block}
 body:not(.quotes) #qframe{display:none}
 body:not(.numbers) #numbers{display:none}
 body:not(.sales) #sales{display:none}
+body:not(.changes) #changes{display:none}
+body.gated #changes{display:none}
+#changes{display:flex;flex-direction:column;gap:14px}
+body.changes .daybar,body.changes .week,body.changes .stats,body.changes .board,body.changes .legend,body.changes #btnSheet{display:none}
+#changes .nbar .sp{flex:1}
+#changes .note{margin:0;font-size:12px;color:var(--muted);max-width:100ch}
+.cday{font-size:13px;margin:14px 0 6px;color:var(--muted)}.cday:first-child{margin-top:0}
+.clist{display:flex;flex-direction:column;gap:6px}
+.chg{display:grid;grid-template-columns:118px 1fr auto;gap:10px;align-items:start;border:1px solid var(--line);border-left:4px solid var(--royal);border-radius:9px;padding:9px 12px}
+.chg.deleted,.chg.cancelled{border-left-color:var(--bad)}.chg.reset{border-left-color:var(--muted)}
+.cbadge{justify-self:start;font-size:11px;font-weight:800;border-radius:6px;padding:2px 7px;background:var(--job);color:var(--royal)}
+.chg.deleted .cbadge,.chg.cancelled .cbadge{background:var(--bad-bg);color:var(--bad)}.chg.reset .cbadge{background:var(--grid);color:var(--muted)}
+.cmain{display:flex;flex-direction:column;gap:3px;min-width:0;font-size:13.5px}.cmain .cs{overflow-wrap:anywhere}.cmain s{color:var(--muted)}
+.ctag{align-self:flex-start;font-size:11px;font-weight:700;border-radius:5px;padding:1px 6px;background:var(--grid);color:var(--muted)}.ctag.w{background:var(--warn-bg);color:var(--warn)}
+.cwhen{text-align:right;display:flex;flex-direction:column;font-size:13px}.cwhen small{color:var(--muted);font-size:11px}
+@media (max-width:600px){.chg{grid-template-columns:1fr auto}.chg .cbadge{grid-column:1;grid-row:1}.chg .cwhen{grid-column:2;grid-row:1}.chg .cmain{grid-column:1/-1;grid-row:2}}
 body.gated #sales{display:none}
 #sales{display:flex;flex-direction:column;gap:14px}
 body.sales .daybar,body.sales .week,body.sales .stats,body.sales .board,body.sales .legend,body.sales #btnSheet{display:none}
@@ -322,7 +339,7 @@ a.lnk{color:var(--royal);font-weight:700}
       <h1 id="appTitle">EAM Dispatch Board</h1>
       <div class="sub">Our trucks, crews and subcontractors against the jobs in the admin Outlook calendar</div>
     </div>
-    <nav class="tabs" id="tabs" aria-label="Sections"><button type="button" id="tabDispatch" aria-current="page">Dispatch</button><button type="button" id="tabQuotes">Quotes</button><button type="button" id="tabNumbers">Numbers</button><button type="button" id="tabSales">Sales</button></nav>
+    <nav class="tabs" id="tabs" aria-label="Sections"><button type="button" id="tabDispatch" aria-current="page">Dispatch</button><button type="button" id="tabQuotes">Quotes</button><button type="button" id="tabNumbers">Numbers</button><button type="button" id="tabSales">Sales</button><button type="button" id="tabChanges">Changes</button></nav>
     <div class="sp"></div>
     <span class="who" id="who"></span>
     <button class="btn ghost" id="btnSheet" type="button">Copy run sheet</button>
@@ -346,6 +363,7 @@ a.lnk{color:var(--royal);font-weight:700}
   <div id="notices"></div>
   <section id="numbers" aria-label="Numbers"></section>
   <section id="sales" aria-label="Sales performance"></section>
+  <section id="changes" aria-label="Bookings moved or deleted"></section>
   <div class="stats" id="stats"></div>
   <div class="board"><div class="grid" id="grid"><div class="empty">Loading the calendar&hellip;</div></div></div>
   <div class="legend">
@@ -533,8 +551,8 @@ function boot(){
     account=(r&&r.account)||pca.getAllAccounts()[0]||null;
     if(!account){S.auth="out";render();return}
     pca.setActiveAccount(account);S.auth="in";S.who=account.username||"";window.EAM.who=S.who;render();
-    if(["#quotes","#numbers","#sales"].indexOf(location.hash)>=0)setTab(location.hash.slice(1));
-    loadFleet();loadSalesCfg();fetchWeek(weekStart(S.day),false);
+    if(["#quotes","#numbers","#sales","#changes"].indexOf(location.hash)>=0)setTab(location.hash.slice(1));
+    loadFleet();loadSalesCfg();fetchWeek(weekStart(S.day),false);setTimeout(chgAuto,4000);
   }).catch(function(){S.auth="out";S.err="Sign-in didn't finish. Try again.";render()});
 }
 
@@ -649,12 +667,12 @@ function writeLock(pw){
 }
 function testLock(pw){var r=LOCK.rec;return derive(pw,u8b64(r.salt),r.iter||210000).then(function(h){return h===r.hash})}
 function lockNow(){LOCK.unlocked=false;LOCK.state="unknown";gateKey="";if(S.modal==="lockchange"){S.modal=null;$("overlay").innerHTML=""}render()}
-function lockSay(m){var el=document.querySelector(".modal #lockMsg")||document.querySelector("#"+(TAB==="sales"?"sales":"numbers")+" #lockMsg");if(el)el.textContent=m}
+function lockSay(m){var el=document.querySelector(".modal #lockMsg")||document.querySelector("#"+(TAB==="sales"||TAB==="changes"?TAB:"numbers")+" #lockMsg");if(el)el.textContent=m}
 ["pointerdown","keydown"].forEach(function(t){document.addEventListener(t,function(){if(LOCK.unlocked)LOCK.last=Date.now()},true)});
 setInterval(function(){if(LOCK.unlocked&&Date.now()-LOCK.last>15*60000)lockNow()},30000);
 document.addEventListener("visibilitychange",function(){if(document.hidden)LOCK.hiddenAt=Date.now();else if(LOCK.unlocked&&LOCK.hiddenAt&&Date.now()-LOCK.hiddenAt>5*60000)lockNow()});
 function gateHtml(what){
-  var st=LOCK.state,b='<div class="lockbox"><h2>'+esc(what||"Numbers")+' is for partners only</h2>';
+  var st=LOCK.state,b='<div class="lockbox"><h2>Access is restricted</h2>';
   if(st==="set")return b+'<p>Enter the partner password to see the numbers and subcontractor costs. It locks again after 15 minutes without use, or when the app has been in the background for 5 minutes.</p><form id="lockOpen" autocomplete="off"><label class="lbl" for="pw">Partner password</label><input type="password" id="pw" autocomplete="current-password"><div class="acts"><button class="btn primary" type="submit">Unlock</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
   if(st==="none")return b+'<p>No partner password has been set yet. Set one now. Only the partners should know it: anyone with it can see Numbers and what is paid to subcontractors.</p><form id="lockSet" autocomplete="off"><label class="lbl" for="pw1">New partner password (at least 8 characters)</label><input type="password" id="pw1" autocomplete="new-password"><label class="lbl" for="pw2">Type it again</label><input type="password" id="pw2" autocomplete="new-password"><div class="acts"><button class="btn primary" type="submit">Set password and open Numbers</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
   if(st==="error")return b+'<p>'+esc(LOCK.err||"The lock couldn’t be checked.")+'</p><div class="acts"><button class="btn" type="button" data-act="lockretry">Try again</button></div></div>';
@@ -1456,6 +1474,187 @@ function buildPdf(m,logo){
   toast("PDF ready: "+name);
 }
 
+/* ---------- Changes: bookings moved or deleted ----------
+   Every check compares the calendar (7 days back to 180 days ahead) with the list saved at the last check.
+   The saved list and the log live in a separate "EAM Change Log" calendar; the time of the last check is a
+   hidden property on the main calendar. Moves carry Outlook's own last-changed time. Outlook keeps no
+   time for a deletion, so a deletion is shown as "between" the two checks, unless the deleted item is
+   still in Deleted Items, when Outlook's time for it is shown. */
+var P_CHG="String "+NS+" Name eamChangeMon";
+var CHG={busy:false,lastRun:0,mon:null,view:"unknown",months:{},err:"",days:30,type:"all",found:0};
+var CHG_BACK=7,CHG_AHEAD=180,CHG_NAME="EAM Change Log",CHG_STATE="EAM change monitor (do not delete)",CHG_LOG="EAM change log ";
+function melIso(d){var p=melParts(d);return p.date+"T"+pad(Math.floor(p.min/60))+":"+pad(p.min%60)}
+function evT(x){var w=when(x);return w.date+"T"+pad(Math.floor(w.min/60))+":"+pad(w.min%60)}
+function lmT(s){if(!s)return "";var d=new Date(/z$|[+-]\d\d:?\d\d$/i.test(s)?s:s+"Z");return isNaN(d)?"":melIso(d)}
+function b64e(o){return btoa(unescape(encodeURIComponent(JSON.stringify(o))))}
+function b64d(t){var m=String(t||"").match(/-----EAM-DATA-BEGIN-----\s*([A-Za-z0-9+\/=\s]+?)\s*-----EAM-DATA-END-----/);if(!m)return null;try{return JSON.parse(decodeURIComponent(escape(atob(m[1].replace(/\s+/g,"")))))}catch(e){return null}}
+function chgBody(o,intro){return {contentType:"text",content:intro+"\n\n-----EAM-DATA-BEGIN-----\n"+b64e(o).replace(/(.{76})/g,"$1\n")+"\n-----EAM-DATA-END-----"}}
+function chgMon(){return calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id)+"?$select=id&$expand="+expandQ(P_CHG))}).then(function(c){return readProp(c)||{}})}
+function chgSaveMon(m){return calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id),{method:"PATCH",body:{singleValueExtendedProperties:[{id:P_CHG,value:JSON.stringify(m)}]}})})}
+function chgCal(mon){
+  var find=function(){return gfetch(BASE+"/calendars?$select=id,name&$top=100").then(function(r){
+    var c=((r&&r.value)||[]).filter(function(x){return x.name===CHG_NAME})[0];
+    return c?{id:c.id}:gfetch(BASE+"/calendars",{method:"POST",body:{name:CHG_NAME}}).then(function(n){return {id:n.id,created:true}})})};
+  if(mon&&mon.cal)return gfetch(BASE+"/calendars/"+encodeURIComponent(mon.cal)+"?$select=id").then(function(c){return {id:c.id}},function(e){if(e&&e.status===404)return find().then(function(x){x.missing=true;return x});throw e});
+  return find();
+}
+function chgFind(cal,subj){return gfetch(BASE+"/calendars/"+encodeURIComponent(cal)+"/events?$filter="+encodeURIComponent("subject eq '"+subj.replace(/'/g,"''")+"'")+"&$select=id,subject,body&$top=5").then(function(r){return ((r&&r.value)||[])[0]||null})}
+function chgPut(cal,ev,subj,data,intro){
+  var b={subject:subj,body:chgBody(data,intro)};
+  if(ev)return gfetch(BASE+"/events/"+encodeURIComponent(ev.id),{method:"PATCH",body:b});
+  b.start={dateTime:"2020-01-01T00:00:00",timeZone:TZ};b.end={dateTime:"2020-01-01T00:30:00",timeZone:TZ};b.showAs="free";b.isReminderOn=false;
+  return gfetch(BASE+"/calendars/"+encodeURIComponent(cal)+"/events",{method:"POST",body:b});
+}
+function chgWin(from,to){
+  var out=[];
+  function page(u,n){return gfetch(u).then(function(r){((r&&r.value)||[]).forEach(function(e){out.push(e)});var nx=r&&r["@odata.nextLink"];if(nx){if(n>=60)throw new Error("too many");return page(nx,n+1)}})}
+  return page(BASE+"/calendarView?startDateTime="+from+"T00:00:00&endDateTime="+to+"T00:00:00&$top=200&$select=id,subject,start,end,isAllDay,isCancelled,lastModifiedDateTime,type",0).then(function(){return out});
+}
+function chgRow(e){return [evT(e.start),evT(e.end),String(e.subject||"(no title)").slice(0,90),lmT(e.lastModifiedDateTime),e.isAllDay?1:0,e.isCancelled?1:0]}
+function chgEntry(t,id,o,n,a,b,at){return {k:id.slice(-40)+"|"+t+"|"+(n?n[0]+n[1]:""),t:t,id:id,s:(n||o)[2],os:o[0],oe:o[1],ns:n?n[0]:"",ne:n?n[1]:"",ad:o[4]||0,at:at||"",a:a||"",b:b}}
+function chgRun(force){
+  if(CHG.busy||S.auth!=="in")return Promise.resolve();
+  if(!force&&Date.now()-CHG.lastRun<120000)return Promise.resolve();
+  CHG.busy=true;CHG.lastRun=Date.now();if(force){CHG.err="";render()}
+  var now=new Date(),b=melIso(now),today=b.slice(0,10),from=addDays(today,-CHG_BACK),to=addDays(today,CHG_AHEAD);
+  var mon,cal,stateEv,snap,cur={},keep={},out=[];
+  return chgMon().then(function(m){
+    mon=m;CHG.mon=m;
+    if(!force&&m.lastU&&now-new Date(m.lastU)<120000)throw {skip:1};
+    return chgCal(m);
+  }).then(function(c){cal=c;return chgFind(c.id,CHG_STATE)}).then(function(ev){
+    stateEv=ev;snap=ev?b64d(ev.body&&ev.body.content):null;
+    return chgWin(from,to);
+  }).then(function(list){
+    list.forEach(function(e){if(e.type&&e.type!=="singleInstance")return;cur[e.id]=chgRow(e)});
+    var a=mon.last||"";
+    if(!snap||!snap.ev){
+      if(mon.since)out.push({k:"reset|"+b,t:"reset",s:cal.missing?"The change log calendar was deleted in Outlook. Monitoring started again.":"The saved list of bookings was missing or unreadable. Monitoring started again.",a:a,b:b,at:""});
+      return;
+    }
+    var miss=[];
+    Object.keys(snap.ev).forEach(function(id){
+      var o=snap.ev[id],n=cur[id];if(o[0].slice(0,10)<from)return;
+      if(!n){miss.push(id);return}
+      var at=n[3]&&n[3]>(o[3]||"")?n[3]:"";
+      if(n[0]!==o[0])out.push(chgEntry("moved",id,o,n,a,b,at));
+      else if(n[1]!==o[1])out.push(chgEntry("time",id,o,n,a,b,at));
+      else if(n[5]&&!o[5])out.push(chgEntry("cancelled",id,o,n,a,b,at));
+    });
+    miss.slice(60).forEach(function(id){keep[id]=snap.ev[id]});
+    var i=0,todo=miss.slice(0,60);
+    function next(){
+      if(i>=todo.length)return Promise.resolve();
+      var id=todo[i++],o=snap.ev[id];
+      return gfetch(BASE+"/events/"+encodeURIComponent(id)+"?$select=id,subject,start,end,isAllDay,isCancelled,lastModifiedDateTime").then(function(e){
+        var n=chgRow(e),d0=n[0].slice(0,10);
+        return gfetch(BASE+"/calendarView?startDateTime="+addDays(d0,-1)+"T00:00:00&endDateTime="+addDays(d0,2)+"T00:00:00&$top=200&$select=id").then(function(r){
+          var inCal=((r&&r.value)||[]).some(function(x){return x.id===id});
+          if(inCal){if(n[0]!==o[0]||n[1]!==o[1])out.push(chgEntry(n[0]!==o[0]?"moved":"time",id,o,n,a,b,n[3]&&n[3]>(o[3]||"")?n[3]:""))}
+          else out.push(chgEntry("deleted",id,o,null,a,b,n[3]&&n[3]>(o[3]||"")&&(!a||n[3]>=a.slice(0,16))&&n[3]<=b?n[3]:""));
+        });
+      },function(er){if(er&&er.status===404){out.push(chgEntry("deleted",id,o,null,a,b,""));return}keep[id]=o}).then(next);
+    }
+    return next();
+  }).then(function(){
+    var ev={};Object.keys(cur).forEach(function(k){ev[k]=cur[k]});Object.keys(keep).forEach(function(k){if(!ev[k])ev[k]=keep[k]});
+    var ym=b.slice(0,7),p=Promise.resolve();
+    if(out.length)p=chgFind(cal.id,CHG_LOG+ym).then(function(le){
+      var old=le?b64d(le.body&&le.body.content):null,list=(old&&old.list)||[],seen={};
+      list.forEach(function(x){seen[x.k]=1});out.forEach(function(x){if(!seen[x.k]){list.push(x);seen[x.k]=1}});
+      return chgPut(cal.id,le,CHG_LOG+ym,{v:1,list:list},"Bookings moved or deleted in "+MN[+ym.slice(5,7)-1]+" "+ym.slice(0,4)+", recorded by the EAM app. Please don't edit or delete this event.");
+    });
+    return p.then(function(){
+      var old=snap&&snap.ev?JSON.stringify(snap.ev):"",nw=JSON.stringify(ev);
+      if(stateEv&&old===nw)return;
+      return chgPut(cal.id,stateEv,CHG_STATE,{v:1,at:b,ev:ev},"Used by the EAM app to notice bookings that are moved or deleted. Please don't edit or delete this event.");
+    }).then(function(){
+      CHG.mon={cal:cal.id,since:mon.since||b,last:b,lastU:now.toISOString()};
+      return chgSaveMon(CHG.mon);
+    });
+  }).then(function(){
+    CHG.busy=false;var n=out.filter(function(x){return x.t!=="reset"}).length;CHG.found=n;
+    if(out.length){delete CHG.months[b.slice(0,7)];CHG.view="unknown"}
+    if(force)toast(n?n+" change"+(n>1?"s":"")+" found.":"Checked. Nothing moved or deleted since the last check.");
+    render();
+  },function(e){
+    CHG.busy=false;if(e&&e.skip){render();return}
+    CHG.err="The last check didn’t finish. "+errText(e);if(force)toast(CHG.err);render();
+  });
+}
+function chgMonthsFor(days){var t=melParts(new Date()).date,s=addDays(t,-days),out=[],y=+s.slice(0,4),m=+s.slice(5,7);
+  while(y*12+m<=(+t.slice(0,4))*12+(+t.slice(5,7))){out.push(y+"-"+pad(m));m++;if(m>12){m=1;y++}}return out}
+function chgLoadView(){
+  if(CHG.view==="loading")return;CHG.view="loading";
+  chgMon().then(function(m){
+    CHG.mon=m;if(!m.cal)return;
+    var need=chgMonthsFor(CHG.days).filter(function(k){return !CHG.months[k]});
+    return Promise.all(need.map(function(k){return chgFind(m.cal,CHG_LOG+k).then(function(le){var d=le?b64d(le.body&&le.body.content):null;CHG.months[k]=(d&&d.list)||[]})}));
+  }).then(function(){CHG.view="ok";render()},function(e){CHG.view="error";CHG.err=errText(e);render()});
+}
+function fDay(d){return DN[dow(d)]+" "+(+d.slice(8))+" "+MN[+d.slice(5,7)-1]+(d.slice(0,4)!==melParts(new Date()).date.slice(0,4)?" "+d.slice(0,4):"")}
+function fMin(x){return tm((+x.slice(11,13))*60+(+x.slice(14,16)))}
+function fWhen(s,e,ad){if(!s)return "";if(ad)return fDay(s.slice(0,10))+" (all day)";return fDay(s.slice(0,10))+", "+fMin(s)+(e?"–"+(e.slice(0,10)===s.slice(0,10)?fMin(e):fDay(e.slice(0,10))+" "+fMin(e)):"")}
+function fStamp(x,ref){return (ref&&x.slice(0,10)===ref.slice(0,10)?"":fDay(x.slice(0,10))+", ")+fMin(x)}
+var CHGL={moved:"Moved",time:"Times changed",deleted:"Deleted",cancelled:"Cancelled",reset:"Monitor restarted"};
+function chgWhenHtml(x){
+  if(x.at)return '<b>'+fMin(x.at)+'</b><small>'+(x.t==="deleted"?"Outlook’s time":"changed")+'</small>';
+  if(x.t==="reset")return '<b>'+fMin(x.b)+'</b><small>noticed</small>';
+  return '<b>'+(x.a?fStamp(x.a,x.b)+"–":"by ")+fMin(x.b)+'</b><small>'+(x.t==="deleted"?"deleted between checks":"changed between checks")+'</small>';
+}
+function chgNotice(x){
+  if(x.t==="reset"||!x.os)return "";
+  var c=(x.at||x.b).slice(0,10),j=x.os.slice(0,10),d=Math.round((new Date(j+"T00:00:00Z")-new Date(c+"T00:00:00Z"))/864e5);
+  if(d<0)return '<span class="ctag">after the job date</span>';
+  if(d===0)return '<span class="ctag w">same day as the job</span>';
+  if(d<=2)return '<span class="ctag w">'+d+' day'+(d>1?"s":"")+' before the job</span>';
+  return "";
+}
+function chgList(){
+  var cut=addDays(melParts(new Date()).date,-CHG.days),all=[];
+  Object.keys(CHG.months).forEach(function(k){(CHG.months[k]||[]).forEach(function(x){if((x.at||x.b).slice(0,10)>=cut)all.push(x)})});
+  return all.sort(function(p,q){return (q.at||q.b)<(p.at||p.b)?-1:1});
+}
+function renderChanges(){
+  var el=$("changes");if(!el||S.auth!=="in")return;
+  if(!LOCK.unlocked){if(LOCK.state==="unknown")loadLock();var gk="c:"+LOCK.state;if(gateKey!==gk){gateKey=gk;el.innerHTML=gateHtml("Changes");var f=el.querySelector("input");if(f)try{f.focus()}catch(e){}}return}
+  gateKey="";
+  if(CHG.view==="unknown")chgLoadView();
+  var seg=function(act,cur,opts){return '<div class="seg" role="group">'+opts.map(function(o){return '<button type="button" data-act="'+act+'" data-v="'+o[0]+'" aria-pressed="'+(String(cur)===String(o[0]))+'">'+o[1]+'</button>'}).join("")+'</div>'};
+  var h='<div class="nbar"><h2>Bookings moved or deleted</h2>'+seg("cdays",CHG.days,[[7,"7 days"],[30,"30 days"],[90,"90 days"]])+seg("ctype",CHG.type,[["all","All"],["moved","Moved"],["deleted","Deleted"]])
+    +'<span class="sp"></span><button class="btn primary small" type="button" data-act="cnow"'+(CHG.busy?" disabled":"")+'>'+(CHG.busy?"Checking…":"Check now")+'</button><button class="btn small" type="button" data-act="ccsv">Download CSV</button><button class="btn small" type="button" data-act="lock">Lock</button></div>';
+  var m=CHG.mon||{};
+  h+='<p class="note">'+(m.last?"Last checked "+fDay(m.last.slice(0,10))+" at "+fMin(m.last)+". Watching since "+fDay(m.since.slice(0,10))+" "+m.since.slice(0,4)+". ":"")
+    +"The calendar is checked whenever anyone opens the app, and every 10 minutes while it’s open. Moves show the time Outlook recorded the change. Outlook doesn’t record when something is deleted, so deletions show the time between two checks.</p>";
+  if(CHG.err)h+='<div class="notice warn"><p>'+esc(CHG.err)+'</p></div>';
+  if(CHG.view!=="ok"){el.innerHTML=h+'<div class="npanel"><p class="none">'+(CHG.view==="error"?"The change log couldn’t be loaded. Press Check now to try again.":"Loading the change log…")+'</p></div>';return}
+  if(!m.cal){el.innerHTML=h+'<div class="npanel"><p class="none">'+(CHG.busy?"Taking the first snapshot of the calendar…":"Monitoring hasn’t started yet. Press Check now to take the first snapshot. Changes made after that will show here.")+'</p></div>';return}
+  var all=chgList(),cnt=function(f){return all.filter(f).length};
+  var mv=cnt(function(x){return x.t==="moved"||x.t==="time"}),dl=cnt(function(x){return x.t==="deleted"||x.t==="cancelled"}),sn=cnt(function(x){return /ctag w/.test(chgNotice(x))});
+  h+='<div class="kpis">'+kpi("Moved or times changed",mv,null,null,"last "+CHG.days+" days")+kpi("Deleted",dl,null,null,"last "+CHG.days+" days")+kpi("At short notice",sn,null,null,"changed within 2 days of the job")+'</div>';
+  var list=all.filter(function(x){return CHG.type==="all"||(CHG.type==="moved"?(x.t==="moved"||x.t==="time"):(x.t==="deleted"||x.t==="cancelled"))});
+  if(!list.length){el.innerHTML=h+'<div class="npanel"><p class="none">Nothing '+(CHG.type==="moved"?"moved":CHG.type==="deleted"?"deleted":"moved or deleted")+' in the last '+CHG.days+' days'+(m.since&&m.since.slice(0,10)>addDays(melParts(new Date()).date,-CHG.days)?" (watching since "+fDay(m.since.slice(0,10))+")":"")+'.</p></div>';return}
+  var day="",rows="";
+  list.forEach(function(x){
+    var d=(x.at||x.b).slice(0,10);
+    if(d!==day){if(rows)rows+='</div>';day=d;rows+='<h3 class="cday">'+DL[dow(d)]+" "+(+d.slice(8))+" "+MN[+d.slice(5,7)-1]+'</h3><div class="clist">'}
+    var what=x.t==="reset"?'<span>'+esc(x.s)+'</span>'
+      :x.t==="deleted"||x.t==="cancelled"?'<span>Was booked for '+esc(fWhen(x.os,x.oe,x.ad))+'</span>'
+      :'<span><s>'+esc(fWhen(x.os,x.oe,x.ad))+'</s> → <b>'+esc(fWhen(x.ns,x.ne,x.ad))+'</b></span>';
+    rows+='<div class="chg '+x.t+'"><span class="cbadge">'+CHGL[x.t]+'</span><div class="cmain">'+(x.t==="reset"?"":'<b class="cs">'+esc(x.s)+'</b>')+what+chgNotice(x)+'</div><div class="cwhen">'+chgWhenHtml(x)+'</div></div>';
+  });
+  el.innerHTML=h+'<div class="npanel">'+rows+'</div></div>';
+}
+function chgCsv(){
+  var all=chgList(),q=function(v){v=String(v==null?"":v);return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v};
+  var rows=[["Change","Booking","Was","Now","Changed at","Noticed between","And"]].concat(all.map(function(x){return [CHGL[x.t],x.t==="reset"?x.s:x.s,fWhen(x.os,x.oe,x.ad),fWhen(x.ns,x.ne,x.ad),x.at?x.at.replace("T"," "):"",x.a?x.a.replace("T"," "):"",x.b.replace("T"," ")]}));
+  var csv="﻿"+rows.map(function(r){return r.map(q).join(",")}).join("\r\n"),blob=new Blob([csv],{type:"text/csv"}),u=URL.createObjectURL(blob),a=document.createElement("a");
+  a.href=u;a.download="EAM bookings moved or deleted (last "+CHG.days+" days).csv";document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u)},30000);
+}
+function chgAuto(){if(S.auth==="in"&&!document.hidden)chgRun(false)}
+setInterval(chgAuto,10*60000);
+document.addEventListener("visibilitychange",function(){if(!document.hidden&&Date.now()-CHG.lastRun>3*60000)chgAuto()});
+
 /* ---------- render ---------- */
 var $=function(id){return document.getElementById(id)};
 function render(){
@@ -1503,6 +1702,7 @@ function render(){
   renderOverlay(jobs,flags);
   if(TAB==="numbers")renderNumbers();
   if(TAB==="sales")renderSales();
+  if(TAB==="changes")renderChanges();
 }
 function slotHtml(jobs){
   var o="";for(var t=360;t<=1200;t+=30)o+='<option value="'+t+'"'+(t===S.slotT?" selected":"")+'>'+tm(t)+'</option>';
@@ -1664,7 +1864,7 @@ function toast(m){var o=document.querySelector(".toast");if(o)o.remove();var d=d
 function go(day){S.day=day;S.sel=null;var ws=weekStart(day);render();if(!S.events[ws])fetchWeek(ws,false)}
 function findJob(k){return dayJobs(S.day).filter(function(j){return j.key===k})[0]}
 document.addEventListener("click",function(e){
-  var t=e.target.closest("[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut,#tabDispatch,#tabQuotes,#tabNumbers,#tabSales");
+  var t=e.target.closest("[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut,#tabDispatch,#tabQuotes,#tabNumbers,#tabSales,#tabChanges");
   if(!t)return;
   if(t.dataset.close){if(e.target!==t&&t.classList.contains("scrim"))return;S.sel=null;render();return}
   if(t.dataset.day){go(t.dataset.day);return}
@@ -1680,6 +1880,7 @@ document.addEventListener("click",function(e){
   if(t.id==="tabQuotes"){setTab("quotes");return}
   if(t.id==="tabNumbers"){setTab("numbers");return}
   if(t.id==="tabSales"){setTab("sales");return}
+  if(t.id==="tabChanges"){setTab("changes");return}
   if(t.dataset.act==="signin"){signIn();return}
   if(t.dataset.rmt){readDraft();draft.trucks.splice(+t.dataset.rmt,1);redrawFleet();return}
   if(t.dataset.rmc){readDraft();draft.crew.splice(+t.dataset.rmc,1);redrawFleet();return}
@@ -1705,6 +1906,10 @@ document.addEventListener("click",function(e){
   if(a==="sset"){S.modal="salesset";render();return}
   if(a==="scancel"){S.modal=null;$("overlay").innerHTML="";render();return}
   if(a==="ssave"){salesSave();return}
+  if(a==="cdays"){CHG.days=+t.dataset.v;CHG.view="unknown";render();return}
+  if(a==="ctype"){CHG.type=t.dataset.v;render();return}
+  if(a==="cnow"){CHG.view="unknown";chgRun(true);return}
+  if(a==="ccsv"){chgCsv();return}
   if(a==="lock"){lockNow();return}
   if(a==="lockretry"){LOCK.state="unknown";gateKey="";render();return}
   if(a==="lockpw"){S.modal="lockchange";render();return}
@@ -1742,13 +1947,13 @@ if(NARROW.addEventListener)NARROW.addEventListener("change",function(){render()}
 /* ---------- sections: Dispatch and Quotes share one sign-in ---------- */
 var TAB="dispatch";
 function setTab(m){
-  if(["quotes","numbers","sales"].indexOf(m)<0)m="dispatch";
-  TAB=m;["quotes","numbers","sales"].forEach(function(c){document.body.classList.toggle(c,m===c)});
-  [["tabDispatch","dispatch"],["tabQuotes","quotes"],["tabNumbers","numbers"],["tabSales","sales"]].forEach(function(x){if(x[1]===m)$(x[0]).setAttribute("aria-current","page");else $(x[0]).removeAttribute("aria-current")});
-  $("appTitle").textContent={quotes:"EAM Quote Builder",numbers:"EAM Numbers",sales:"EAM Sales Review",dispatch:"EAM Dispatch Board"}[m];
+  if(["quotes","numbers","sales","changes"].indexOf(m)<0)m="dispatch";
+  TAB=m;["quotes","numbers","sales","changes"].forEach(function(c){document.body.classList.toggle(c,m===c)});
+  [["tabDispatch","dispatch"],["tabQuotes","quotes"],["tabNumbers","numbers"],["tabSales","sales"],["tabChanges","changes"]].forEach(function(x){if(x[1]===m)$(x[0]).setAttribute("aria-current","page");else $(x[0]).removeAttribute("aria-current")});
+  $("appTitle").textContent={quotes:"EAM Quote Builder",numbers:"EAM Numbers",sales:"EAM Sales Review",changes:"EAM Changes",dispatch:"EAM Dispatch Board"}[m];
   if(m==="quotes"&&S.auth==="in"){var f=$("qframe");if(!f.getAttribute("src"))f.setAttribute("src","quotes.html")}
   try{var want=m==="dispatch"?"":"#"+m;if(location.hash!==want)history.replaceState(null,"",want||location.pathname+location.search)}catch(e){}
-  S.sel=null;nTried={};gateKey="";$("numbers").innerHTML="";$("sales").innerHTML="";
+  S.sel=null;nTried={};gateKey="";$("numbers").innerHTML="";$("sales").innerHTML="";$("changes").innerHTML="";
   if(m==="dispatch"&&S.auth==="in")fetchWeek(weekStart(S.day),true,true);
   render();
 }
