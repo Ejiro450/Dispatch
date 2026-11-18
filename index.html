@@ -40,9 +40,9 @@
   color-scheme:dark;
 }
 html{--sat:env(safe-area-inset-top,0px)}
-:root{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--spark:#9aa6b8;--trk:#cde2fb;--q1:#cde2fb;--q2:#9ec5f4;--q3:#6da7ec;--q4:#3987e5;--q5:#256abf;--q6:#104281}
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--s1:#3987e5;--s2:#d95926;--s3:#199e70;--spark:#5d6b80;--trk:#184f95;--q1:#123a6e;--q2:#184f95;--q3:#256abf;--q4:#3987e5;--q5:#6da7ec;--q6:#9ec5f4}}
-:root[data-theme="dark"]{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--spark:#5d6b80;--trk:#184f95;--q1:#123a6e;--q2:#184f95;--q3:#256abf;--q4:#3987e5;--q5:#6da7ec;--q6:#9ec5f4}
+:root{--s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--s5:#e87ba4;--s6:#008300;--s7:#6250d6;--s8:#e34948;--spark:#9aa6b8;--trk:#cde2fb;--q1:#cde2fb;--q2:#9ec5f4;--q3:#6da7ec;--q4:#3987e5;--q5:#256abf;--q6:#104281}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#0ca30c;--s7:#9085e9;--s8:#e66767;--spark:#5d6b80;--trk:#184f95;--q1:#123a6e;--q2:#184f95;--q3:#256abf;--q4:#3987e5;--q5:#6da7ec;--q6:#9ec5f4}}
+:root[data-theme="dark"]{--s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--s5:#d55181;--s6:#0ca30c;--s7:#9085e9;--s8:#e66767;--spark:#5d6b80;--trk:#184f95;--q1:#123a6e;--q2:#184f95;--q3:#256abf;--q4:#3987e5;--q5:#6da7ec;--q6:#9ec5f4}
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.4;font-variant-numeric:tabular-nums}
@@ -59,10 +59,49 @@ body:not(.gated) #gate{display:none}
 body.gated .tabs,body.gated #qframe{display:none}
 .tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);border-radius:10px;padding:3px}
 .tabs button{border:0;background:transparent;color:#fff;font-weight:700;padding:7px 14px;border-radius:8px}
+@media (max-width:420px){.tabs button{padding:7px 9px;font-size:13.5px}}
 .tabs button[aria-current="page"]{background:#fff;color:#063A80}
 #qframe{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;height:calc(100dvh - 120px - var(--sat) - env(safe-area-inset-bottom,0px));min-height:480px;display:block}
 body:not(.quotes) #qframe{display:none}
 body:not(.numbers) #numbers{display:none}
+body:not(.sales) #sales{display:none}
+body.gated #sales{display:none}
+#sales{display:flex;flex-direction:column;gap:14px}
+body.sales .daybar,body.sales .week,body.sales .stats,body.sales .board,body.sales .legend,body.sales #btnSheet{display:none}
+.reps{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:12px}
+.rep{display:flex;flex-direction:column;gap:8px}
+.rh{display:flex;align-items:center;gap:10px}.rh h3{margin:0;flex:1;font-size:17px}
+.rk{font-weight:800;color:var(--muted);font-size:13px}
+.pc{font-weight:800;font-size:18px}.pc.g{color:var(--ok)}.pc.i{color:var(--royal)}.pc.b{color:var(--warn)}
+.rnum{font-size:14px;color:var(--muted)}.rnum b{font-size:22px;color:var(--ink)}.rnum .d{font-size:12px;font-weight:700;margin-left:6px}.rnum .d.g{color:var(--ok)}.rnum .d.b{color:var(--bad)}.rnum .d.n{color:var(--muted)}
+.rstats{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12.5px;color:var(--muted)}
+.ins.sm li{font-size:13px}
+.srcs{display:flex;flex-direction:column;gap:10px;margin:4px 0 6px}
+.srow{display:grid;grid-template-columns:minmax(60px,110px) 1fr auto;gap:10px;align-items:center;font-size:13px}
+.srow .sn{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.srow .st{color:var(--muted);font-variant-numeric:tabular-nums}
+.sbar{display:flex;gap:2px;height:10px}.sbar i{display:block;flex-basis:0;min-width:3px;height:100%}
+.sbar i:first-child{border-radius:5px 0 0 5px}.sbar i:last-child{border-radius:0 5px 5px 0}.sbar i:only-child{border-radius:5px}
+.muted{color:var(--muted);font-size:.88em}
+.shouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:12px}
+.shout{display:flex;gap:14px;align-items:flex-start;background:var(--sb);border-left:4px solid var(--sc);border-radius:10px;padding:14px 16px;color:#1d2430}
+.sbadge{flex:none;width:40px;height:40px;border-radius:50%;background:var(--sc);color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center}
+.shout .slab{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--sc)}
+.shout h4{margin:2px 0 2px;font-size:18px}.shout .sst{font-size:12px;color:#5d6878}.shout p{margin:8px 0 0;font-size:14px;line-height:1.5}
+.vp{font-size:12px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap;background:var(--grid);color:var(--muted)}
+.vp.g{background:var(--ok-bg);color:var(--ok)}.vp.b{background:var(--warn-bg);color:var(--warn)}
+.npanel td .spark{width:90px;height:22px;margin:0 0 0 16px}
+ul.plain{margin:0;padding-left:18px;display:grid;gap:5px;font-size:14px;line-height:1.5}
+.rep .cmt{margin:0;font-size:14px;line-height:1.55}
+.rep .focus{margin:0;font-size:13.5px;color:var(--muted)}.rep .focus b{color:var(--ink)}
+.sgrid td,.sgrid th{white-space:nowrap}
+.sgrid tfoot td{border-top:1px solid var(--line)}
+.cellb{border:1px solid transparent;border-radius:7px;padding:4px 8px;min-width:58px;font-weight:700;font-variant-numeric:tabular-nums;background:transparent;text-align:right}
+.cellb.hit{background:var(--ok-bg);color:var(--ok);border-color:var(--ok)}
+.cellb.below{background:var(--job);color:var(--royal)}
+.cellb.poor{background:var(--warn-bg);color:var(--warn);border-color:var(--warn)}
+.cellb.off,.cellb.offb{background:var(--grid);color:var(--muted);font-weight:600}
+.cellb.future{color:var(--muted);font-weight:500}
+.offg td,.offg th{text-align:center;padding:4px 6px}.offg td:first-child,.offg th:first-child{text-align:left}
 body.gated #numbers{display:none}
 body.numbers .daybar,body.numbers .week,body.numbers .stats,body.numbers .board,body.numbers .legend,body.numbers #btnSheet{display:none}
 #numbers{display:flex;flex-direction:column;gap:14px}
@@ -283,7 +322,7 @@ a.lnk{color:var(--royal);font-weight:700}
       <h1 id="appTitle">EAM Dispatch Board</h1>
       <div class="sub">Our trucks, crews and subcontractors against the jobs in the admin Outlook calendar</div>
     </div>
-    <nav class="tabs" id="tabs" aria-label="Sections"><button type="button" id="tabDispatch" aria-current="page">Dispatch</button><button type="button" id="tabQuotes">Quotes</button><button type="button" id="tabNumbers">Numbers</button></nav>
+    <nav class="tabs" id="tabs" aria-label="Sections"><button type="button" id="tabDispatch" aria-current="page">Dispatch</button><button type="button" id="tabQuotes">Quotes</button><button type="button" id="tabNumbers">Numbers</button><button type="button" id="tabSales">Sales</button></nav>
     <div class="sp"></div>
     <span class="who" id="who"></span>
     <button class="btn ghost" id="btnSheet" type="button">Copy run sheet</button>
@@ -306,6 +345,7 @@ a.lnk{color:var(--royal);font-weight:700}
   <div class="week" id="week"></div>
   <div id="notices"></div>
   <section id="numbers" aria-label="Numbers"></section>
+  <section id="sales" aria-label="Sales performance"></section>
   <div class="stats" id="stats"></div>
   <div class="board"><div class="grid" id="grid"><div class="empty">Loading the calendar&hellip;</div></div></div>
   <div class="legend">
@@ -493,8 +533,8 @@ function boot(){
     account=(r&&r.account)||pca.getAllAccounts()[0]||null;
     if(!account){S.auth="out";render();return}
     pca.setActiveAccount(account);S.auth="in";S.who=account.username||"";window.EAM.who=S.who;render();
-    if(location.hash==="#quotes")setTab("quotes");else if(location.hash==="#numbers")setTab("numbers");
-    loadFleet();fetchWeek(weekStart(S.day),false);
+    if(["#quotes","#numbers","#sales"].indexOf(location.hash)>=0)setTab(location.hash.slice(1));
+    loadFleet();loadSalesCfg();fetchWeek(weekStart(S.day),false);
   }).catch(function(){S.auth="out";S.err="Sign-in didn't finish. Try again.";render()});
 }
 
@@ -609,12 +649,12 @@ function writeLock(pw){
 }
 function testLock(pw){var r=LOCK.rec;return derive(pw,u8b64(r.salt),r.iter||210000).then(function(h){return h===r.hash})}
 function lockNow(){LOCK.unlocked=false;LOCK.state="unknown";gateKey="";if(S.modal==="lockchange"){S.modal=null;$("overlay").innerHTML=""}render()}
-function lockSay(m){var el=document.getElementById("lockMsg");if(el)el.textContent=m}
+function lockSay(m){var el=document.querySelector(".modal #lockMsg")||document.querySelector("#"+(TAB==="sales"?"sales":"numbers")+" #lockMsg");if(el)el.textContent=m}
 ["pointerdown","keydown"].forEach(function(t){document.addEventListener(t,function(){if(LOCK.unlocked)LOCK.last=Date.now()},true)});
 setInterval(function(){if(LOCK.unlocked&&Date.now()-LOCK.last>15*60000)lockNow()},30000);
 document.addEventListener("visibilitychange",function(){if(document.hidden)LOCK.hiddenAt=Date.now();else if(LOCK.unlocked&&LOCK.hiddenAt&&Date.now()-LOCK.hiddenAt>5*60000)lockNow()});
-function gateHtml(){
-  var st=LOCK.state,b='<div class="lockbox"><h2>Numbers is for partners only</h2>';
+function gateHtml(what){
+  var st=LOCK.state,b='<div class="lockbox"><h2>'+esc(what||"Numbers")+' is for partners only</h2>';
   if(st==="set")return b+'<p>Enter the partner password to see the numbers and subcontractor costs. It locks again after 15 minutes without use, or when the app has been in the background for 5 minutes.</p><form id="lockOpen" autocomplete="off"><label class="lbl" for="pw">Partner password</label><input type="password" id="pw" autocomplete="current-password"><div class="acts"><button class="btn primary" type="submit">Unlock</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
   if(st==="none")return b+'<p>No partner password has been set yet. Set one now. Only the partners should know it: anyone with it can see Numbers and what is paid to subcontractors.</p><form id="lockSet" autocomplete="off"><label class="lbl" for="pw1">New partner password (at least 8 characters)</label><input type="password" id="pw1" autocomplete="new-password"><label class="lbl" for="pw2">Type it again</label><input type="password" id="pw2" autocomplete="new-password"><div class="acts"><button class="btn primary" type="submit">Set password and open Numbers</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
   if(st==="error")return b+'<p>'+esc(LOCK.err||"The lock couldn’t be checked.")+'</p><div class="acts"><button class="btn" type="button" data-act="lockretry">Try again</button></div></div>';
@@ -784,11 +824,12 @@ function colChart(w,cats,series,fmt,label){
   });
   return svgWrap(w,H,yAxis(pl,pw,pt,ph,top,st,fmt)+'<line x1="'+pl+'" x2="'+(pl+pw)+'" y1="'+(pt+ph)+'" y2="'+(pt+ph)+'" class="bl"/>'+bars+labs+hits,label);
 }
-function lineChart(w,cats,series,fmt,minTop,label){
+function lineChart(w,cats,series,fmt,minTop,label,ref){
   var H=200,pl=44,pr=10,pt=10,pb=26,pw=Math.max(60,w-pl-pr),ph=H-pt-pb,n=cats.length;
   var mx=Math.max.apply(null,[minTop||0].concat(series.map(function(s){return Math.max.apply(null,s.vals.map(function(v){return v||0}))})));
   var st=niceStep((mx||1)/4),top=Math.ceil((mx||1)/st)*st,X=function(i){return n>1?pl+pw*i/(n-1):pl+pw/2},Y=function(v){return pt+ph-v/top*ph};
   var every=Math.max(1,Math.ceil(n/Math.max(1,Math.floor(pw/56)))),body=yAxis(pl,pw,pt,ph,top,st,fmt)+'<line x1="'+pl+'" x2="'+(pl+pw)+'" y1="'+(pt+ph)+'" y2="'+(pt+ph)+'" class="bl"/>';
+  if(ref){var yr=Y(ref);body+='<line x1="'+pl+'" x2="'+(pl+pw)+'" y1="'+yr.toFixed(1)+'" y2="'+yr.toFixed(1)+'" style="stroke:var(--ink);stroke-width:1.5;opacity:.55"/><text x="'+(pl+pw)+'" y="'+(yr-5).toFixed(1)+'" text-anchor="end" class="ax">'+esc(fmt(ref))+' hr target</text>'}
   series.forEach(function(s){var pts=[];s.vals.forEach(function(v,i){if(v!=null)pts.push(X(i).toFixed(1)+","+Y(v).toFixed(1))});
     if(pts.length>1)body+='<polyline points="'+pts.join(" ")+'" style="fill:none;stroke:'+s.color+';stroke-width:2;stroke-linejoin:round;stroke-linecap:round"/>';
     var li=-1;s.vals.forEach(function(v,i){if(v!=null)li=i});if(li>=0)body+='<circle cx="'+X(li).toFixed(1)+'" cy="'+Y(s.vals[li]).toFixed(1)+'" r="4.5" style="fill:'+s.color+';stroke:var(--panel);stroke-width:2"/>'});
@@ -818,17 +859,17 @@ function heatChart(w,grid,rows,cols,tipf,label){
   return svgWrap(w,H,body,label);
 }
 function drawCharts(){
-  document.querySelectorAll("#numbers [data-chart]").forEach(function(el){var f=NCH[el.getAttribute("data-chart")];if(!f)return;var w=Math.floor(el.clientWidth);if(w<80)return;if(el._w===w&&el.firstChild)return;el._w=w;el.innerHTML=f(w)});
+  document.querySelectorAll("#numbers [data-chart],#sales [data-chart]").forEach(function(el){var f=NCH[el.getAttribute("data-chart")];if(!f)return;var w=Math.floor(el.clientWidth);if(w<80)return;if(el._w===w&&el.firstChild)return;el._w=w;el.innerHTML=f(w)});
 }
-var rzT=null;window.addEventListener("resize",function(){clearTimeout(rzT);rzT=setTimeout(function(){if(TAB==="numbers"){document.querySelectorAll("#numbers [data-chart]").forEach(function(el){el._w=0});drawCharts()}},150)});
+var rzT=null;window.addEventListener("resize",function(){clearTimeout(rzT);rzT=setTimeout(function(){if(TAB==="numbers"||TAB==="sales"){document.querySelectorAll("#numbers [data-chart],#sales [data-chart]").forEach(function(el){el._w=0});drawCharts()}},150)});
 
 /* tooltip for every [data-tip] mark */
 var tipEl=null;
 function showTip(t,x,y){if(!tipEl){tipEl=document.createElement("div");tipEl.id="tip";tipEl.setAttribute("role","tooltip");document.body.appendChild(tipEl)}
   tipEl.textContent=t;tipEl.style.display="block";var r=tipEl.getBoundingClientRect(),px=x+14,py=y+14;if(px+r.width>innerWidth-8)px=x-r.width-14;if(px<8)px=8;if(py+r.height>innerHeight-8)py=y-r.height-14;tipEl.style.left=px+"px";tipEl.style.top=py+"px"}
 function hideTip(){if(tipEl)tipEl.style.display="none"}
-document.addEventListener("pointermove",function(e){var t=e.target&&e.target.closest&&e.target.closest("#numbers [data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else hideTip()});
-document.addEventListener("pointerdown",function(e){var t=e.target&&e.target.closest&&e.target.closest("#numbers [data-tip]");if(t&&e.pointerType!=="mouse")showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else if(!t)hideTip()});
+document.addEventListener("pointermove",function(e){var t=e.target&&e.target.closest&&e.target.closest("#numbers [data-tip],#sales [data-tip]");if(t)showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else hideTip()});
+document.addEventListener("pointerdown",function(e){var t=e.target&&e.target.closest&&e.target.closest("#numbers [data-tip],#sales [data-tip]");if(t&&e.pointerType!=="mouse")showTip(t.getAttribute("data-tip"),e.clientX,e.clientY);else if(!t)hideTip()});
 document.addEventListener("scroll",hideTip,true);
 
 /* ---------- Numbers: page ---------- */
@@ -906,7 +947,7 @@ function renderNumbers(){
   var timedAll=C.timed;if(timedAll.length){ins.push({k:C.over.length?"b":"g",t:C.over.length?C.over.length+" of "+plural(timedAll.length,"timed job")+" ran over the booked time, by "+dur(C.overMin/C.over.length)+" on average. "+fM0(C.extra)+" in extra time should be charged.":"Every timed job finished within its booked time."})}
   else ins.push({k:"i",t:"No start and finish times were recorded in this "+mode+". Ask crews to tap Start and Finish on each job to see where time is lost."});
   if(C.rev&&C.assumedRev/C.rev>0.25)ins.push({k:"i",t:fP(C.assumedRev/C.rev)+" of revenue is estimated at "+fM0(defRate())+" per booked hour because the booking had no price. Typing the real price on those jobs makes every figure here exact."});
-  var byRep=groupBy(C.J,function(j){return j.reps.length?j.reps:[""]}),reps=Object.keys(byRep).filter(function(k){return k!=="Not stated"});
+  var byRep=groupBy(C.J,repsOf),reps=Object.keys(byRep).filter(function(k){return k!=="Not stated"});
   if(reps.length>1){var rh=reps.map(function(k){var l=byRep[k];return {k:k,h:sumF(l,bookedH),r:sumF(l,valueOf)}}).sort(function(a,b){return b.h-a.h});ins.push({k:"i",t:rh[0].k+" booked the most hours ("+fH(rh[0].h)+" hrs, "+fM0(rh[0].r)+"), then "+rh[1].k+" ("+fH(rh[1].h)+" hrs)."})}
   var srcRph=Object.keys(groupBy(C.J,function(j){return j.platform})).map(function(k){var l=C.J.filter(function(j){return (j.platform||"Not stated")===k});var h=sumF(l,bookedH);return {k:k,n:l.length,v:h?sumF(l,valueOf)/h:0}}).filter(function(s){return s.n>=2}).sort(function(a,b){return b.v-a.v});
   if(srcRph.length>1&&srcRph[0].v-srcRph[srcRph.length-1].v>=10)ins.push({k:"i",t:srcRph[0].k+" jobs earn "+fM0(srcRph[0].v)+" per booked hour, against "+fM0(srcRph[srcRph.length-1].v)+" for "+srcRph[srcRph.length-1].k+"."});
@@ -939,8 +980,8 @@ function renderNumbers(){
   NCH.src=function(w){return hbarChart(w,srcRows.map(function(s){return {label:s.k,val:s.v,tip:s.k+": "+fM0(s.v)+", "+plural(s.n,"job")+", "+fH(s.h)+" hrs, "+fM0(s.h?s.v/s.h:0)+" per hour"}}),fM,"Revenue by lead source")};
   html+='<div class="npanels">'+panel("Lead sources","Where this "+mode+"’s revenue came from.",'<div class="chart" data-chart="src"></div>'+tbl([["Source"],["Jobs",1],["Hours",1],["Revenue",1],["Share",1],["Avg job",1],["Per hour",1],["vs prev",1]].concat(hasQ?[["Quotes",1],["Won",1]]:[]),srcRows.map(function(s){return [esc(s.k),s.n,fH(s.h),fM0(s.v),fP(C.rev?s.v/C.rev:0),fM0(s.v/s.n),fM0(s.h?s.v/s.h:0),chgTxt(s.v,s.pv)].concat(hasQ?[s.qs.n,s.qs.n?fP(s.qs.rate):"–"]:[])}),"No jobs in this "+mode+"."));
   /* sales reps */
-  var repG=groupBy(C.J,function(j){return j.reps.length?j.reps:[""]}),repGR=groupBy(R.J,function(j){return j.reps.length?j.reps:[""]});
-  var repRows=Object.keys(repG).map(function(k){var l=repG[k],v=sumF(l,valueOf),h=sumF(l,bookedH),qs=quoteStats(P.from,P.to,function(q){return q.rep===k});return {k:k,n:l.length,v:v,h:h,qs:qs,ph:sumF(repGR[k]||[],bookedH)}}).sort(function(a,b){return b.h-a.h});
+  var repG=groupBy(C.J,repsOf),repGR=groupBy(R.J,repsOf);
+  var repRows=Object.keys(repG).map(function(k){var l=repG[k],v=sumF(l,valueOf),h=sumF(l,bookedH),qs=quoteStats(P.from,P.to,function(q){return repName(q.rep)===k});return {k:k,n:l.length,v:v,h:h,qs:qs,ph:sumF(repGR[k]||[],bookedH)}}).sort(function(a,b){return b.h-a.h});
   NCH.rep=function(w){return hbarChart(w,repRows.map(function(r){return {label:r.k,val:r.h,tip:r.k+": "+fH(r.h)+" hrs booked, "+plural(r.n,"job")+", "+fM0(r.v)}}),function(v){return fH(v)+" hrs"},"Hours booked by sales rep")};
   html+=panel("Sales reps","Hours booked this "+mode+". A job with two reps counts for both.",'<div class="chart" data-chart="rep"></div>'+tbl([["Rep"],["Jobs",1],["Hours booked",1],["Hours vs prev",1],["Revenue",1],["Avg job",1],["Per hour",1]].concat(hasQ?[["Quotes",1],["Won",1]]:[]),repRows.map(function(r){return [esc(r.k),r.n,fH(r.h),chgTxt(r.h,r.ph),fM0(r.v),fM0(r.v/r.n),fM0(r.h?r.v/r.h:0)].concat(hasQ?[r.qs.n,r.qs.n?fP(r.qs.rate):"–"]:[])}),"No jobs in this "+mode+"."))+'</div>';
   /* subcontractors */
@@ -975,6 +1016,444 @@ function exportCsv(){
     rows.push([j.day,hhmm(j.start),hhmm(j.end),j.customer,j.platform||"",j.reps.join(" & "),truckOf(j)?truckName(truckOf(j)):"",subOf(j),bookedH(j),ah==null?"":Math.round(ah*100)/100,v==null?"":Math.round(v*100)/100,a&&a.val!=null?"entered":estInfo(j).how==="assumed"?"estimated at "+defRate()+"/hr":"booking note",c==null?"":c,c==null||v==null?"":Math.round((v-c)*100)/100,j.body.pickup,j.body.drop,j.subject])});
   var csv="﻿"+rows.map(function(r){return r.map(q).join(",")}).join("\r\n"),blob=new Blob([csv],{type:"text/csv"}),u=URL.createObjectURL(blob),a=document.createElement("a");
   a.href=u;a.download="EAM jobs "+P.from+" to "+P.to+".csv";document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u)},30000);
+}
+
+/* ---------- Sales: weekly review of hours booked by each sales rep ----------
+   A job counts on the day it was ADDED to the calendar (Monday to Sunday), credited to the
+   rep(s) named in brackets in the title. Hours = the booking's initial hours (or its length). */
+var P_SALES="String "+NS+" Name eamSalesSettings";
+var SALES={cfg:null,cfgState:"unknown",data:{},busy:{},err:"",saveT:null};
+var SDAY=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],SDAYL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+function sCfg(){var c=SALES.cfg||{};return {target:c.target>0?c.target:12,weekTarget:c.weekTarget>0?c.weekTarget:72,split:c.split===true,alias:c.alias||{"Dayvido":"David"},hide:c.hide||[],off:c.off||{},weeks:c.weeks||{}}}
+function aliasMap(){var al=sCfg().alias,m={};Object.keys(al).forEach(function(k){m[k.toLowerCase()]=al[k]});return m}
+function repName(n){var m=aliasMap();return m[String(n||"").toLowerCase()]||n}
+function repsOf(j){var m=aliasMap(),r=j.reps.map(function(n){return m[n.toLowerCase()]||n}).filter(function(n,i,a){return a.indexOf(n)===i});return r.length?r:[""]}
+function loadSalesCfg(){
+  if(SALES.cfgState==="loading")return;SALES.cfgState="loading";
+  calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id)+"?$select=id&$expand="+expandQ(P_SALES))}).then(function(c){SALES.cfg=readProp(c)||{};SALES.cfgState="ok";render()},function(e){SALES.cfg={};SALES.cfgState="ok";SALES.err=errText(e);render()});
+}
+function saveSalesCfg(){
+  clearTimeout(SALES.saveT);
+  SALES.saveT=setTimeout(function(){
+    var c=sCfg(),keep={},cut=addDays(weekStart(melParts(new Date()).date),-7*30);Object.keys(c.weeks).forEach(function(w){if(w>=cut)keep[w]=c.weeks[w]});c.weeks=keep;
+    calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id),{method:"PATCH",body:{singleValueExtendedProperties:[{id:P_SALES,value:JSON.stringify(c)}]}})}).catch(function(e){toast("Sales settings weren\u2019t saved. "+errText(e))});
+  },600);
+}
+function isoFix(s){return String(s||"").replace(/(\.\d{3})\d+/,"$1")}
+function loadCreated(ws){
+  if(SALES.busy[ws]||SALES.data[ws])return;SALES.busy[ws]=1;
+  var from=addDays(ws,-35),to=addDays(ws,7),out=[];
+  var sel="$select=id,subject,body,bodyPreview,start,end,isAllDay,isCancelled,createdDateTime,webLink";
+  var u1=BASE+"/events?$filter="+encodeURIComponent("createdDateTime ge "+addDays(from,-1)+"T00:00:00Z and createdDateTime lt "+addDays(to,1)+"T00:00:00Z")+"&$top=100&"+sel;
+  function page(u,k){return gfetch(u).then(function(d){out=out.concat((d&&d.value)||[]);if(d&&d["@odata.nextLink"]&&k<60)return page(d["@odata.nextLink"],k+1)})}
+  page(u1,0).catch(function(){out=[];return page(BASE+"/calendarView?startDateTime="+addDays(from,-60)+"T00:00:00&endDateTime="+addDays(to,366)+"T00:00:00&$top=100&"+sel,0)}).then(function(){
+    var seen={},list=[];
+    out.forEach(function(e){
+      if(seen[e.id]||e.isCancelled||e.isAllDay||!e.createdDateTime)return;seen[e.id]=1;
+      var cd=new Date(isoFix(e.createdDateTime));if(isNaN(cd))return;var c=melParts(cd);if(c.date<from||c.date>=to)return;
+      e.summary=(e.body&&e.body.content)||e.bodyPreview||"";var j;try{j=parseEvent(e)}catch(x){return}
+      j.cDay=c.date;j.cMin=c.min;list.push(j);
+    });
+    SALES.data[ws]=list;SALES.err="";delete SALES.busy[ws];render();
+  },function(e){delete SALES.busy[ws];SALES.err=errText(e);render()});
+}
+function repsFor(j,c){
+  var al={};Object.keys(c.alias).forEach(function(k){al[k.toLowerCase()]=c.alias[k]});
+  var hid={};c.hide.forEach(function(h){hid[h.toLowerCase()]=1});
+  var r=j.reps.map(function(n){return al[n.toLowerCase()]||n}).filter(function(n,i,a){return a.indexOf(n)===i});
+  if(!r.length)r=["Not stated"];
+  return r.filter(function(n){return !hid[n.toLowerCase()]});
+}
+function isOffDay(c,ws,rep,di){
+  var w=c.weeks[ws]&&c.weeks[ws][rep];if(w&&w[di])return w[di]==="off";
+  var reg=c.off[rep];return reg?reg.indexOf(di)>=0:false;
+}
+function statusOf(h,T,off,future){if(future)return "future";if(off)return h>0?"offb":"off";if(h>=T)return "hit";if(h>=T*0.5)return "below";return "poor"}
+
+/* the whole week's model, used by the tab and the PDF */
+function salesModel(ws){
+  var c=sCfg(),T=c.target,all=SALES.data[ws]||[],today=melParts(new Date()).date;
+  function share(j,n){return c.split?bookedH(j)/n:bookedH(j)}
+  function weekJobs(w){return all.filter(function(j){return j.cDay>=w&&j.cDay<addDays(w,7)})}
+  function tally(w){var m={};weekJobs(w).forEach(function(j){var r=repsFor(j,c);r.forEach(function(n){var x=m[n]||(m[n]={h:0,jobs:0,d:[0,0,0,0,0,0,0],list:[]});var di=dayDiff(w,j.cDay),s=share(j,r.length);x.h+=s;x.jobs+=1;x.d[di]+=s;x.list.push({j:j,s:s,shared:r.length>1})})});return m}
+  var cur=tally(ws),prev=tally(addDays(ws,-7)),hist=[1,2,3,4].map(function(k){return tally(addDays(ws,-7*k))}),trendW=[5,4,3,2,1,0].map(function(k){return addDays(ws,-7*k)}),trend=trendW.map(tally);
+  var names={};Object.keys(cur).forEach(function(n){names[n]=1});Object.keys(prev).forEach(function(n){if(n!=="Not stated")names[n]=1});Object.keys(c.off).forEach(function(n){names[n]=1});
+  var gone={};Object.keys(c.alias).forEach(function(k){gone[k.toLowerCase()]=1});c.hide.forEach(function(h){gone[h.toLowerCase()]=1});
+  var reps=Object.keys(names).filter(function(n){return n!=="Not stated"&&!gone[n.toLowerCase()]}).sort(function(a,b){return a.localeCompare(b)});
+  var teamAvgJob=(function(){var h=0,n=0;Object.keys(cur).forEach(function(k){if(k==="Not stated")return;cur[k].list.forEach(function(x){h+=bookedH(x.j);n++})});return n?h/n:0})();
+  var WT=c.weekTarget,running=ws<=today&&addDays(ws,6)>=today,elapsed=running?dayDiff(ws,today)+1:7;
+  /* 72 hours a week each, whichever day is their day off; two or more days marked off lowers it by 12 a day */
+  function repTarget(w,n){var offs=0;for(var d=0;d<7;d++)if(isOffDay(c,w,n,d))offs++;return Math.max(0,WT-T*Math.max(0,offs-1))}
+  var R=reps.map(function(n){
+    var x=cur[n]||{h:0,jobs:0,d:[0,0,0,0,0,0,0],list:[]},days=[],worked=0,hit=0,poor=[],zero=0,anyOff=false;
+    for(var di=0;di<7;di++){var day=addDays(ws,di),fut=day>today,off=isOffDay(c,ws,n,di);if(off)anyOff=true;days.push({day:day,di:di,h:x.d[di],off:off,future:fut,assumed:false})}
+    if(!anyOff){var pd=days.filter(function(d){return !d.future}),pick=null;
+      if(!running&&pd.length)pick=pd.slice().sort(function(a,b){return a.h-b.h||b.di-a.di})[0];
+      else pick=pd.filter(function(d){return d.h===0})[0]||null;
+      if(pick){pick.off=true;pick.assumed=true}}
+    days.forEach(function(d){d.st=statusOf(d.h,T,d.off,d.future);if(!d.off&&!d.future){worked++;if(d.st==="hit")hit++;else if(d.st==="poor"){poor.push(d);if(d.h===0)zero++}}});
+    var tgt=repTarget(ws,n),tgtDone=running?tgt*elapsed/7:tgt;
+    var pv=prev[n]||{h:0,d:[0,0,0,0,0,0,0]},p=pv.h,pSame=pv.d.slice(0,elapsed).reduce(function(a,b){return a+b},0),h4=hist.map(function(t){return t[n]?t[n].h:0}),avg4=h4.reduce(function(a,b){return a+b},0)/4;
+    var src={};x.list.forEach(function(it){var s=it.j.platform||"Not stated";src[s]=(src[s]||0)+it.s});
+    var topSrc=Object.keys(src).sort(function(a,b){return src[b]-src[a]})[0]||"";
+    var sharedH=x.list.filter(function(it){return it.shared}).reduce(function(a,it){return a+it.s},0);
+    var lead=leadOf(x.list.map(function(it){return it.j}));
+    var tr=trend.map(function(t,i){return {h:t[n]?t[n].h:0,target:repTarget(trendW[i],n)}});
+    /* week on week: this week (or its pace so far) against last week and the 4-week average */
+    var proj=running&&elapsed<7?x.h*7/elapsed:x.h,base=avg4>0?avg4:p,verdict="new",ratio=base?proj/base:null;
+    if(base>0)verdict=ratio>=1.1?"up":ratio<=0.9?"down":"steady";else if(x.h>0)verdict="new";
+    var full=tr.slice(0,running?5:6).map(function(q){return q.h}),streak=0;for(var k=full.length-1;k>0;k--){if(full[k]>full[k-1]+0.01)streak++;else break}
+    return {name:n,h:x.h,jobs:x.jobs,list:x.list,days:days,worked:worked,hit:hit,poor:poor,zero:zero,target:tgt,targetToDate:tgtDone,
+      lead:lead,pct:tgtDone?x.h/tgtDone:null,pctFull:tgt?x.h/tgt:null,prev:p,prevSame:pSame,avg4:avg4,proj:proj,verdict:verdict,ratio:ratio,streak:streak,
+      avgJob:x.jobs?x.list.reduce(function(a,it){return a+bookedH(it.j)},0)/x.jobs:0,src:src,topSrc:topSrc,sharedH:sharedH,trend:tr};
+  });
+  var rank=R.slice().sort(function(a,b){return b.h-a.h});rank.forEach(function(r,i){r.rank=i+1});
+  var team={h:R.reduce(function(a,r){return a+r.h},0),target:R.reduce(function(a,r){return a+r.target},0),targetToDate:R.reduce(function(a,r){return a+r.targetToDate},0),
+    jobs:weekJobs(ws).length,prev:Object.keys(prev).filter(function(k){return k!=="Not stated"}).reduce(function(a,k){return a+prev[k].h},0),
+    shifts:R.reduce(function(a,r){return a+r.worked},0),hit:R.reduce(function(a,r){return a+r.hit},0),avgJob:teamAvgJob,
+    unnamed:cur["Not stated"]||null,
+    days:[0,1,2,3,4,5,6].map(function(di){var h=0,t=0;R.forEach(function(r){h+=r.days[di].h;if(!r.days[di].off)t+=T});return {day:addDays(ws,di),h:h,target:t,future:addDays(ws,di)>today}})};
+  team.pct=team.targetToDate?team.h/team.targetToDate:null;
+  team.lead=leadOf(weekJobs(ws));
+  var srcTot={};R.forEach(function(r){Object.keys(r.src).forEach(function(k){srcTot[k]=(srcTot[k]||0)+r.src[k]})});
+  team.sources=Object.keys(srcTot).sort(function(a,b){return (a==="Not stated")-(b==="Not stated")||srcTot[b]-srcTot[a]});team.srcTot=srcTot;
+  var done=addDays(ws,6)<today;
+  team.prevSame=R.reduce(function(a,r){return a+r.prevSame},0);team.avg4=R.reduce(function(a,r){return a+r.avg4},0);team.proj=R.reduce(function(a,r){return a+r.proj},0);
+  team.verdict=team.avg4>0?(team.proj/team.avg4>=1.1?"up":team.proj/team.avg4<=0.9?"down":"steady"):"new";
+  R.forEach(function(r){r.advice=repAdvice(r,T,team,running)});
+  return {ws:ws,we:addDays(ws,6),T:T,WT:WT,elapsed:elapsed,reps:R,rank:rank,team:team,running:running,done:done,teamAdvice:teamAdvice(R,T,team,running),jobs:weekJobs(ws).slice().sort(function(a,b){return a.cDay<b.cDay?-1:a.cDay>b.cDay?1:a.cMin-b.cMin}),cfg:c,trendW:trendW};
+}
+/* days between the day a job was added and its move date */
+var LEADB=[["Same or next day",0,1],["2 to 7 days",2,7],["8 to 14 days",8,14],["15 days or more",15,9999]];
+function leadOf(jobs){var b=[0,0,0,0],tot=0,n=0;jobs.forEach(function(j){var d=Math.max(0,dayDiff(j.cDay,j.day));tot+=d;n++;for(var k=0;k<4;k++)if(d>=LEADB[k][1]&&d<=LEADB[k][2]){b[k]++;break}});return {n:n,avg:n?tot/n:null,b:b}}
+var SRCORDER=["Airtasker","Facebook","Hipages","Direct","Find a mover","Referral","Website","Google"];
+function srcColor(k){var i=SRCORDER.indexOf(k);return i<0?"var(--spark)":"var(--s"+(i+1)+")"}
+var VERD={up:["Improving","▲","g"],down:["Slipping","▼","b"],steady:["Steady","–","n"],"new":["No history yet","","n"]};
+function verdictPill(v){var x=VERD[v]||VERD["new"];return '<span class="vp '+x[2]+'">'+(x[1]?x[1]+" ":"")+x[0]+'</span>'}
+function fh(h){return (Math.round(h*10)/10).toLocaleString("en-AU")}
+function dayName(d){return SDAYL[(dow(d)+6)%7]+" "+(+d.slice(8))+" "+MN[+d.slice(5,7)-1]}
+function shortDay(d){return SDAY[(dow(d)+6)%7]+" "+(+d.slice(8))}
+/* ---------- shout-outs: best rep, an improving (or steady) rep, and encouragement ---------- */
+function pickV(arr,seed){var h=0;for(var i=0;i<seed.length;i++)h=(h*31+seed.charCodeAt(i))>>>0;return arr[h%arr.length]}
+function bestDayOf(r){var d=r.days.filter(function(x){return !x.future}).slice().sort(function(a,b){return b.h-a.h})[0];return d&&d.h>0?d:null}
+function focusFor(r,team){
+  var past=r.days.filter(function(d){return !d.future&&!d.off}),zero=past.filter(function(d){return d.h===0}).length;
+  var srcShare=r.h&&r.topSrc?r.src[r.topSrc]/r.h:0;
+  if(zero>=2)return "getting at least one booking in every shift, starting each day with the enquiries still open from the day before";
+  if(r.jobs>=3&&team.avgJob&&r.avgJob<team.avgJob-0.5)return "quoting bigger moves on realistic hours rather than the minimum, and offering extra movers or packing";
+  if(srcShare>=0.8&&r.jobs>=4&&r.topSrc!=="Not stated")return "working leads beyond "+r.topSrc+" so one quiet channel doesn’t slow the week";
+  if(r.lead.n>=4&&r.lead.b[0]/r.lead.n>=0.7)return "offering customers dates further out so next week starts with hours already booked";
+  return "picking up one more job each shift";
+}
+function shoutouts(m){
+  var out=[],t=m.team,so=m.running?" so far this week":" this week",used={};
+  var cand=m.reps.filter(function(r){return r.h>0&&r.pct!=null});
+  var star=cand.slice().sort(function(a,b){return (b.pct-a.pct)||(b.h-a.h)})[0];
+  if(star){used[star.name]=1;var bd=bestDayOf(star);
+    var open=pickV(["Congratulations, "+star.name+".","Well done, "+star.name+".","Great week, "+star.name+"."],m.ws+star.name);
+    var msg=open+" You booked "+fh(star.h)+" hours"+so+", "+Math.round(star.pct*100)+"% of your target and the "+(star.rank===1?"most on the team":"best result against target")+".";
+    if(star.pct>=1)msg+=" That’s the target hit.";
+    if(bd)msg+=" Your best day was "+SDAYL[bd.di]+" with "+fh(bd.h)+" hours.";
+    if(star.verdict==="up")msg+=" You’re also up on your 4-week average of "+fh(star.avg4)+" hours"+(star.streak>=2?", "+star.streak+" weeks in a row":"")+".";
+    msg+=" Thank you for the effort.";
+    out.push({kind:"star",label:"Sales rep of the week",name:star.name,stats:fh(star.h)+" hrs  |  "+Math.round(star.pct*100)+"% of target  |  "+(star.hit?star.hit+" of "+star.worked+" shifts at "+m.T+"+ hrs":star.jobs+" jobs"),msg:msg});}
+  var up=m.reps.filter(function(r){return !used[r.name]&&r.verdict==="up"}).sort(function(a,b){return (b.ratio||0)-(a.ratio||0)})[0];
+  if(up){used[up.name]=1;var gain=up.h-(m.running?up.prevSame:up.prev);
+    var msg2=pickV(["Well done, "+up.name+".","Good progress, "+up.name+".","Nice work, "+up.name+"."],m.ws+up.name)+" "+fh(up.h)+" hours"+so+" against a 4-week average of "+fh(up.avg4)+"."+(gain>0.4?" That’s "+fh(gain)+" more than "+(m.running?"at this point last week":"last week")+".":"")+(up.streak>=2?" "+up.streak+" weeks of growth in a row.":"")+" Keep building on it.";
+    out.push({kind:"up",label:"Most improved",name:up.name,stats:fh(up.h)+" hrs  |  4-week avg "+fh(up.avg4)+"  |  "+(up.ratio?"+"+Math.round((up.ratio-1)*100)+"% on average":""),msg:msg2});}
+  else{var st=m.reps.filter(function(r){return !used[r.name]&&r.verdict==="steady"&&r.h>0}).sort(function(a,b){return (b.pct||0)-(a.pct||0)})[0];
+    if(st){used[st.name]=1;out.push({kind:"steady",label:"Steady performer",name:st.name,stats:fh(st.h)+" hrs  |  4-week avg "+fh(st.avg4)+"  |  "+Math.round((st.pct||0)*100)+"% of target",
+      msg:pickV(["Thanks, "+st.name+".","Good, steady work, "+st.name+"."],m.ws+st.name)+" "+fh(st.h)+" hours"+so+", right in line with your 4-week average of "+fh(st.avg4)+". Consistency like this is what the weekly target is built on. The next step is "+focusFor(st,t)+"."})}}
+  var slip=m.reps.filter(function(r){return !used[r.name]&&r.verdict==="down"});
+  slip.forEach(function(r){var best=Math.max.apply(null,r.trend.slice(0,5).map(function(q){return q.h}));
+    var msg3=pickV([r.name+", this was a tougher week, and that happens to everyone.",r.name+", this week didn’t go your way, but it’s one week.",r.name+", a quieter week this time."],m.ws+r.name)
+      +" You booked "+fh(r.h)+" hours"+so+" against your 4-week average of "+fh(r.avg4)+"."+(best>r.h+1?" You’ve done "+fh(best)+" hours in a week recently, so you know you can get there.":"")
+      +" For next week, focus on "+focusFor(r,t)+". We’re behind you.";
+    out.push({kind:"go",label:"Keep going",name:r.name,stats:fh(r.h)+" hrs  |  4-week avg "+fh(r.avg4)+"  |  "+Math.round((r.pct||0)*100)+"% of target",msg:msg3})});
+  return out;
+}
+var SHOUT={star:["#b07d00","#fff6dc"],up:["#1b7f4c","#e3f5ea"],steady:["#004AAD","#e6f0ff"],go:["#2a78d6","#eaf2fc"]};
+function shoutHtml(list){
+  if(!list.length)return '<p class="none">No bookings yet this week.</p>';
+  return '<div class="shouts">'+list.map(function(x){var c=SHOUT[x.kind];return '<div class="shout" style="--sc:'+c[0]+';--sb:'+c[1]+'"><span class="sbadge" aria-hidden="true">'+esc(x.name.charAt(0))+'</span><div><span class="slab">'+esc(x.label)+'</span><h4>'+esc(x.name)+'</h4><span class="sst">'+esc(x.stats)+'</span><p>'+esc(x.msg)+'</p></div></div>'}).join("")+'</div>';
+}
+function repAdvice(r,T,team,running){
+  var a=[],pc=r.pct;
+  if(r.targetToDate===0&&r.h===0)return [{k:"i",t:"No shifts rostered "+(running?"so far ":"")+"this week."}];
+  if(pc!=null){
+    if(pc>=1)a.push({k:"g",t:"On target: "+fh(r.h)+" of "+fh(r.targetToDate)+" hrs ("+Math.round(pc*100)+"%)"+(running?" so far":"")+". Keep it up."});
+    else if(pc>=0.8)a.push({k:"i",t:"Close to target: "+fh(r.h)+" of "+fh(r.targetToDate)+" hrs ("+Math.round(pc*100)+"%). One more strong shift would have closed the gap."});
+    else a.push({k:"b",t:"Below target: "+fh(r.h)+" of "+fh(r.targetToDate)+" hrs ("+Math.round(pc*100)+"%), "+fh(r.targetToDate-r.h)+" hrs short. That is about "+Math.max(1,Math.round((r.targetToDate-r.h)/Math.max(1,team.avgJob||2.5)))+" more average-size jobs."});
+  }
+  if(r.poor.length)a.push({k:"b",t:"Weak shifts: "+r.poor.map(function(d){return shortDay(d.day)+" ("+fh(d.h)+" hrs)"}).join(", ")+". On days like these, call back every open enquiry and follow up quotes sent in the last three days."});
+  if(r.zero>=2)a.push({k:"b",t:r.zero+" shifts with no bookings at all. Check how quickly new enquiries are answered on those days."});
+  var mx=Math.max.apply(null,r.days.map(function(d){return d.h}));
+  if(mx>=2*T&&r.poor.length>=1)a.push({k:"i",t:"Bookings came in bursts ("+fh(mx)+" hrs on "+shortDay(r.days.filter(function(d){return d.h===mx})[0].day)+"). Aim for a steady "+T+" hrs every shift."});
+  if(r.jobs>=3&&team.avgJob&&r.avgJob<team.avgJob-0.5)a.push({k:"i",t:"Average booking is "+fh(r.avgJob)+" hrs against the team\u2019s "+fh(team.avgJob)+". Quote realistic hours for larger moves and offer extra movers, packing or dismantling."});
+  if(r.h>0&&r.topSrc&&r.src[r.topSrc]/r.h>=0.8&&r.jobs>=4)a.push({k:"i",t:Math.round(r.src[r.topSrc]/r.h*100)+"% of hours came from "+r.topSrc+". Work the other lead sources too so a quiet day there doesn\u2019t empty the week."});
+  if(!running&&r.prev>0){var ch=(r.h-r.prev)/r.prev;if(ch>=0.2)a.push({k:"g",t:"Up "+Math.round(ch*100)+"% on last week ("+fh(r.prev)+" to "+fh(r.h)+" hrs)."});else if(ch<=-0.2)a.push({k:"b",t:"Down "+Math.round(-ch*100)+"% on last week ("+fh(r.prev)+" to "+fh(r.h)+" hrs)."})}
+  if(r.verdict==="up")a.push({k:"g",t:"Improving: "+(running?"on pace for "+fh(r.proj)+" hrs":fh(r.h)+" hrs")+" against a 4-week average of "+fh(r.avg4)+"."+(r.streak>=2?" Up "+r.streak+" weeks in a row.":"")});
+  else if(r.verdict==="down")a.push({k:"b",t:"Slipping: "+(running?"on pace for "+fh(r.proj)+" hrs":fh(r.h)+" hrs")+" against a 4-week average of "+fh(r.avg4)+"."});
+  if(r.lead.n>=4&&r.lead.b[0]/r.lead.n>=0.7)a.push({k:"i",t:Math.round(r.lead.b[0]/r.lead.n*100)+"% of jobs were for the same or next day. Offer customers dates further out, and the off-peak deal for quieter days, to build next week’s book early."});
+  else if(r.lead.n>=4&&team.lead.avg!=null&&r.lead.avg>team.lead.avg+5)a.push({k:"g",t:"Books well ahead: "+fh(r.lead.avg)+" days on average against the team’s "+fh(team.lead.avg)+"."});
+  if(r.h&&r.sharedH/r.h>0.4)a.push({k:"i",t:fh(r.sharedH)+" hrs came from jobs shared with another rep"+(sCfg().split?", counted as a split":", counted in full for each rep")+"."});
+  return a.slice(0,6);
+}
+function teamAdvice(R,T,team,running){
+  var a=[];
+  if(team.pct!=null){var gap=team.targetToDate-team.h;
+    a.push({k:team.pct>=1?"g":team.pct>=0.8?"i":"b",t:"The team booked "+fh(team.h)+" of "+fh(team.targetToDate)+" target hrs ("+Math.round(team.pct*100)+"%)"+(running?" so far this week":"")+"."+(gap>0?" The gap is "+fh(gap)+" hrs, roughly "+Math.max(1,Math.round(gap/Math.max(1,team.avgJob||2.5)))+" average jobs.":"")})}
+  if(!running&&team.prev){var ch=(team.h-team.prev)/team.prev;a.push({k:ch>=0?"g":"b",t:(ch>=0?"Up ":"Down ")+Math.abs(Math.round(ch*100))+"% on last week ("+fh(team.prev)+" hrs)."})}
+  var best=R.filter(function(r){return r.pct!=null}).sort(function(a,b){return b.pct-a.pct})[0];if(best&&best.h>0)a.push({k:"g",t:"Best performer: "+best.name+", "+fh(best.h)+" hrs ("+Math.round(best.pct*100)+"% of target)."});
+  var past=team.days.filter(function(d){return !d.future&&d.target>0});
+  if(past.length>=3){var w=past.slice().sort(function(a,b){return a.h/a.target-b.h/b.target})[0];if(w.h<w.target*0.6)a.push({k:"b",t:"Weakest day: "+dayName(w.day)+", "+fh(w.h)+" hrs against a team target of "+fh(w.target)+". Look at what happened with enquiries that day."})}
+  if(team.unnamed&&team.unnamed.jobs)a.push({k:"b",t:plural(team.unnamed.jobs,"job")+" ("+fh(team.unnamed.h)+" hrs) had no sales rep in brackets in the calendar title, so nobody was credited. Ask staff to always add their name."});
+  var lowShift=R.reduce(function(s,r){return s+r.poor.length},0);if(team.shifts)a.push({k:"i",t:team.hit+" of "+team.shifts+" shifts hit the "+T+"-hour target; "+lowShift+" were under half of it."});
+  return a;
+}
+
+/* ---------- Sales tab ---------- */
+function salesHead(ws){
+  var we=addDays(ws,6),today=melParts(new Date()).date,mon=dow(today)===1,lastWs=addDays(weekStart(today),-7);
+  return (mon&&ws===weekStart(today)?'<div class="notice"><p><b>It\u2019s Monday.</b> Last week\u2019s performance review is ready.</p><button class="btn primary small" type="button" data-act="spdflast">Download last week\u2019s PDF</button></div>':'')
+    +'<div class="nbar"><h2>'+(+ws.slice(8))+" "+MN[+ws.slice(5,7)-1]+' to '+(+we.slice(8))+" "+MN[+we.slice(5,7)-1]+" "+we.slice(0,4)+'</h2>'
+    +'<button class="btn small" type="button" data-act="sprev">&larr; Prev</button><button class="btn small" type="button" data-act="sthis">This week</button><button class="btn small" type="button" data-act="snext">Next &rarr;</button><span class="sp"></span>'
+    +'<button class="btn primary small" type="button" data-act="spdf">Download PDF review</button><button class="btn small" type="button" data-act="sset">Targets and rota</button><button class="btn small" type="button" data-act="srefresh">Refresh</button><button class="btn small" type="button" data-act="lock">Lock</button></div>';
+}
+function renderSales(){
+  var el=$("sales");if(!el||S.auth!=="in")return;
+  if(!LOCK.unlocked){if(LOCK.state==="unknown")loadLock();var gk="s:"+LOCK.state;if(gateKey!==gk){gateKey=gk;el.innerHTML=gateHtml("Sales performance");var f=el.querySelector("input");if(f)try{f.focus()}catch(e){}}return}
+  gateKey="";
+  var ws=S.sWeek||(S.sWeek=weekStart(melParts(new Date()).date));
+  if(SALES.cfgState==="unknown")loadSalesCfg();
+  loadCreated(ws);
+  if(S.quotes===undefined&&!S.qBusy)loadQuotes();
+  var head=salesHead(ws);
+  if(SALES.cfgState!=="ok"||!SALES.data[ws]){el.innerHTML=head+'<div class="npanel"><p class="none">'+(SALES.err?esc(SALES.err)+" Press Refresh.":"Loading the jobs added to the calendar this week and the five weeks before\u2026")+'</p></div>';return}
+  var m=salesModel(ws),t=m.team,T=m.T,html=head;
+  if(m.running)html+='<p class="note">This week is still running. Targets count only shifts up to today. A job counts on the day it was added to the calendar, whatever its move date.</p>';
+  else html+='<p class="note">A job counts on the day it was added to the calendar, whatever its move date, and is credited to the name(s) in brackets in its title.</p>';
+  var d=dlt(t.h,t.prev,"pct",true);
+  html+='<div class="kpis">'+kpi("Team hours booked",fh(t.h),m.running?null:d,m.reps.length?[5,4,3,2,1,0].map(function(k){return m.reps.reduce(function(a,r){return a+r.trend[5-k].h},0)}):null,"target "+fh(t.targetToDate)+" hrs"+(m.running?" so far":""),true)
+    +kpi("Target achieved",t.pct==null?"\u2013":Math.round(t.pct*100)+"%",null,null,T+" hrs per shift, "+fh(m.WT)+" a week each (one day off)")
+    +kpi("Jobs added",t.jobs,null,null,"average "+fh(t.avgJob)+" hrs per job")
+    +kpi("Shifts on target",t.hit+" of "+t.shifts,null,null,t.shifts?Math.round(t.hit/t.shifts*100)+"% of shifts worked":"")+'</div>';
+  html+=panel("Summary","",'<ul class="ins">'+m.teamAdvice.map(function(x){return '<li class="'+x.k+'"><span class="ic" aria-hidden="true">'+(x.k==="g"?"\u25B2":x.k==="b"?"!":"\u2022")+'</span><span>'+esc(x.t)+'</span></li>'}).join("")+'</ul>',true);
+  html+=panel("Shout-outs","Recognition for the week"+(m.running?" so far":"")+": the best result, someone improving or steady, and encouragement for anyone slipping. Also on its own page in the PDF.",shoutHtml(shoutouts(m)),true);
+  /* leaderboard cards */
+  html+='<div class="reps">'+m.rank.map(function(r){var pc=r.pct==null?0:r.pct,dd=m.running?null:dlt(r.h,r.prev,"pct",true);
+    return '<section class="npanel rep"><div class="rh"><span class="rk">#'+r.rank+'</span><h3>'+esc(r.name)+'</h3>'+verdictPill(r.verdict)+'<span class="pc '+(pc>=1?"g":pc>=0.8?"i":"b")+'">'+(r.pct==null?"\u2013":Math.round(pc*100)+"%")+'</span></div>'
+      +'<div class="rnum"><b>'+fh(r.h)+'</b> of '+fh(r.targetToDate)+' hrs'+(dd?' <span class="d '+dd.c+'">'+esc(dd.t)+' vs last week</span>':"")+'</div>'
+      +'<div class="meter"><i style="width:'+Math.min(100,pc*100).toFixed(1)+'%;background:'+(pc>=1?"var(--ok)":pc>=0.8?"var(--s1)":"var(--warn)")+'"></i></div>'
+      +'<div class="rstats"><span>'+r.hit+' of '+r.worked+' shifts on target</span><span>'+plural(r.jobs,"job")+', avg '+fh(r.avgJob)+' hrs</span><span>4-week average '+fh(r.avg4)+' hrs</span>'+(r.lead.n?'<span>books '+fh(r.lead.avg)+' days ahead on average</span>':"")+'</div>'
+      +'<ul class="ins sm">'+r.advice.map(function(x){return '<li class="'+x.k+'"><span class="ic" aria-hidden="true">'+(x.k==="g"?"\u25B2":x.k==="b"?"!":"\u2022")+'</span><span>'+esc(x.t)+'</span></li>'}).join("")+'</ul></section>'}).join("")+'</div>';
+  /* daily grid */
+  var lbl={hit:"On target",below:"Under target",poor:"Well under",off:"Day off",offb:"Day off",future:"Still to come"};
+  var grid='<div class="tw"><table class="sgrid"><thead><tr><th>Day added</th>'+m.reps.map(function(r){return '<th class="r">'+esc(r.name)+'</th>'}).join("")+'<th class="r">Team</th></tr></thead><tbody>';
+  for(var di=0;di<7;di++){var td=t.days[di];grid+='<tr><td>'+shortDay(addDays(ws,di))+'</td>'+m.reps.map(function(r){var x=r.days[di];
+      return '<td class="r"><button type="button" class="cellb '+x.st+'" data-act="soff" data-rep="'+esc(r.name)+'" data-di="'+di+'" title="'+esc(x.assumed?"Taken as the day off because it was the lowest day. Tap the real day off to change it.":lbl[x.st]+". Tap to mark as "+(x.off?"a working shift":"a day off"))+'">'+(x.off&&x.h===0?(x.assumed?"Off?":"Off"):fh(x.h)+(x.off?(x.assumed?" (off?)":" (off)"):""))+'</button></td>'}).join("")+'<td class="r">'+fh(td.h)+'</td></tr>'}
+  grid+='</tbody><tfoot><tr><td>Total</td>'+m.reps.map(function(r){return '<td class="r"><b>'+fh(r.h)+'</b></td>'}).join("")+'<td class="r"><b>'+fh(t.h)+'</b></td></tr><tr><td>Target'+(m.running?" so far":"")+'</td>'+m.reps.map(function(r){return '<td class="r">'+fh(r.targetToDate)+'</td>'}).join("")+'<td class="r">'+fh(t.targetToDate)+'</td></tr><tr><td>Achieved</td>'+m.reps.map(function(r){return '<td class="r"><b>'+(r.pct==null?"\u2013":Math.round(r.pct*100)+"%")+'</b></td>'}).join("")+'<td class="r"><b>'+(t.pct==null?"\u2013":Math.round(t.pct*100)+"%")+'</b></td></tr></tfoot></table></div>';
+  html+='<div class="npanels">'+panel("Hours booked each day","Green is on the "+T+"-hour shift target, blue under it, orange under half. Tap a cell to mark a day off or back on.",grid+'<div class="lgd" style="margin-top:8px"><span><i style="background:var(--ok-bg);outline:1px solid var(--ok)"></i>On target</span><span><i style="background:var(--job);outline:1px solid var(--s1)"></i>Under target</span><span><i style="background:var(--warn-bg);outline:1px solid var(--warn)"></i>Under half</span><span><i style="background:var(--grid)"></i>Day off</span></div>');
+  var cols=["var(--s1)","var(--s2)","var(--s3)","#eda100"];
+  NCH.sday=function(w){return groupChart(w,[0,1,2,3,4,5,6].map(function(di){return {label:SDAY[di],tip:dayName(addDays(ws,di))+"\n"+m.reps.map(function(r){var x=r.days[di];return r.name+": "+(x.off&&!x.h?"day off":fh(x.h)+" hrs")}).join("\n")}}),m.reps.slice(0,4).map(function(r,k){return {color:cols[k],vals:r.days.map(function(x){return x.h})}}),T,"Hours booked each day")};
+  html+=panel("Each day against the shift target","The line marks "+T+" hours.",legend(m.reps.slice(0,4).map(function(r,k){return [r.name,cols[k]]}))+'<div class="chart" data-chart="sday"></div>')+'</div>';
+  /* where each rep's hours came from, and how far ahead the jobs were booked */
+  var srcs=t.sources,pc=function(a,b){return b?Math.round(a/b*100)+"%":"–"};
+  var bars='<div class="srcs">'+m.rank.map(function(r){var segs=srcs.filter(function(k){return r.src[k]>0}).map(function(k){return '<i style="flex-grow:'+r.src[k].toFixed(2)+';background:'+srcColor(k)+'" data-tip="'+esc(r.name+": "+k+", "+fh(r.src[k])+" hrs ("+pc(r.src[k],r.h)+")")+'"></i>'}).join("");
+    return '<div class="srow"><span class="sn">'+esc(r.name)+'</span><div class="sbar" role="img" aria-label="'+esc(r.name+": "+srcs.filter(function(k){return r.src[k]>0}).map(function(k){return k+" "+fh(r.src[k])+" hours"}).join(", "))+'">'+(segs||'<i style="flex-grow:1;background:var(--grid)"></i>')+'</div><span class="st">'+fh(r.h)+' hrs</span></div>'}).join("")+'</div>';
+  var srcTbl=tbl([["Sales rep"]].concat(srcs.map(function(k){return [esc(k),1]}),[["Total",1]]),m.rank.map(function(r){return [esc(r.name)].concat(srcs.map(function(k){return r.src[k]?fh(r.src[k])+' <span class="muted">'+pc(r.src[k],r.h)+'</span>':"–"}),['<b>'+fh(r.h)+'</b>'])}).concat([['<b>Team</b>'].concat(srcs.map(function(k){return '<b>'+fh(t.srcTot[k])+'</b>'}),['<b>'+fh(t.h)+'</b>'])]),"No jobs were added this week.");
+  var leadRow=function(name,L){return [name].concat(L.b.map(function(n){return n?n+' <span class="muted">'+pc(n,L.n)+'</span>':"–"}),[L.avg==null?"–":fh(L.avg)+" days"])};
+  var leadTbl=tbl([["Sales rep"]].concat(LEADB.map(function(b){return [b[0],1]}),[["Average",1]]),m.rank.map(function(r){return leadRow(esc(r.name),r.lead)}).concat([leadRow("<b>Team</b>",t.lead)]),"No jobs were added this week.");
+  html+='<div class="npanels">'+panel("Where the hours came from","Hours booked by each rep, by lead source. Tap a segment for the figures.",legend(srcs.map(function(k){return [k,srcColor(k)]}))+bars+srcTbl)
+    +panel("How far ahead jobs were booked","Number of jobs by the gap between the day they were added and the move date.",leadTbl)+'</div>';
+  var lastLbl=m.running?"Same point last week":"Last week",wow=m.rank.map(function(r){var lw=m.running?r.prevSame:r.prev,d=r.h-lw;
+      return [esc(r.name),'<b>'+fh(r.h)+'</b>',fh(lw),(Math.abs(d)<0.05?"0":(d>0?"+":"−")+fh(Math.abs(d))),fh(r.avg4),sparkSvg(r.trend.map(function(q){return q.h})),verdictPill(r.verdict)]});
+  wow.push(['<b>Team</b>','<b>'+fh(t.h)+'</b>',fh(m.running?t.prevSame:t.prev),(function(d){return Math.abs(d)<0.05?"0":(d>0?"+":"−")+fh(Math.abs(d))})(t.h-(m.running?t.prevSame:t.prev)),fh(t.avg4),"",verdictPill(t.verdict)]);
+  NCH.strend=function(w){return lineChart(w,m.trendW.map(function(tw,i){return {label:(+tw.slice(8))+" "+MN[+tw.slice(5,7)-1],cur:i===5,tip:"Week of "+(+tw.slice(8))+" "+MN[+tw.slice(5,7)-1]+(i===5&&m.running?" (so far)":"")+"\n"+m.reps.map(function(r){var x=r.trend[i];return r.name+": "+fh(x.h)+" of "+fh(x.target)+" hrs"}).join("\n")}}),m.reps.slice(0,4).map(function(r,k){return {color:cols[k],vals:r.trend.map(function(x){return x.h})}}),function(v){return String(Math.round(v))},m.WT*1.1,"Hours booked by week",m.WT)};
+  html+='<div class="npanels">'+panel("Week on week","Is each rep improving? This week against "+(m.running?"the same point last week (Monday to "+SDAYL[m.elapsed-1]+")":"last week")+" and the average of the four weeks before. “Improving” means "+(m.running?"on pace for ":"")+"at least 10% above that average; “Slipping” 10% below.",
+      tbl([["Sales rep"],["This week",1],[lastLbl,1],["Change",1],["4-week avg",1],['<span style="padding-left:16px">Last 6 weeks</span>'],["Trend"]],wow,"No reps yet."))
+    +panel("Six-week trend","Hours booked each week. The line marks the "+fh(m.WT)+"-hour weekly target."+(m.running?" This week is so far.":""),legend(m.reps.slice(0,4).map(function(r,k){return [r.name,cols[k]]}))+'<div class="chart" data-chart="strend"></div>')+'</div>';
+  html+='<div class="npanels">';
+  html+=panel("Jobs added this week","Each job, the day it went into the calendar and who booked it.",tbl([["Added"],["Booked by"],["Customer"],["Source"],["Move date"],["Hours",1]],m.jobs.map(function(j){var r=repsFor(j,m.cfg);return [esc(shortDay(j.cDay)+" "+tm(j.cMin)),esc(r.join(" & ")),esc(j.customer),esc(j.platform||""),esc(shortDay(j.day)+" "+MN[+j.day.slice(5,7)-1]),fh(bookedH(j))]}),"No jobs were added to the calendar this week."))+'</div>';
+  el.innerHTML=html;drawCharts();
+}
+function groupChart(w,cats,series,ref,label){
+  var H=220,pl=40,pr=8,pt=10,pb=26,pw=Math.max(60,w-pl-pr),ph=H-pt-pb,n=cats.length,band=pw/n,ns=series.length||1,gw=Math.min(band*0.78,ns*22+(ns-1)*2),bw=(gw-(ns-1)*2)/ns;
+  var mx=ref||0;series.forEach(function(s){s.vals.forEach(function(v){if(v>mx)mx=v})});
+  var st=niceStep((mx||1)/4),top=Math.ceil((mx*1.05||1)/st)*st,Y=function(v){return pt+ph-v/top*ph},body=yAxis(pl,pw,pt,ph,top,st,function(v){return String(Math.round(v*10)/10)})+'<line x1="'+pl+'" x2="'+(pl+pw)+'" y1="'+(pt+ph)+'" y2="'+(pt+ph)+'" class="bl"/>';
+  cats.forEach(function(c,i){var x0=pl+band*i+(band-gw)/2;
+    series.forEach(function(s,k){var v=s.vals[i]||0;if(v<=0)return;var y=Y(v),h=pt+ph-y;body+='<path d="'+topRound(x0+k*(bw+2),y,bw,h,Math.min(4,bw/2))+'" style="fill:'+s.color+'"/>'});
+    body+='<text x="'+(pl+band*(i+0.5)).toFixed(1)+'" y="'+(H-8)+'" text-anchor="middle" class="ax">'+esc(c.label)+'</text>'});
+  if(ref){var yr=Y(ref);body+='<line x1="'+pl+'" x2="'+(pl+pw)+'" y1="'+yr.toFixed(1)+'" y2="'+yr.toFixed(1)+'" style="stroke:var(--ink);stroke-width:1.5;opacity:.55"/><text x="'+(pl+pw)+'" y="'+(yr-5).toFixed(1)+'" text-anchor="end" class="ax">'+ref+' hr target</text>'}
+  cats.forEach(function(c,i){body+='<rect x="'+(pl+band*i).toFixed(1)+'" y="'+pt+'" width="'+band.toFixed(1)+'" height="'+ph+'" class="hit" data-tip="'+esc(c.tip)+'"/>'});
+  return svgWrap(w,H,body,label);
+}
+function toggleOff(rep,di){
+  var ws=S.sWeek,c=sCfg(),cur=isOffDay(c,ws,rep,di),reg=c.off[rep]?c.off[rep].indexOf(di)>=0:false;
+  var w=c.weeks[ws]||(c.weeks[ws]={}),r=w[rep]||(w[rep]={});
+  if(!cur===reg)delete r[di];else r[di]=cur?"on":"off";
+  if(!Object.keys(r).length)delete w[rep];if(!Object.keys(w).length)delete c.weeks[ws];
+  SALES.cfg=c;saveSalesCfg();render();
+}
+function salesSetHtml(){
+  var c=sCfg(),ws=S.sWeek,m=SALES.data[ws]?salesModel(ws):null,reps=m?m.reps.map(function(r){return r.name}):Object.keys(c.off);
+  Object.keys(c.off).forEach(function(n){if(reps.indexOf(n)<0)reps.push(n)});
+  var al=Object.keys(c.alias).map(function(k){return k+" = "+c.alias[k]}).join("\n");
+  return '<div class="scrim mid"><div class="modal" role="dialog" aria-label="Targets and rota"><div class="hd"><h3>Targets and rota</h3><button class="btn small" type="button" data-act="scancel">Cancel</button></div>'
+    +'<div class="fld"><label for="sWeekT">Weekly target per rep (hours)</label><input type="number" id="sWeekT" min="1" step="1" value="'+c.weekTarget+'" style="max-width:120px"><span class="fresh">Stays the same whichever day is their day off. Marking two or more days off in a week lowers it by one shift each.</span></div>'
+    +'<div class="fld"><label for="sTarget">Hours to book per shift (for the daily colours)</label><input type="number" id="sTarget" min="1" step="0.5" value="'+c.target+'" style="max-width:120px"></div>'
+    +'<div class="fld"><span class="lbl">Jobs shared by two reps</span><label class="tin"><input type="radio" name="sSplit" value="full"'+(c.split?"":" checked")+'> Give each rep the full hours</label><label class="tin"><input type="radio" name="sSplit" value="split"'+(c.split?" checked":"")+'> Split the hours between them</label></div>'
+    +'<div class="fld"><span class="lbl">Regular days off</span>'+(reps.length?'<div class="tw"><table class="offg"><thead><tr><th>Rep</th>'+SDAY.map(function(d){return '<th>'+d+'</th>'}).join("")+'</tr></thead><tbody>'+reps.map(function(n,ri){var o=c.off[n]||[];return '<tr><td>'+esc(n)+'</td>'+SDAY.map(function(d,di){return '<td><input type="checkbox" aria-label="'+esc(n+" off on "+SDAYL[di])+'" data-offrep="'+ri+'" data-offd="'+di+'"'+(o.indexOf(di)>=0?" checked":"")+'></td>'}).join("")+'</tr>'}).join("")+'</tbody></table></div>':'<span class="fresh">Reps appear here once they have bookings.</span>')+'<span class="fresh">Ticked days don\u2019t count towards the target. For a one-off change, tap the day in the daily table.</span></div>'
+    +'<div class="fld"><label for="sAlias">Same person, different spelling (one per line, for example <i>Dayvido = David</i>)</label><textarea id="sAlias" rows="3">'+esc(al)+'</textarea></div>'
+    +'<div class="fld"><label for="sHide">Names to leave out of the review (comma separated)</label><input type="text" id="sHide" value="'+esc(c.hide.join(", "))+'"></div>'
+    +'<div class="acts"><button class="btn primary" type="button" data-act="ssave">Save</button></div><script type="application/json" id="sRepNames">'+JSON.stringify(reps).replace(/</g,"\\u003c")+'<\/script></div></div>';
+}
+function salesSave(){
+  var c=sCfg(),reps=[];try{reps=JSON.parse($("sRepNames").textContent)}catch(e){}
+  c.target=Math.max(1,+$("sTarget").value||12);c.weekTarget=Math.max(1,+$("sWeekT").value||72);
+  var sp=document.querySelector('input[name="sSplit"]:checked');c.split=!!sp&&sp.value==="split";
+  var off={};reps.forEach(function(n){off[n]=[]});document.querySelectorAll("[data-offrep]").forEach(function(x){if(x.checked)off[reps[+x.dataset.offrep]].push(+x.dataset.offd)});
+  Object.keys(c.off).forEach(function(n){if(!(n in off))off[n]=c.off[n]});
+  var al={};$("sAlias").value.split(/\n/).forEach(function(l){var p=l.split("=");if(p.length===2&&p[0].trim()&&p[1].trim())al[tc(p[0].trim())]=tc(p[1].trim())});c.alias=al;
+  c.hide=$("sHide").value.split(",").map(function(x){return x.trim()}).filter(Boolean);
+  Object.keys(al).forEach(function(k){delete off[k]});c.off=off;
+  SALES.cfg=c;saveSalesCfg();S.modal=null;$("overlay").innerHTML="";render();
+}
+
+/* ---------- Sales: PDF review ---------- */
+function needPdf(){
+  if(window.jspdf&&window.jspdf.jsPDF)return Promise.resolve();
+  return new Promise(function(res,rej){var s=document.createElement("script");s.src="pdf-lib.js";s.onload=function(){window.jspdf?res():rej(new Error("pdf"))};s.onerror=function(){rej(new Error("pdf"))};document.head.appendChild(s)});
+}
+function logoData(){return fetch("logo.png").then(function(r){return r.blob()}).then(function(b){return new Promise(function(res){var fr=new FileReader();fr.onload=function(){res(fr.result)};fr.onerror=function(){res(null)};fr.readAsDataURL(b)})}).catch(function(){return null})}
+function salesPdf(ws){
+  if(!SALES.data[ws]){toast("Loading that week first\u2026");loadCreated(ws);var tries=0,iv=setInterval(function(){if(SALES.data[ws]||++tries>40){clearInterval(iv);if(SALES.data[ws])salesPdf(ws)}},500);return}
+  toast("Making the PDF\u2026");
+  Promise.all([needPdf(),logoData()]).then(function(r){buildPdf(salesModel(ws),r[1])}).catch(function(){toast("The PDF couldn\u2019t be made. Check the connection and try again.")});
+}
+function pdfTxt(s){return String(s).replace(/[\u25B2]/g,"+").replace(/[\u25BC]/g,"-").replace(/\u2212/g,"-").replace(/\u2026/g,"...").replace(/[\u2018\u2019]/g,"'").replace(/[\u201C\u201D]/g,'"').replace(/[^\x00-\xFF\u2013\u2014\u2022]/g,"")}
+function buildPdf(m,logo){
+  var J=window.jspdf.jsPDF,doc=new J({unit:"mm",format:"a4"}),W=210,M=14,y=0,t=m.team,T=m.T;
+  var NAVY=[6,58,128],ROYAL=[0,74,173],SKY=[56,182,255],INK=[29,36,48],MUT=[93,104,120],LINE=[217,225,236],GOOD=[27,127,76],GOODB=[227,245,234],WARN=[180,83,9],WARNB=[255,244,221],BLUEB=[230,240,255],GREY=[232,237,245];
+  var col=function(c){doc.setTextColor(c[0],c[1],c[2])},fill=function(c){doc.setFillColor(c[0],c[1],c[2])},draw=function(c){doc.setDrawColor(c[0],c[1],c[2])};
+  var range=(+m.ws.slice(8))+" "+MONTHS[+m.ws.slice(5,7)-1]+" to "+(+m.we.slice(8))+" "+MONTHS[+m.we.slice(5,7)-1]+" "+m.we.slice(0,4);
+  function header(){fill(NAVY);doc.rect(0,0,W,34,"F");if(logo)try{doc.addImage(logo,"PNG",M,6,22,22)}catch(e){}
+    col([255,255,255]);doc.setFont("helvetica","bold");doc.setFontSize(18);doc.text("Sales performance review",M+27,16);doc.setFont("helvetica","normal");doc.setFontSize(10.5);doc.text(pdfTxt("Week of "+range+(m.running?" (week in progress)":"")),M+27,23);
+    doc.setFontSize(8.5);doc.text("EAM Global Movers  |  Hours booked Monday to Sunday",M+27,28.5);y=42}
+  function need(h){if(y+h>282){doc.addPage();y=16}}
+  function h2(s){need(14);col(NAVY);doc.setFont("helvetica","bold");doc.setFontSize(13);doc.text(pdfTxt(s),M,y);y+=2.5;draw(SKY);doc.setLineWidth(0.8);doc.line(M,y,M+18,y);y+=6}
+  function bullets(list,w){list.forEach(function(b){doc.setFont("helvetica","normal");doc.setFontSize(9.5);var lines=doc.splitTextToSize(pdfTxt(b.t),w-7);need(lines.length*4.4+2);
+    var c=b.k==="g"?GOOD:b.k==="b"?WARN:ROYAL;fill(c);doc.circle(M+1.6,y-1.2,1.2,"F");col(INK);doc.text(lines,M+5,y);y+=lines.length*4.4+1.6})}
+  header();
+  /* team tiles */
+  var tiles=[["Team hours booked",fh(t.h),"target "+fh(t.targetToDate)+" hrs"],["Target achieved",t.pct==null?"-":Math.round(t.pct*100)+"%",fh(m.WT)+" hrs a week each"],["Jobs added",String(t.jobs),"avg "+fh(t.avgJob)+" hrs per job"],["Shifts on target",t.hit+" of "+t.shifts,!m.running&&t.prev?"last week "+fh(t.prev)+" hrs":""]];
+  var tw=(W-2*M-9)/4;tiles.forEach(function(x,i){var tx=M+i*(tw+3);fill([243,246,251]);draw(LINE);doc.setLineWidth(0.2);doc.roundedRect(tx,y,tw,24,2,2,"FD");col(MUT);doc.setFont("helvetica","bold");doc.setFontSize(7.5);doc.text(x[0].toUpperCase(),tx+3,y+5.5);col(INK);doc.setFontSize(17);doc.text(pdfTxt(x[1]),tx+3,y+14);doc.setFont("helvetica","normal");doc.setFontSize(7.8);col(MUT);doc.text(pdfTxt(x[2]),tx+3,y+20)});
+  y+=32;
+  h2("Summary");bullets(m.teamAdvice,W-2*M);y+=3;
+  h2("Leaderboard");
+  doc.autoTable({startY:y,margin:{left:M,right:M},head:[["Rank","Sales rep","Hours","Target","Achieved","Shifts on target","Weak shifts","Jobs","Avg job","Last week"]],
+    body:m.rank.map(function(r){return ["#"+r.rank,r.name,fh(r.h),fh(r.targetToDate),r.pct==null?"-":Math.round(r.pct*100)+"%",r.hit+" of "+r.worked,String(r.poor.length),String(r.jobs),fh(r.avgJob)+" hrs",fh(r.prev)]}),
+    theme:"grid",styles:{fontSize:9,cellPadding:2,textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,fontStyle:"bold"},columnStyles:{0:{halign:"center"},2:{halign:"right",fontStyle:"bold"},3:{halign:"right"},4:{halign:"right",fontStyle:"bold"},5:{halign:"center"},6:{halign:"center"},7:{halign:"right"},8:{halign:"right"},9:{halign:"right"}},
+    didParseCell:function(d){if(d.section==="body"&&d.column.index===4){var r=m.rank[d.row.index];if(r.pct!=null){d.cell.styles.fillColor=r.pct>=1?GOODB:r.pct>=0.8?BLUEB:WARNB;d.cell.styles.textColor=r.pct>=1?GOOD:r.pct>=0.8?ROYAL:WARN}}}});
+  y=doc.lastAutoTable.finalY+8;
+  /* week on week */
+  need(40+m.rank.length*8);h2("Week on week");
+  var VT={up:"Improving",down:"Slipping",steady:"Steady","new":"No history"},lwk=m.running?"Same point last week":"Last week";
+  doc.autoTable({startY:y,margin:{left:M,right:M},head:[["Sales rep","This week",lwk,"Change","4-week average","Trend"]],
+    body:m.rank.map(function(r){var lw=m.running?r.prevSame:r.prev,d=r.h-lw;return [r.name,fh(r.h),fh(lw),Math.abs(d)<0.05?"0":(d>0?"+":"-")+fh(Math.abs(d)),fh(r.avg4),VT[r.verdict]+(r.verdict==="up"&&r.streak>=2?" ("+r.streak+" weeks up)":"")]}).concat([["Team",fh(t.h),fh(m.running?t.prevSame:t.prev),(function(d){return Math.abs(d)<0.05?"0":(d>0?"+":"-")+fh(Math.abs(d))})(t.h-(m.running?t.prevSame:t.prev)),fh(t.avg4),VT[t.verdict]]]),
+    theme:"grid",styles:{fontSize:9,cellPadding:2,halign:"right",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"},5:{halign:"left",fontStyle:"bold"}},
+    didParseCell:function(d){if(d.section!=="body")return;if(d.row.index===m.rank.length)d.cell.styles.fillColor=[243,246,251];
+      if(d.column.index===5){var v=d.row.index<m.rank.length?m.rank[d.row.index].verdict:t.verdict;d.cell.styles.textColor=v==="up"?GOOD:v==="down"?WARN:MUT}}});
+  y=doc.lastAutoTable.finalY+4;doc.setFont("helvetica","normal");doc.setFontSize(8);col(MUT);
+  doc.text(doc.splitTextToSize(pdfTxt("Improving: "+(m.running?"on pace for ":"")+"10% or more above the average of the four weeks before. Slipping: 10% or more below."+(m.running?" Same point last week = Monday to "+SDAYL[m.elapsed-1]+" last week.":"")),W-2*M),M,y);y+=8;
+  /* shout-outs page */
+  var SO=shoutouts(m);
+  if(SO.length){doc.addPage();y=18;h2("Shout-outs");
+    doc.setFont("helvetica","normal");doc.setFontSize(9.5);col(MUT);doc.text(pdfTxt("Recognising this week’s results"+(m.running?" so far":"")+"."),M,y);y+=8;
+    var hx=function(s){return [parseInt(s.slice(1,3),16),parseInt(s.slice(3,5),16),parseInt(s.slice(5,7),16)]};
+    SO.forEach(function(x){var cc=hx(SHOUT[x.kind][0]),cb=hx(SHOUT[x.kind][1]),tx=M+24,tw2=W-M-tx-6;
+      doc.setFont("helvetica","normal");doc.setFontSize(10.5);var L=doc.splitTextToSize(pdfTxt(x.msg),tw2),hh=26+L.length*5.1;need(hh+6);
+      fill(cb);doc.roundedRect(M,y,W-2*M,hh,3,3,"F");fill(cc);doc.rect(M,y,2.4,hh,"F");
+      doc.circle(M+12.5,y+12,7,"F");col([255,255,255]);doc.setFont("helvetica","bold");doc.setFontSize(14);doc.text(pdfTxt(x.name.charAt(0)),M+12.5,y+14.6,{align:"center"});
+      col(cc);doc.setFontSize(8.5);doc.text(pdfTxt(x.label.toUpperCase()),tx,y+8);
+      col(INK);doc.setFontSize(16);doc.text(pdfTxt(x.name),tx,y+15.5);
+      doc.setFont("helvetica","normal");doc.setFontSize(8.8);col(MUT);doc.text(pdfTxt(x.stats),tx,y+21);
+      doc.setFontSize(10.5);col(INK);doc.text(L,tx,y+27.5);y+=hh+6});
+    doc.addPage();y=16}
+  /* six-week trend chart */
+  need(70);h2("Six-week trend (hours booked each week)");
+  var RC=[[42,120,214],[235,104,52],[27,175,122],[237,161,0]],cx=M+10,cw=W-2*M-14,ch=48,cy=y+2,mxv=m.WT*1.15;
+  m.reps.forEach(function(r){r.trend.forEach(function(q){if(q.h>mxv)mxv=q.h})});
+  var stp=niceStep(mxv/4),topv=Math.ceil(mxv/stp)*stp,XP=function(i){return cx+cw*i/5},YP=function(v){return cy+ch-v/topv*ch};
+  doc.setLineWidth(0.15);draw(LINE);doc.setFontSize(7);col(MUT);
+  for(var gv=0;gv<=topv+1e-9;gv+=stp){doc.line(cx,YP(gv),cx+cw,YP(gv));doc.text(String(Math.round(gv)),cx-2,YP(gv)+1,{align:"right"})}
+  m.trendW.forEach(function(tw,i){doc.text(pdfTxt((+tw.slice(8))+" "+MN[+tw.slice(5,7)-1]+(i===5&&m.running?" (so far)":"")),XP(i),cy+ch+4.5,{align:"center"})});
+  doc.setLineWidth(0.5);draw(INK);doc.line(cx,YP(m.WT),cx+cw,YP(m.WT));doc.setFontSize(7);col(INK);doc.text(fh(m.WT)+" hr target",cx+cw,YP(m.WT)-1.2,{align:"right"});
+  m.reps.slice(0,4).forEach(function(r,k){var c=RC[k];draw(c);fill(c);doc.setLineWidth(0.7);
+    for(var i=1;i<6;i++)doc.line(XP(i-1),YP(r.trend[i-1].h),XP(i),YP(r.trend[i].h));
+    for(var i2=0;i2<6;i2++)doc.circle(XP(i2),YP(r.trend[i2].h),0.9,"F")});
+  y=cy+ch+9;var lx2=M;doc.setFontSize(8.5);m.reps.slice(0,4).forEach(function(r,k){fill(RC[k]);doc.rect(lx2,y-2.6,3.2,3.2,"F");col(INK);doc.text(pdfTxt(r.name),lx2+4.5,y);lx2+=doc.getTextWidth(pdfTxt(r.name))+12});y+=8;
+
+  h2("Hours booked each day");
+  var body=[0,1,2,3,4,5,6].map(function(di){return [shortDay(addDays(m.ws,di))].concat(m.reps.map(function(r){var x=r.days[di];return x.off&&x.h===0?"Off":fh(x.h)+(x.off?" (off)":"")}),[fh(t.days[di].h)])});
+  body.push(["Total"].concat(m.reps.map(function(r){return fh(r.h)}),[fh(t.h)]));
+  body.push(["Target"].concat(m.reps.map(function(r){return fh(r.targetToDate)}),[fh(t.targetToDate)]));
+  body.push(["Achieved"].concat(m.reps.map(function(r){return r.pct==null?"-":Math.round(r.pct*100)+"%"}),[t.pct==null?"-":Math.round(t.pct*100)+"%"]));
+  doc.autoTable({startY:y,margin:{left:M,right:M},head:[["Day added"].concat(m.reps.map(function(r){return r.name}),["Team"])],body:body,theme:"grid",
+    styles:{fontSize:9,cellPadding:2,halign:"right",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"}},
+    didParseCell:function(d){if(d.section!=="body")return;if(d.row.index>=7){d.cell.styles.fontStyle="bold";d.cell.styles.fillColor=[243,246,251];return}
+      if(d.column.index===0||d.column.index>m.reps.length)return;var x=m.reps[d.column.index-1].days[d.row.index];
+      var map={hit:[GOODB,GOOD],below:[BLUEB,ROYAL],poor:[WARNB,WARN],off:[GREY,MUT],offb:[GREY,MUT],future:[[255,255,255],MUT]}[x.st];d.cell.styles.fillColor=map[0];d.cell.styles.textColor=map[1];if(x.st==="hit"||x.st==="poor")d.cell.styles.fontStyle="bold"}});
+  y=doc.lastAutoTable.finalY+4;
+  var lg=[["On target ("+T+"+ hrs)",GOODB,GOOD],["Under target",BLUEB,ROYAL],["Under half ("+fh(T/2)+" hrs)",WARNB,WARN],["Day off",GREY,MUT]],lx=M;
+  doc.setFontSize(8);lg.forEach(function(l){fill(l[1]);draw(l[2]);doc.setLineWidth(0.3);doc.rect(lx,y-2.6,3.2,3.2,"FD");col(MUT);doc.text(pdfTxt(l[0]),lx+4.5,y);lx+=doc.getTextWidth(pdfTxt(l[0]))+11});y+=8;
+  /* where the hours came from */
+  var srcs=t.sources,pcs=function(a,b){return b?Math.round(a/b*100)+"%":"-"};
+  need(28+m.rank.length*8);h2("Where the hours came from");
+  doc.autoTable({startY:y,margin:{left:M,right:M},head:[["Sales rep"].concat(srcs,["Total"])],
+    body:m.rank.map(function(r){return [r.name].concat(srcs.map(function(k){return r.src[k]?fh(r.src[k])+" ("+pcs(r.src[k],r.h)+")":"-"}),[fh(r.h)])}).concat([["Team"].concat(srcs.map(function(k){return fh(t.srcTot[k])}),[fh(t.h)])]),
+    theme:"grid",styles:{fontSize:8.6,cellPadding:2,halign:"right",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"}},
+    didParseCell:function(d){if(d.section==="body"&&d.row.index===m.rank.length){d.cell.styles.fontStyle="bold";d.cell.styles.fillColor=[243,246,251]}}});
+  y=doc.lastAutoTable.finalY+8;
+  /* how far ahead jobs were booked */
+  need(28+m.rank.length*8);h2("How far ahead jobs were booked");
+  var lr=function(name,L){return [name].concat(L.b.map(function(n){return n?n+" ("+pcs(n,L.n)+")":"-"}),[L.avg==null?"-":fh(L.avg)+" days"])};
+  doc.autoTable({startY:y,margin:{left:M,right:M},head:[["Sales rep"].concat(LEADB.map(function(b){return b[0]}),["Average"])],
+    body:m.rank.map(function(r){return lr(r.name,r.lead)}).concat([lr("Team",t.lead)]),
+    theme:"grid",styles:{fontSize:9,cellPadding:2,halign:"right",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"right"},columnStyles:{0:{halign:"left",fontStyle:"bold"}},
+    didParseCell:function(d){if(d.section==="body"&&d.row.index===m.rank.length){d.cell.styles.fontStyle="bold";d.cell.styles.fillColor=[243,246,251]}}});
+  y=doc.lastAutoTable.finalY+4;doc.setFont("helvetica","normal");doc.setFontSize(8);col(MUT);doc.text("Number of jobs, by the days between the job being added to the calendar and its move date.",M,y);y+=9;
+  /* one section per rep */
+  m.rank.forEach(function(r){
+    need(78);
+    fill([243,246,251]);doc.rect(M,y-5,W-2*M,10,"F");col(NAVY);doc.setFont("helvetica","bold");doc.setFontSize(12.5);doc.text(pdfTxt("#"+r.rank+"  "+r.name),M+3,y+1.6);
+    var pc=r.pct;doc.setFontSize(11);col(pc==null?MUT:pc>=1?GOOD:pc>=0.8?ROYAL:WARN);doc.text(pc==null?"-":Math.round(pc*100)+"% of target",W-M-3,y+1.6,{align:"right"});y+=11;
+    col(INK);doc.setFont("helvetica","normal");doc.setFontSize(9.5);
+    var stl=doc.splitTextToSize(pdfTxt(fh(r.h)+" hrs booked of "+fh(r.targetToDate)+"  |  "+r.hit+" of "+r.worked+" shifts on target  |  "+plural(r.jobs,"job")+", avg "+fh(r.avgJob)+" hrs  |  last week "+fh(r.prev)+" hrs  |  4-week avg "+fh(r.avg4)+" hrs"+(r.lead.n?"  |  books "+fh(r.lead.avg)+" days ahead":"")+"  |  "+({up:"Improving",down:"Slipping",steady:"Steady","new":"No history yet"})[r.verdict]),W-2*M);doc.text(stl,M,y);y+=stl.length*4.3+0.8;
+    /* mini bar chart of the 7 days with the shift target line */
+    var cx=M,cw=78,ch=34,cy=y,mx=Math.max(T*1.4,Math.max.apply(null,r.days.map(function(d){return d.h}))),bw=cw/7;
+    draw(LINE);doc.setLineWidth(0.2);doc.line(cx,cy+ch,cx+cw,cy+ch);
+    r.days.forEach(function(d,i){var bh=d.h/mx*ch,bx=cx+i*bw+bw*0.2,c=d.st==="hit"?GOOD:d.st==="below"?ROYAL:d.st==="poor"?WARN:[170,180,195];
+      if(bh>0.2){fill(c);doc.rect(bx,cy+ch-bh,bw*0.6,bh,"F")}doc.setFontSize(6.8);col(MUT);doc.text(SDAY[i].charAt(0)+SDAY[i].charAt(1),bx+bw*0.3,cy+ch+3.6,{align:"center"});
+      if(d.h>0){col(INK);doc.text(fh(d.h),bx+bw*0.3,cy+ch-bh-1,{align:"center"})}else if(d.off){col(MUT);doc.text("off",bx+bw*0.3,cy+ch-1.5,{align:"center"})}});
+    var ty=cy+ch-T/mx*ch;draw(INK);doc.setLineWidth(0.35);doc.line(cx,ty,cx+cw,ty);doc.setFontSize(6.5);col(MUT);doc.text(T+" hr target",cx+cw,ty-1,{align:"right"});
+    var savedY=y;y=cy+2;var bxL=M+cw+8,bwid=W-M-bxL;
+    r.advice.forEach(function(b){doc.setFont("helvetica","normal");doc.setFontSize(9);var lines=doc.splitTextToSize(pdfTxt(b.t),bwid-5);var c=b.k==="g"?GOOD:b.k==="b"?WARN:ROYAL;fill(c);doc.circle(bxL+1.3,y-1.1,1.1,"F");col(INK);doc.text(lines,bxL+4,y);y+=lines.length*4.1+1.4});
+    y=Math.max(y,cy+ch+8)+4;
+  });
+  /* appendix: every job added */
+  doc.addPage();y=16;h2("Jobs added to the calendar this week");
+  doc.autoTable({startY:y,margin:{left:M,right:M},head:[["Added","Booked by","Customer","Source","Move date","Hours"]],
+    body:m.jobs.map(function(j){return [shortDay(j.cDay)+" "+tm(j.cMin),repsFor(j,m.cfg).join(" & "),j.customer,j.platform||"",shortDay(j.day)+" "+MN[+j.day.slice(5,7)-1],fh(bookedH(j))]}),
+    theme:"striped",styles:{fontSize:8.5,cellPadding:1.8,textColor:INK},headStyles:{fillColor:NAVY,textColor:255},columnStyles:{5:{halign:"right"}}});
+  y=doc.lastAutoTable.finalY+6;doc.setFontSize(8);col(MUT);
+  doc.text(doc.splitTextToSize(pdfTxt("How this is worked out: a job counts on the day it was added to the Outlook calendar, credited to the sales rep(s) named in brackets in its title"+(m.cfg.split?", split equally when two reps are named":"")+". Hours are the booking's initial hours, or its length when none are stated. Target: "+T+" hours per rostered shift. Shifts under half the target are marked as weak."),W-2*M),M,y);
+  var n=doc.getNumberOfPages();for(var p=1;p<=n;p++){doc.setPage(p);doc.setFontSize(7.5);col(MUT);doc.text(pdfTxt("EAM Global Movers  |  Sales performance review  |  "+range),M,292);doc.text("Page "+p+" of "+n,W-M,292,{align:"right"})}
+  var name="EAM sales review "+m.ws+" to "+m.we+".pdf",blob=doc.output("blob");
+  var file=null;try{file=new File([blob],name,{type:"application/pdf"})}catch(e){}
+  if(file&&navigator.canShare&&/iPhone|iPad|iPod/.test(navigator.userAgent)&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:name}).catch(function(){})}
+  else{var u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){a.remove();URL.revokeObjectURL(u)},60000)}
+  toast("PDF ready: "+name);
 }
 
 /* ---------- render ---------- */
@@ -1023,6 +1502,7 @@ function render(){
   $("grid").innerHTML=have?(NARROW.matches?listHtml(jobs,flags):boardHtml(jobs,flags,today)):'<div class="empty">'+(S.loading||S.auth==="wait"?"Loading the calendar…":"No calendar data yet.")+'</div>';
   renderOverlay(jobs,flags);
   if(TAB==="numbers")renderNumbers();
+  if(TAB==="sales")renderSales();
 }
 function slotHtml(jobs){
   var o="";for(var t=360;t<=1200;t+=30)o+='<option value="'+t+'"'+(t===S.slotT?" selected":"")+'>'+tm(t)+'</option>';
@@ -1092,6 +1572,7 @@ function listHtml(jobs,flags){
 /* ---------- drawer and dialogs ---------- */
 function renderOverlay(jobs,flags){
   var el=$("overlay"),keep=document.activeElement&&document.activeElement.id;
+  if(S.modal==="salesset"){if(!el.querySelector("#sTarget"))el.innerHTML=salesSetHtml();return}
   if(S.modal==="lockchange"){if(!el.querySelector("#lockChange")){el.innerHTML=changeHtml();var pf=el.querySelector("input");if(pf)try{pf.focus()}catch(e){}}return}
   if(S.modal==="fleet"){if(!el.querySelector(".modal"))el.innerHTML=fleetHtml();return}
   if(S.modal==="text"){return}
@@ -1183,7 +1664,7 @@ function toast(m){var o=document.querySelector(".toast");if(o)o.remove();var d=d
 function go(day){S.day=day;S.sel=null;var ws=weekStart(day);render();if(!S.events[ws])fetchWeek(ws,false)}
 function findJob(k){return dayJobs(S.day).filter(function(j){return j.key===k})[0]}
 document.addEventListener("click",function(e){
-  var t=e.target.closest("[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut,#tabDispatch,#tabQuotes,#tabNumbers");
+  var t=e.target.closest("[data-day],[data-job],[data-act],[data-close],[data-rmt],[data-rmc],#prev,#next,#today,#refresh,#btnFleet,#btnSheet,#btnOut,#tabDispatch,#tabQuotes,#tabNumbers,#tabSales");
   if(!t)return;
   if(t.dataset.close){if(e.target!==t&&t.classList.contains("scrim"))return;S.sel=null;render();return}
   if(t.dataset.day){go(t.dataset.day);return}
@@ -1198,6 +1679,7 @@ document.addEventListener("click",function(e){
   if(t.id==="tabDispatch"){setTab("dispatch");return}
   if(t.id==="tabQuotes"){setTab("quotes");return}
   if(t.id==="tabNumbers"){setTab("numbers");return}
+  if(t.id==="tabSales"){setTab("sales");return}
   if(t.dataset.act==="signin"){signIn();return}
   if(t.dataset.rmt){readDraft();draft.trucks.splice(+t.dataset.rmt,1);redrawFleet();return}
   if(t.dataset.rmc){readDraft();draft.crew.splice(+t.dataset.rmc,1);redrawFleet();return}
@@ -1214,6 +1696,15 @@ document.addEventListener("click",function(e){
   if(a==="nrefresh"){var mb=S.nMode||"week",ab=S.nAnchor||melParts(new Date()).date,nb=mb==="week"?12:mb==="month"?6:4,f0=pBounds(mb,ab,1-nb).from,td=melParts(new Date()).date,f1=pBounds(mb,ab,0).to;if(addDays(weekStart(td),27)>f1)f1=addDays(weekStart(td),27);if(weekStart(td)<f0)f0=weekStart(td);
     for(var rw=weekStart(f0);rw<=weekStart(f1);rw=addDays(rw,7))if(!S.busy[rw])delete S.events[rw];nTried={};S.nErr="";S.quotes=undefined;render();return}
   if(a==="ncsv"){exportCsv();return}
+  if(a==="spdf"){salesPdf(S.sWeek);return}
+  if(a==="spdflast"){salesPdf(addDays(weekStart(melParts(new Date()).date),-7));return}
+  if(a==="sprev"||a==="snext"){S.sWeek=addDays(S.sWeek,a==="snext"?7:-7);render();return}
+  if(a==="sthis"){S.sWeek=weekStart(melParts(new Date()).date);render();return}
+  if(a==="srefresh"){delete SALES.data[S.sWeek];SALES.cfgState="unknown";SALES.err="";render();return}
+  if(a==="soff"){toggleOff(t.dataset.rep,+t.dataset.di);return}
+  if(a==="sset"){S.modal="salesset";render();return}
+  if(a==="scancel"){S.modal=null;$("overlay").innerHTML="";render();return}
+  if(a==="ssave"){salesSave();return}
   if(a==="lock"){lockNow();return}
   if(a==="lockretry"){LOCK.state="unknown";gateKey="";render();return}
   if(a==="lockpw"){S.modal="lockchange";render();return}
@@ -1251,13 +1742,13 @@ if(NARROW.addEventListener)NARROW.addEventListener("change",function(){render()}
 /* ---------- sections: Dispatch and Quotes share one sign-in ---------- */
 var TAB="dispatch";
 function setTab(m){
-  if(m!=="quotes"&&m!=="numbers")m="dispatch";
-  TAB=m;document.body.classList.toggle("quotes",m==="quotes");document.body.classList.toggle("numbers",m==="numbers");
-  [["tabDispatch","dispatch"],["tabQuotes","quotes"],["tabNumbers","numbers"]].forEach(function(x){if(x[1]===m)$(x[0]).setAttribute("aria-current","page");else $(x[0]).removeAttribute("aria-current")});
-  $("appTitle").textContent=m==="quotes"?"EAM Quote Builder":m==="numbers"?"EAM Numbers":"EAM Dispatch Board";
+  if(["quotes","numbers","sales"].indexOf(m)<0)m="dispatch";
+  TAB=m;["quotes","numbers","sales"].forEach(function(c){document.body.classList.toggle(c,m===c)});
+  [["tabDispatch","dispatch"],["tabQuotes","quotes"],["tabNumbers","numbers"],["tabSales","sales"]].forEach(function(x){if(x[1]===m)$(x[0]).setAttribute("aria-current","page");else $(x[0]).removeAttribute("aria-current")});
+  $("appTitle").textContent={quotes:"EAM Quote Builder",numbers:"EAM Numbers",sales:"EAM Sales Review",dispatch:"EAM Dispatch Board"}[m];
   if(m==="quotes"&&S.auth==="in"){var f=$("qframe");if(!f.getAttribute("src"))f.setAttribute("src","quotes.html")}
   try{var want=m==="dispatch"?"":"#"+m;if(location.hash!==want)history.replaceState(null,"",want||location.pathname+location.search)}catch(e){}
-  S.sel=null;nTried={};
+  S.sel=null;nTried={};gateKey="";$("numbers").innerHTML="";$("sales").innerHTML="";
   if(m==="dispatch"&&S.auth==="in")fetchWeek(weekStart(S.day),true,true);
   render();
 }
