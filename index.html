@@ -129,6 +129,9 @@ body.sales .daybar,body.sales .week,body.sales .stats,body.sales .board,body.sal
 .sbadge{flex:none;width:40px;height:40px;border-radius:50%;background:var(--sc);color:#fff;font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center}
 .shout .slab{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--sc)}
 .shout h4{margin:2px 0 2px;font-size:18px}.shout .sst{font-size:12px;color:#5d6878}.shout p{margin:8px 0 0;font-size:14px;line-height:1.5}
+.krc{font-weight:800;border-radius:5px;padding:1px 6px;white-space:nowrap;font-size:12.5px}.krc.g{background:var(--ok-bg,#e3f5ea);color:var(--ok)}.krc.b{background:var(--bad-bg);color:var(--bad)}.krc.w{background:var(--warn-bg);color:var(--warn)}.krc.n{background:var(--grid);color:var(--muted);font-weight:600}
+.krin input{width:90px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}.krin td,.krin th{padding:6px 8px;text-align:left}
+.krset{display:flex;flex-wrap:wrap;gap:10px}.krset label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;color:var(--muted)}.krset input{width:110px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px}
 .vp{font-size:12px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap;background:var(--grid);color:var(--muted)}
 .vp.g{background:var(--ok-bg);color:var(--ok)}.vp.b{background:var(--warn-bg);color:var(--warn)}
 .npanel td .spark{width:90px;height:22px;margin:0 0 0 16px}
@@ -1443,7 +1446,7 @@ function exportCsv(){
 var P_SALES="String "+NS+" Name eamSalesSettings";
 var SALES={cfg:null,cfgState:"unknown",data:{},busy:{},err:"",saveT:null};
 var SDAY=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],SDAYL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-function sCfg(){var c=SALES.cfg||{};return {target:c.target>0?c.target:12,weekTarget:c.weekTarget>0?c.weekTarget:72,split:c.split===true,alias:c.alias||{"Dayvido":"David"},hide:c.hide||[],off:c.off||{},weeks:c.weeks||{}}}
+function sCfg(){var c=SALES.cfg||{};return {target:c.target>0?c.target:12,weekTarget:c.weekTarget>0?c.weekTarget:72,split:c.split===true,alias:c.alias||{"Dayvido":"David"},hide:c.hide||[],off:c.off||{},weeks:c.weeks||{},kr:{resp:c.kr&&c.kr.resp>0?c.kr.resp:7,bid:c.kr&&c.kr.bid>0?c.kr.bid:5,fu:c.kr&&c.kr.fu>0?c.kr.fu:100}}}
 function aliasMap(){var al=sCfg().alias,m={};Object.keys(al).forEach(function(k){m[k.toLowerCase()]=al[k]});return m}
 function repName(n){var m=aliasMap();return m[String(n||"").toLowerCase()]||n}
 function repsOf(j){var m=aliasMap(),r=j.reps.map(function(n){return m[n.toLowerCase()]||n}).filter(function(n,i,a){return a.indexOf(n)===i});return r.length?r:[""]}
@@ -1458,6 +1461,20 @@ function saveSalesCfg(){
     calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id),{method:"PATCH",body:{singleValueExtendedProperties:[{id:P_SALES,value:JSON.stringify(c)}]}})}).catch(function(e){toast("Sales settings weren\u2019t saved. "+errText(e))});
   },600);
 }
+/* key results entered each week: average response time, average time to bid, % of open bids followed up */
+var P_KR="String "+NS+" Name eamSalesKR";
+var KR={data:null,state:"unknown",edit:false,draft:{}};
+document.addEventListener("input",function(e){var d=e.target&&e.target.dataset;if(d&&d.kr)KR.draft[d.ki+"|"+d.kr]=e.target.value});
+function loadKR(){if(KR.state==="loading")return;KR.state="loading";
+  calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id)+"?$select=id&$expand="+expandQ(P_KR))}).then(function(c){var d=readProp(c);KR.data=d&&d.weeks?d:{weeks:{}};KR.state="ok";render()},function(){KR.data={weeks:{}};KR.state="ok";render()})}
+function saveKR(){var cut=addDays(weekStart(melParts(new Date()).date),-7*40),w={};Object.keys(KR.data.weeks).forEach(function(k){if(k>=cut)w[k]=KR.data.weeks[k]});KR.data.weeks=w;
+  return calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id),{method:"PATCH",body:{singleValueExtendedProperties:[{id:P_KR,value:JSON.stringify(KR.data)}]}})}).then(function(){toast("Key results saved.")},function(e){toast("Key results weren\u2019t saved. "+errText(e))})}
+function krOf(ws,name){var w=KR.data&&KR.data.weeks[ws];return (w&&w[name])||{}}
+/* status of each key result for a rep: true met, false missed, null not entered */
+function krStatus(r,ws,T){var c=sCfg().kr,e=krOf(ws,r.name),num=function(v){return v===""||v==null||isNaN(+v)?null:+v};
+  var resp=num(e.resp),bid=num(e.bid),fu=num(e.fu),per=r.worked?r.h/r.worked:null;
+  var s={resp:resp,bid:bid,fu:fu,per:per,k1:resp==null?null:resp<c.resp,k2:bid==null?null:bid<c.bid,k3:per==null?null:per>=T,k4:fu==null?null:fu>=c.fu};
+  s.met=[s.k1,s.k2,s.k3,s.k4].filter(function(v){return v===true}).length;s.known=[s.k1,s.k2,s.k3,s.k4].filter(function(v){return v!=null}).length;return s}
 function isoFix(s){return String(s||"").replace(/(\.\d{3})\d+/,"$1")}
 function loadCreated(ws){
   if(SALES.busy[ws]||SALES.data[ws])return;SALES.busy[ws]=1;
@@ -1539,7 +1556,7 @@ function salesModel(ws){
   var done=addDays(ws,6)<today;
   team.prevSame=R.reduce(function(a,r){return a+r.prevSame},0);team.avg4=R.reduce(function(a,r){return a+r.avg4},0);team.proj=R.reduce(function(a,r){return a+r.proj},0);
   team.verdict=team.avg4>0?(team.proj/team.avg4>=1.1?"up":team.proj/team.avg4<=0.9?"down":"steady"):"new";
-  R.forEach(function(r){r.advice=repAdvice(r,T,team,running)});
+  R.forEach(function(r){r.kr=krStatus(r,ws,T);r.advice=repAdvice(r,T,team,running)});
   return {ws:ws,we:addDays(ws,6),T:T,WT:WT,elapsed:elapsed,reps:R,rank:rank,team:team,running:running,done:done,teamAdvice:teamAdvice(R,T,team,running),jobs:weekJobs(ws).slice().sort(function(a,b){return a.cDay<b.cDay?-1:a.cDay>b.cDay?1:a.cMin-b.cMin}),cfg:c,trendW:trendW};
 }
 /* days between the day a job was added and its move date */
@@ -1596,6 +1613,35 @@ function shoutHtml(list){
   if(!list.length)return '<p class="none">No bookings yet this week.</p>';
   return '<div class="shouts">'+list.map(function(x){var c=SHOUT[x.kind];return '<div class="shout" style="--sc:'+c[0]+';--sb:'+c[1]+'"><span class="sbadge" aria-hidden="true">'+esc(x.name.charAt(0))+'</span><div><span class="slab">'+esc(x.label)+'</span><h4>'+esc(x.name)+'</h4><span class="sst">'+esc(x.stats)+'</span><p>'+esc(x.msg)+'</p></div></div>'}).join("")+'</div>';
 }
+function listJoin(a){return a.length<=1?(a[0]||""):a.slice(0,-1).join(", ")+" and "+a[a.length-1]}
+/* rep-facing: where most of their hours came from, and which platforms to push (the team comparison stays out of this text) */
+function platAdvice(r,team){
+  var known=Object.keys(r.src).filter(function(k){return k!=="Not stated"&&r.src[k]>0}),tot=known.reduce(function(a,k){return a+r.src[k]},0);
+  if(r.jobs<2||tot<=0)return null;
+  known.sort(function(a,b){return r.src[b]-r.src[a]});var top=known[0],sh=r.src[top]/tot;
+  if(sh<0.4)return {k:"g",t:"Good spread of bookings across platforms: "+listJoin(known.slice(0,3).map(function(k){return k+" "+Math.round(r.src[k]/tot*100)+"%"}))+"."};
+  var low=function(k){return k!==top&&k!=="Not stated"&&(r.src[k]||0)/tot<0.15},others=team.sources.filter(low);
+  SRCORDER.forEach(function(k){if(low(k)&&others.indexOf(k)<0)others.push(k)});
+  return {k:"i",t:"Most of your hours came from "+top+" ("+Math.round(sh*100)+"%, "+fh(r.src[top])+" of "+fh(tot)+" hrs). Put more effort into booking from "+listJoin(others.slice(0,3))+" so the week doesn\u2019t depend on one platform."};
+}
+/* partners only (app, never the PDF): is a platform weak for everyone (few leads) or only for one rep? */
+function platCheck(m){
+  var R=m.rank.filter(function(r){return r.h>0}),t=m.team,out=[],stated=function(k){return k!=="Not stated"};
+  var tTot=Object.keys(t.srcTot).filter(stated).reduce(function(a,k){return a+t.srcTot[k]},0);if(!tTot||R.length<2)return null;
+  var share=function(src,k,tot){return tot?(src[k]||0)/tot:0},rTot=function(r){return Object.keys(r.src).filter(stated).reduce(function(a,k){return a+r.src[k]},0)};
+  var plats=SRCORDER.slice();t.sources.filter(stated).forEach(function(k){if(plats.indexOf(k)<0)plats.push(k)});
+  var quiet=plats.filter(function(k){return share(t.srcTot,k,tTot)<0.08});
+  if(quiet.length)out.push({k:"i",t:listJoin(quiet)+(quiet.length>1?" are":" is")+" quiet for the whole team (under 8% of hours"+(quiet.length>1?" each":"")+"). That points to few leads there, not one rep\u2019s effort."});
+  var rows=plats.filter(function(k){return quiet.indexOf(k)<0}).map(function(k){
+    var cells=R.map(function(r){var rt=rTot(r),oT=tTot-rt,os=oT?((t.srcTot[k]||0)-(r.src[k]||0))/oT:0,rs=share(r.src,k,rt),v="";
+      if(rt>0&&os>=0.15&&rs<os/2){v="low";out.push({k:"b",t:"Peculiar to "+r.name+": "+k+" gives the other reps "+Math.round(os*100)+"% of their hours, "+r.name+" "+Math.round(rs*100)+"%. Worth checking "+r.name+"\u2019s bidding there."})}
+      else if(rt>0&&rs>=0.5&&rs-os>=0.2){v="high";out.push({k:"i",t:r.name+" leans on "+k+" more than the rest of the team ("+Math.round(rs*100)+"% of hours against "+Math.round(os*100)+"% for the others)."})}
+      return {rs:rs,v:v}});
+    return {k:k,ts:share(t.srcTot,k,tTot),cells:cells}});
+  var top=plats.slice().sort(function(a,b){return (t.srcTot[b]||0)-(t.srcTot[a]||0)})[0];
+  if(top&&!out.some(function(o){return o.t.indexOf(top)>=0&&o.k==="i"&&o.t.indexOf("leans")>=0}))out.push({k:"g",t:top+" is the main platform for the whole team this week ("+Math.round(share(t.srcTot,top,tTot)*100)+"% of hours), so reps relying on it is normal."});
+  return {R:R,rows:rows,quiet:quiet,notes:out};
+}
 function repAdvice(r,T,team,running){
   var a=[],pc=r.pct;
   if(r.targetToDate===0&&r.h===0)return [{k:"i",t:"No shifts rostered "+(running?"so far ":"")+"this week."}];
@@ -1604,19 +1650,25 @@ function repAdvice(r,T,team,running){
     else if(pc>=0.8)a.push({k:"i",t:"Close to target: "+fh(r.h)+" of "+fh(r.targetToDate)+" hrs ("+Math.round(pc*100)+"%). One more strong shift would have closed the gap."});
     else a.push({k:"b",t:"Below target: "+fh(r.h)+" of "+fh(r.targetToDate)+" hrs ("+Math.round(pc*100)+"%), "+fh(r.targetToDate-r.h)+" hrs short. That is about "+Math.max(1,Math.round((r.targetToDate-r.h)/Math.max(1,team.avgJob||2.5)))+" more average-size jobs."});
   }
+  var pa=platAdvice(r,team);if(pa)a.push(pa);
+  if(r.kr){var c=sCfg().kr,K=r.kr;
+    if(K.k1===false)a.push({k:"b",t:"Response time averaged "+fh(K.resp)+" min (key result: under "+c.resp+"). Reply to every new enquiry within "+c.resp+" minutes: keep platform notifications on and answer before anything else."});
+    if(K.k2===false)a.push({k:"b",t:"Bids went in "+fh(K.bid)+" min after jobs were posted on average (key result: under "+c.bid+"). Bid within "+c.bid+" minutes; the first good bid usually wins the job."});
+    if(K.k3===false&&r.worked)a.push({k:"b",t:"Averaged "+fh(K.per)+" billable hrs per shift (key result: "+T+"). "+r.hit+" of "+r.worked+" shifts reached "+T+" hrs."});
+    if(K.k4===false)a.push({k:"b",t:"Followed up "+fh(K.fu)+"% of open bids (key result: "+c.fu+"%). Call and text every open bid during each shift."});
+    if(K.known===4&&K.met===4)a.push({k:"g",t:"All four key results met this week."});}
   if(r.poor.length)a.push({k:"b",t:"Weak shifts: "+r.poor.map(function(d){return shortDay(d.day)+" ("+fh(d.h)+" hrs)"}).join(", ")+". On days like these, call back every open enquiry and follow up quotes sent in the last three days."});
   if(r.zero>=2)a.push({k:"b",t:r.zero+" shifts with no bookings at all. Check how quickly new enquiries are answered on those days."});
   var mx=Math.max.apply(null,r.days.map(function(d){return d.h}));
   if(mx>=2*T&&r.poor.length>=1)a.push({k:"i",t:"Bookings came in bursts ("+fh(mx)+" hrs on "+shortDay(r.days.filter(function(d){return d.h===mx})[0].day)+"). Aim for a steady "+T+" hrs every shift."});
   if(r.jobs>=3&&team.avgJob&&r.avgJob<team.avgJob-0.5)a.push({k:"i",t:"Average booking is "+fh(r.avgJob)+" hrs against the team\u2019s "+fh(team.avgJob)+". Quote realistic hours for larger moves and offer extra movers, packing or dismantling."});
-  if(r.h>0&&r.topSrc&&r.src[r.topSrc]/r.h>=0.8&&r.jobs>=4)a.push({k:"i",t:Math.round(r.src[r.topSrc]/r.h*100)+"% of hours came from "+r.topSrc+". Work the other lead sources too so a quiet day there doesn\u2019t empty the week."});
   if(!running&&r.prev>0){var ch=(r.h-r.prev)/r.prev;if(ch>=0.2)a.push({k:"g",t:"Up "+Math.round(ch*100)+"% on last week ("+fh(r.prev)+" to "+fh(r.h)+" hrs)."});else if(ch<=-0.2)a.push({k:"b",t:"Down "+Math.round(-ch*100)+"% on last week ("+fh(r.prev)+" to "+fh(r.h)+" hrs)."})}
   if(r.verdict==="up")a.push({k:"g",t:"Improving: "+(running?"on pace for "+fh(r.proj)+" hrs":fh(r.h)+" hrs")+" against a 4-week average of "+fh(r.avg4)+"."+(r.streak>=2?" Up "+r.streak+" weeks in a row.":"")});
   else if(r.verdict==="down")a.push({k:"b",t:"Slipping: "+(running?"on pace for "+fh(r.proj)+" hrs":fh(r.h)+" hrs")+" against a 4-week average of "+fh(r.avg4)+"."});
   if(r.lead.n>=4&&r.lead.b[0]/r.lead.n>=0.7)a.push({k:"i",t:Math.round(r.lead.b[0]/r.lead.n*100)+"% of jobs were for the same or next day. Offer customers dates further out, and the off-peak deal for quieter days, to build next week’s book early."});
   else if(r.lead.n>=4&&team.lead.avg!=null&&r.lead.avg>team.lead.avg+5)a.push({k:"g",t:"Books well ahead: "+fh(r.lead.avg)+" days on average against the team’s "+fh(team.lead.avg)+"."});
   if(r.h&&r.sharedH/r.h>0.4)a.push({k:"i",t:fh(r.sharedH)+" hrs came from jobs shared with another rep"+(sCfg().split?", counted as a split":", counted in full for each rep")+"."});
-  return a.slice(0,6);
+  return a.slice(0,7);
 }
 function teamAdvice(R,T,team,running){
   var a=[];
@@ -1645,6 +1697,7 @@ function renderSales(){
   gateKey="";
   var ws=S.sWeek||(S.sWeek=weekStart(melParts(new Date()).date));
   if(SALES.cfgState==="unknown")loadSalesCfg();
+  if(KR.state==="unknown")loadKR();
   loadCreated(ws);
   if(S.quotes===undefined&&!S.qBusy)loadQuotes();
   var head=salesHead(ws);
@@ -1658,6 +1711,7 @@ function renderSales(){
     +kpi("Jobs added",t.jobs,null,null,"average "+fh(t.avgJob)+" hrs per job")
     +kpi("Shifts on target",t.hit+" of "+t.shifts,null,null,t.shifts?Math.round(t.hit/t.shifts*100)+"% of shifts worked":"")+'</div>';
   html+=panel("Summary","",'<ul class="ins">'+m.teamAdvice.map(function(x){return '<li class="'+x.k+'"><span class="ic" aria-hidden="true">'+(x.k==="g"?"\u25B2":x.k==="b"?"!":"\u2022")+'</span><span>'+esc(x.t)+'</span></li>'}).join("")+'</ul>',true);
+  html+=krPanel(m);
   html+=panel("Shout-outs","Recognition for the week"+(m.running?" so far":"")+": the best result, someone improving or steady, and encouragement for anyone slipping. Also on its own page in the PDF.",shoutHtml(shoutouts(m)),true);
   /* leaderboard cards */
   html+='<div class="reps">'+m.rank.map(function(r){var pc=r.pct==null?0:r.pct,dd=m.running?null:dlt(r.h,r.prev,"pct",true);
@@ -1685,6 +1739,12 @@ function renderSales(){
   var leadTbl=tbl([["Sales rep"]].concat(LEADB.map(function(b){return [b[0],1]}),[["Average",1]]),m.rank.map(function(r){return leadRow(esc(r.name),r.lead)}).concat([leadRow("<b>Team</b>",t.lead)]),"No jobs were added this week.");
   html+='<div class="npanels">'+panel("Where the hours came from","Hours booked by each rep, by lead source. Tap a segment for the figures.",legend(srcs.map(function(k){return [k,srcColor(k)]}))+bars+srcTbl)
     +panel("How far ahead jobs were booked","Number of jobs by the gap between the day they were added and the move date.",leadTbl)+'</div>';
+  var pck=platCheck(m);
+  if(pck){var pcf=function(v){return Math.round(v*100)+"%"};
+    html+=panel("Platform check (partners only)","Compares each rep with the rest of the team, to tell a platform with few leads from one a rep isn\u2019t working. Shown here only: not in the PDF or the reps\u2019 advice.",
+      '<ul class="ins">'+pck.notes.map(function(x){return '<li class="'+x.k+'"><span class="ic" aria-hidden="true">'+(x.k==="g"?"\u25B2":x.k==="b"?"!":"\u2022")+'</span><span>'+esc(x.t)+'</span></li>'}).join("")+'</ul>'
+      +tbl([["Platform"],["Team",1]].concat(pck.R.map(function(r){return [esc(r.name),1]})),pck.rows.map(function(row){return [esc(row.k),pcf(row.ts)].concat(row.cells.map(function(c){return '<span class="krc '+(c.v==="low"?"b":c.v==="high"?"w":"n")+'">'+pcf(c.rs)+'</span>'}))}),"No platform data this week.")
+      +'<p class="sub">Share of each person\u2019s hours with a stated platform. Red = well under the other reps on a platform that gives them at least 15% of their hours. Amber = far above the others.</p>',true)}
   var lastLbl=m.running?"Same point last week":"Last week",wow=m.rank.map(function(r){var lw=m.running?r.prevSame:r.prev,d=r.h-lw;
       return [esc(r.name),'<b>'+fh(r.h)+'</b>',fh(lw),(Math.abs(d)<0.05?"0":(d>0?"+":"−")+fh(Math.abs(d))),fh(r.avg4),sparkSvg(r.trend.map(function(q){return q.h})),verdictPill(r.verdict)]});
   wow.push(['<b>Team</b>','<b>'+fh(t.h)+'</b>',fh(m.running?t.prevSame:t.prev),(function(d){return Math.abs(d)<0.05?"0":(d>0?"+":"−")+fh(Math.abs(d))})(t.h-(m.running?t.prevSame:t.prev)),fh(t.avg4),"",verdictPill(t.verdict)]);
@@ -1695,6 +1755,33 @@ function renderSales(){
   html+='<div class="npanels">';
   html+=panel("Jobs added this week","Each job, the day it went into the calendar and who booked it.",tbl([["Added"],["Booked by"],["Customer"],["Source"],["Move date"],["Hours",1]],m.jobs.map(function(j){var r=repsFor(j,m.cfg);return [esc(shortDay(j.cDay)+" "+tm(j.cMin)),esc(r.join(" & ")),esc(j.customer),esc(j.platform||""),esc(shortDay(j.day)+" "+MN[+j.day.slice(5,7)-1]),fh(bookedH(j))]}),"No jobs were added to the calendar this week."))+'</div>';
   el.innerHTML=html;drawCharts();
+}
+function krPanel(m){
+  var c=sCfg().kr,T=m.T,ws=m.ws,cell=function(ok,txt){return '<td class="r"><span class="krc '+(ok===true?"g":ok===false?"b":"n")+'">'+txt+'</span></td>'};
+  var head=[["Sales rep"],["1. Response time",1],["2. Time to bid",1],["3. Billable hrs per shift",1],["4. Open bids followed up",1],["Key results met",1],["Weekly hours",1]];
+  var sub='<p class="sub">Objective: '+fh(m.WT)+' hours booked a week per rep. Key results: 1. under '+c.resp+' min to respond to a customer, 2. a bid in under '+c.bid+' min of a job being posted, 3. '+T+' billable hours per shift, 4. a follow-up call and text on every open bid during the shift. Number 3 comes from the calendar; enter 1, 2 and 4 each week from the platforms and call logs.</p>';
+  if(KR.state!=="ok")return panel("Key results","",sub+'<p class="none">Loading\u2026</p>',true);
+  if(KR.edit){
+    var rows=m.rank.map(function(r,i){var e0=krOf(ws,r.name),e={};["resp","bid","fu"].forEach(function(k){var dv=KR.draft[i+"|"+k];e[k]=dv!==undefined?(dv===""?null:dv):e0[k]});return '<tr><td>'+esc(r.name)+'</td><td><input type="number" min="0" step="0.5" data-kr="resp" data-ki="'+i+'" value="'+(e.resp!=null?e.resp:"")+'" aria-label="'+esc(r.name)+' average response time in minutes"></td><td><input type="number" min="0" step="0.5" data-kr="bid" data-ki="'+i+'" value="'+(e.bid!=null?e.bid:"")+'" aria-label="'+esc(r.name)+' average time to bid in minutes"></td><td class="r">'+fh(r.kr.per||0)+' hrs (from the calendar)</td><td><input type="number" min="0" max="100" step="1" data-kr="fu" data-ki="'+i+'" value="'+(e.fu!=null?e.fu:"")+'" aria-label="'+esc(r.name)+' percent of open bids followed up"></td></tr>'}).join("");
+    return panel("Key results","Enter this week\u2019s figures for each rep. Leave a box empty if you don\u2019t have it.",sub+'<div class="tw"><table class="krin"><thead><tr><th>Sales rep</th><th>Avg response time (min)</th><th>Avg time to bid (min)</th><th>Billable hrs per shift</th><th>Open bids followed up (%)</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="acts" style="margin-top:10px"><button class="btn primary small" type="button" data-act="krsave">Save key results</button><button class="btn small" type="button" data-act="krcancel">Cancel</button></div>'
+      +'<script type="application/json" id="krNames">'+JSON.stringify(m.rank.map(function(r){return r.name})).replace(/</g,"\\u003c")+'<\/script>',true);
+  }
+  var body=m.rank.map(function(r){var K=r.kr,pc=r.pct;return [esc(r.name),
+      K.resp==null?'<span class="krc n">not entered</span>':'<span class="krc '+(K.k1?"g":"b")+'">'+fh(K.resp)+' min</span>',
+      K.bid==null?'<span class="krc n">not entered</span>':'<span class="krc '+(K.k2?"g":"b")+'">'+fh(K.bid)+' min</span>',
+      K.per==null?'<span class="krc n">no shifts</span>':'<span class="krc '+(K.k3?"g":"b")+'">'+fh(K.per)+' hrs</span> <span class="muted">'+r.hit+'/'+r.worked+' shifts</span>',
+      K.fu==null?'<span class="krc n">not entered</span>':'<span class="krc '+(K.k4?"g":"b")+'">'+fh(K.fu)+'%</span>',
+      K.met+' of '+(K.known||0)+(K.known<4?' <span class="muted">('+(4-K.known)+' to enter)</span>':''),
+      '<span class="krc '+(pc==null?"n":pc>=1?"g":"b")+'">'+fh(r.h)+' / '+fh(r.targetToDate)+'</span>']});
+  var anyMissing=m.rank.some(function(r){return r.kr.known<4&&r.worked});
+  return panel("Key results","Green = key result met, red = missed."+(m.running?" Weekly hours count shifts so far.":""),sub+tbl(head,body,"No reps this week.")+'<div class="acts" style="margin-top:10px"><button class="btn '+(anyMissing?"primary ":"")+'small" type="button" data-act="kredit">'+(anyMissing?"Enter this week\u2019s results":"Edit results")+'</button></div>',true);
+}
+function krSaveForm(){
+  var names=[];try{names=JSON.parse($("krNames").textContent)}catch(e){}
+  var ws=S.sWeek,w=KR.data.weeks[ws]=KR.data.weeks[ws]||{};
+  document.querySelectorAll("[data-kr]").forEach(function(inp){var n=names[+inp.dataset.ki];if(!n)return;var o=w[n]=w[n]||{},v=inp.value.trim();if(v==="")delete o[inp.dataset.kr];else o[inp.dataset.kr]=+v});
+  Object.keys(w).forEach(function(n){if(!Object.keys(w[n]).length)delete w[n]});
+  KR.edit=false;KR.draft={};render();saveKR();
 }
 function groupChart(w,cats,series,ref,label){
   var H=220,pl=40,pr=8,pt=10,pb=26,pw=Math.max(60,w-pl-pr),ph=H-pt-pb,n=cats.length,band=pw/n,ns=series.length||1,gw=Math.min(band*0.78,ns*22+(ns-1)*2),bw=(gw-(ns-1)*2)/ns;
@@ -1721,6 +1808,7 @@ function salesSetHtml(){
   return '<div class="scrim mid"><div class="modal" role="dialog" aria-label="Targets and rota"><div class="hd"><h3>Targets and rota</h3><button class="btn small" type="button" data-act="scancel">Cancel</button></div>'
     +'<div class="fld"><label for="sWeekT">Weekly target per rep (hours)</label><input type="number" id="sWeekT" min="1" step="1" value="'+c.weekTarget+'" style="max-width:120px"><span class="fresh">Stays the same whichever day is their day off. Marking two or more days off in a week lowers it by one shift each.</span></div>'
     +'<div class="fld"><label for="sTarget">Hours to book per shift (for the daily colours)</label><input type="number" id="sTarget" min="1" step="0.5" value="'+c.target+'" style="max-width:120px"></div>'
+    +'<div class="fld"><span class="lbl">Key result targets</span><div class="krset"><label>Respond within (min) <input type="number" id="sKr1" min="1" step="0.5" value="'+c.kr.resp+'"></label><label>Bid within (min) <input type="number" id="sKr2" min="1" step="0.5" value="'+c.kr.bid+'"></label><label>Open bids followed up (%) <input type="number" id="sKr4" min="1" max="100" step="1" value="'+c.kr.fu+'"></label></div><span class="fresh">Billable hours per shift uses the hours per shift above.</span></div>'
     +'<div class="fld"><span class="lbl">Jobs shared by two reps</span><label class="tin"><input type="radio" name="sSplit" value="full"'+(c.split?"":" checked")+'> Give each rep the full hours</label><label class="tin"><input type="radio" name="sSplit" value="split"'+(c.split?" checked":"")+'> Split the hours between them</label></div>'
     +'<div class="fld"><span class="lbl">Regular days off</span>'+(reps.length?'<div class="tw"><table class="offg"><thead><tr><th>Rep</th>'+SDAY.map(function(d){return '<th>'+d+'</th>'}).join("")+'</tr></thead><tbody>'+reps.map(function(n,ri){var o=c.off[n]||[];return '<tr><td>'+esc(n)+'</td>'+SDAY.map(function(d,di){return '<td><input type="checkbox" aria-label="'+esc(n+" off on "+SDAYL[di])+'" data-offrep="'+ri+'" data-offd="'+di+'"'+(o.indexOf(di)>=0?" checked":"")+'></td>'}).join("")+'</tr>'}).join("")+'</tbody></table></div>':'<span class="fresh">Reps appear here once they have bookings.</span>')+'<span class="fresh">Ticked days don\u2019t count towards the target. For a one-off change, tap the day in the daily table.</span></div>'
     +'<div class="fld"><label for="sAlias">Same person, different spelling (one per line, for example <i>Dayvido = David</i>)</label><textarea id="sAlias" rows="3">'+esc(al)+'</textarea></div>'
@@ -1729,7 +1817,7 @@ function salesSetHtml(){
 }
 function salesSave(){
   var c=sCfg(),reps=[];try{reps=JSON.parse($("sRepNames").textContent)}catch(e){}
-  c.target=Math.max(1,+$("sTarget").value||12);c.weekTarget=Math.max(1,+$("sWeekT").value||72);
+  c.target=Math.max(1,+$("sTarget").value||12);c.kr={resp:Math.max(0.5,+$("sKr1").value||7),bid:Math.max(0.5,+$("sKr2").value||5),fu:Math.min(100,Math.max(1,+$("sKr4").value||100))};c.weekTarget=Math.max(1,+$("sWeekT").value||72);
   var sp=document.querySelector('input[name="sSplit"]:checked');c.split=!!sp&&sp.value==="split";
   var off={};reps.forEach(function(n){off[n]=[]});document.querySelectorAll("[data-offrep]").forEach(function(x){if(x.checked)off[reps[+x.dataset.offrep]].push(+x.dataset.offd)});
   Object.keys(c.off).forEach(function(n){if(!(n in off))off[n]=c.off[n]});
@@ -1774,6 +1862,16 @@ function buildPdf(m,logo){
     body:m.rank.map(function(r){return ["#"+r.rank,r.name,fh(r.h),fh(r.targetToDate),r.pct==null?"-":Math.round(r.pct*100)+"%",r.hit+" of "+r.worked,String(r.poor.length),String(r.jobs),fh(r.avgJob)+" hrs",fh(r.prev)]}),
     theme:"grid",styles:{fontSize:9,cellPadding:2,textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,fontStyle:"bold"},columnStyles:{0:{halign:"center"},2:{halign:"right",fontStyle:"bold"},3:{halign:"right"},4:{halign:"right",fontStyle:"bold"},5:{halign:"center"},6:{halign:"center"},7:{halign:"right"},8:{halign:"right"},9:{halign:"right"}},
     didParseCell:function(d){if(d.section==="body"&&d.column.index===4){var r=m.rank[d.row.index];if(r.pct!=null){d.cell.styles.fillColor=r.pct>=1?GOODB:r.pct>=0.8?BLUEB:WARNB;d.cell.styles.textColor=r.pct>=1?GOOD:r.pct>=0.8?ROYAL:WARN}}}});
+  y=doc.lastAutoTable.finalY+8;
+  /* key results */
+  var KC=sCfg().kr;need(34+m.rank.length*8);h2("Key results");
+  doc.setFont("helvetica","normal");doc.setFontSize(8.5);col(MUT);
+  var krl=doc.splitTextToSize(pdfTxt("Objective: "+fh(m.WT)+" hours a week per rep. 1. Respond to customers in under "+KC.resp+" min. 2. Bid within "+KC.bid+" min of a job being posted. 3. "+T+" billable hours per shift. 4. Follow-up call and text on every open bid during the shift."),W-2*M);doc.text(krl,M,y);y+=krl.length*3.8+1.5;
+  doc.autoTable({startY:y,margin:{left:M,right:M},head:[["Sales rep","1. Response","2. Time to bid","3. Hrs per shift","4. Follow-ups","Met","Weekly hours"]],
+    body:m.rank.map(function(r){var K=r.kr;return [r.name,K.resp==null?"not entered":fh(K.resp)+" min",K.bid==null?"not entered":fh(K.bid)+" min",K.per==null?"-":fh(K.per)+" ("+r.hit+"/"+r.worked+")",K.fu==null?"not entered":fh(K.fu)+"%",K.met+" of "+(K.known||0),fh(r.h)+" / "+fh(r.targetToDate)]}),
+    theme:"grid",styles:{fontSize:9,cellPadding:2,halign:"center",textColor:INK,lineColor:LINE,lineWidth:0.2},headStyles:{fillColor:NAVY,textColor:255,halign:"center"},columnStyles:{0:{halign:"left",fontStyle:"bold"},5:{fontStyle:"bold"}},
+    didParseCell:function(d){if(d.section!=="body")return;var r=m.rank[d.row.index],K=r.kr,ok=[null,K.k1,K.k2,K.k3,K.k4,null,r.pct==null?null:r.pct>=1][d.column.index];
+      if(ok===true){d.cell.styles.fillColor=GOODB;d.cell.styles.textColor=GOOD}else if(ok===false){d.cell.styles.fillColor=WARNB;d.cell.styles.textColor=WARN}else if(d.column.index>0&&d.column.index<5){d.cell.styles.textColor=MUT}}});
   y=doc.lastAutoTable.finalY+8;
   /* week on week */
   need(40+m.rank.length*8);h2("Week on week");
@@ -2490,6 +2588,9 @@ document.addEventListener("click",function(e){
   if(a==="papply"){pairApply();return}
   if(a==="psheet"){copy(sheetText(),"Run sheet");return}
   if(a==="pshare"){shareSheet();return}
+  if(a==="kredit"){KR.edit=true;KR.draft={};render();return}
+  if(a==="krcancel"){KR.edit=false;KR.draft={};render();return}
+  if(a==="krsave"){krSaveForm();return}
   if(a==="finpdf"){finPdf(t.dataset.ws);return}
   if(a==="finclear"){FIN.data=null;FIN.err="";render();return}
   if(a==="finedit"){FIN.edit=!FIN.edit;render();return}
