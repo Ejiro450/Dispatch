@@ -69,6 +69,23 @@ body:not(.sales) #sales{display:none}
 body:not(.changes) #changes{display:none}
 body.gated #changes{display:none}
 #changes{display:flex;flex-direction:column;gap:14px}
+body.quotes #pairs,body.numbers #pairs,body.sales #pairs,body.changes #pairs,body.gated #pairs{display:none}
+.pairs{border:1px solid var(--line);border-left:4px solid var(--ok);border-radius:10px;background:var(--panel);margin:10px 0;padding:0}
+.pairs.warn{border-left-color:var(--warn)}.pairs.bad{border-left-color:var(--bad)}
+.pairs>summary{cursor:pointer;list-style:none;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:10px 14px;font-size:14px}
+.pairs>summary::-webkit-details-marker{display:none}.pairs>summary::before{content:"\25B8";color:var(--muted);font-size:12px}.pairs[open]>summary::before{content:"\25BE"}
+.pairs>summary span{color:var(--muted);font-size:13px}.pairs.warn>summary span{color:var(--warn);font-weight:700}.pairs.bad>summary span{color:var(--bad);font-weight:700}
+.pbody{padding:0 14px 12px;display:flex;flex-direction:column;gap:8px}
+.psub{margin:0;font-size:12px;color:var(--muted)}
+.prun{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center}
+.ptr{font-weight:800;font-size:13px}.ptr.sub{color:var(--warn)}
+.pseq{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pj{font:inherit;text-align:left;border:1px solid var(--line);background:var(--job);color:var(--ink);border-radius:8px;padding:5px 9px;cursor:pointer;display:flex;flex-direction:column;font-size:13px;line-height:1.25}
+.pj span{font-size:11.5px;color:var(--muted)}
+.plink{font-size:11.5px;color:var(--muted);white-space:nowrap}.plink::before{content:"\2192  "}.plink.w{color:var(--warn);font-weight:700}.plink.b{color:var(--bad);font-weight:700}
+.pissues{font-size:13px;background:var(--warn-bg);color:var(--ink);border-radius:8px;padding:8px 12px}.pissues ul{margin:4px 0 0;padding-left:18px}
+.pacts{display:flex;flex-wrap:wrap;gap:8px}
+@media (max-width:600px){.prun{grid-template-columns:1fr}}
 .oos{margin-top:6px;align-self:flex-start;font:inherit;font-size:11.5px;font-weight:700;border:1px solid var(--line);background:var(--card,transparent);color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer}
 .oos:hover{color:var(--ink);border-color:var(--muted)}
 .oos[aria-pressed="true"]{background:var(--warn-bg);color:var(--warn);border-color:transparent}
@@ -377,6 +394,7 @@ a.lnk{color:var(--royal);font-weight:700}
 
   <div class="week" id="week"></div>
   <div id="notices"></div>
+  <div id="pairs"></div>
   <section id="numbers" aria-label="Sales Metrics"></section>
   <section id="sales" aria-label="Admin Metrics"></section>
   <section id="changes" aria-label="System Monitoring"></section>
@@ -2080,6 +2098,7 @@ function render(){
     +(offList(S.day).length?'<div class="stat warn"><b>'+offList(S.day).length+'</b><span>out of service</span></div>':"")
     +slotHtml(jobs);
   $("stats").innerHTML=st;
+  var ph=TAB==="dispatch"?pairHtml(jobs):"";if(PAIR.last!==ph){$("pairs").innerHTML=ph;PAIR.last=ph}
 
   $("grid").className=NARROW.matches?"grid list":"grid";
   $("grid").innerHTML=have?(NARROW.matches?listHtml(jobs,flags):boardHtml(jobs,flags,today)):'<div class="empty">'+(S.loading||S.auth==="wait"?"Loading the calendar…":"No calendar data yet.")+'</div>';
@@ -2233,22 +2252,207 @@ function jobText(j){
   if(b.pickup)L.push("📍 Pickup: "+b.pickup);if(b.drop)L.push("🏁 Drop off: "+b.drop);if(b.phone)L.push("📞 "+j.customer.split(" ")[0]+" "+b.phone);
   return L.join("\n");
 }
-function sheetText(){
-  var jobs=dayJobs(S.day),out=["📅 "+dLong(S.day)+" run sheet",""];
-  function block(title,list){if(!list.length)return;out.push(title);list.forEach(function(j){var c=crewOf(j).map(crewName);out.push("");if(c.length)out.push("Crew: "+c.join(", "));out.push(jobText(j))});out.push("")}
-  S.fleet.trucks.forEach(function(t){block("🚚 "+t.name+(t.size?" ("+t.size+")":"")+(isOff(S.day,t.id)?" (OUT OF SERVICE)":""),jobs.filter(function(j){return truckOf(j)===t.id}))});
-  if(offList(S.day).length)out.push("Out of service today: "+offList(S.day).map(function(t){return t.name}).join(", "),"");
-  var sn={};jobs.forEach(function(j){var s=subOf(j);if(s)(sn[s]=sn[s]||[]).push(j)});
-  Object.keys(sn).sort().forEach(function(n){block("🤝 Subcontractor: "+n,sn[n])});
-  block("⚠️ Not assigned to a truck yet",jobs.filter(needs));
-  return out.join("\n").trim();
-}
 function copy(text,label){
   var done=function(){toast(label+" copied")},fail=function(){S.modal="text";$("overlay").innerHTML='<div class="scrim mid"><div class="modal"><div class="hd"><h3>'+esc(label)+'</h3><button class="btn small" type="button" data-act="textclose">Close</button></div><div class="fresh">Select the text and copy it.</div><textarea id="txtout" rows="16" readonly>'+esc(text)+'</textarea></div></div>';var t=$("txtout");if(t){t.focus();t.select()}};
   try{navigator.clipboard.writeText(text).then(done,fail)}catch(e){fail()}
 }
 var tt=null;
 function toast(m){var o=document.querySelector(".toast");if(o)o.remove();var d=document.createElement("div");d.className="toast";d.setAttribute("role","status");d.textContent=m;document.body.appendChild(d);clearTimeout(tt);tt=setTimeout(function(){d.remove()},2600)}
+
+/* ---------- Pairing advice and run sheet (the "Removalist daily schedule" rules, inside Dispatch) ----------
+   Rules (from the daily schedule task):
+   - Each morning job (start before 12pm) starts a truck; afternoon jobs follow on a truck that can reach them in time.
+   - Crew: a later job can't need more movers than the truck's first job (3-man then 4-man is not allowed;
+     4-man then 3-man is fine, 3 then 3 is best). No crew size stated = fits any truck.
+   - Geography: pair jobs that are close; avoid east then west on one truck.
+   - A truck's size must fit the job (an 8T job can't go on a 4.5T truck) when both sizes are known.
+   Locations come from the suburb or postcode in each address (geo-vic.js, public data), so travel is an estimate. */
+var PAIR={loading:false,sig:{},open:true};
+var DEPOT_SUBURB="THOMASTOWN";
+function needGeo(){
+  if(window.EAM_GEO)return true;
+  if(!PAIR.loading){PAIR.loading=true;var s=document.createElement("script");s.src="geo-vic.js";s.onload=function(){render()};s.onerror=function(){PAIR.loading=false};document.head.appendChild(s)}
+  return false;
+}
+var GEO_CACHE={};
+function geoOf(addr){
+  if(!addr||!window.EAM_GEO)return null;
+  if(GEO_CACHE[addr]!==undefined)return GEO_CACHE[addr];
+  var G=window.EAM_GEO,A=String(addr).toUpperCase().replace(/[^A-Z0-9' ,-]/g," "),res=null;
+  var pcm=A.match(/\b(3\d{3})\b(?!.*\b3\d{3}\b)/),pc=pcm?pcm[1]:"";
+  var segs=A.split(",").map(function(s){return s.trim()}).filter(Boolean);
+  var clean=function(s){return s.replace(/\b(AUSTRALIA|VICTORIA|VIC)\b/g," ").replace(/\b\d{4}\b/g," ").replace(/\s+/g," ").trim()};
+  /* the suburb is usually the last words before VIC / the postcode */
+  for(var i=segs.length-1;i>=0&&!res;i--){
+    var w=clean(segs[i]).split(" ").filter(Boolean);
+    for(var n=Math.min(4,w.length);n>=1&&!res;n--){var nm=w.slice(w.length-n).join(" ");if(G.s[nm])res={lat:G.s[nm][0],lon:G.s[nm][1],name:tc(nm.toLowerCase())}}
+  }
+  if(!res&&pc&&G.p[pc])res={lat:G.p[pc][0],lon:G.p[pc][1],name:pc};
+  GEO_CACHE[addr]=res;return res;
+}
+function firstAddr(a){return String(a||"").split(" + ")[0]}
+function lastAddr(a){var p=String(a||"").split(" + ");return p[p.length-1]}
+function jobGeo(j){
+  if(j._g)return j._g;
+  var b=j.body,p=geoOf(firstAddr(b.pickup)),d=geoOf(lastAddr(b.drop))||(b.drop?null:p);
+  return (j._g={p:p,d:d});
+}
+function travelMin(a,b){
+  if(!a||!b)return null;
+  var R=6371,t=Math.PI/180,dLa=(b.lat-a.lat)*t,dLo=(b.lon-a.lon)*t,x=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLo/2)*Math.sin(dLo/2);
+  var km=2*R*Math.asin(Math.sqrt(x))*1.35;   /* straight line x 1.35 = rough road distance */
+  return Math.round(6+km/38*60);              /* about 38 km/h average across Melbourne, plus loading up */
+}
+function sideOf(g){if(!g)return "";return g.lon>=145.1?"east":g.lon<=144.87?"west":""}
+function numSize(s){var m=String(s||"").match(/[\d.]+/);return m?+m[0]:null}
+function depotGeo(){var G=window.EAM_GEO,n=(S.fleet.depot||DEPOT_SUBURB).toUpperCase();return G&&G.s[n]?{lat:G.s[n][0],lon:G.s[n][1],name:tc(n.toLowerCase())}:null}
+/* the link from one job to the next on the same truck: feasible?, cost, notes */
+function pairLink(prev,j,truck,lead){
+  var g=jobGeo(j),out={ok:true,cost:0,travel:null,spare:null,why:[]};
+  if(truck&&truck.size&&j.size){var ts=numSize(truck.size),js=numSize(j.size);if(ts&&js&&js>ts+0.6){out.ok=false;out.why.push(j.size+" job on a "+truck.size+" truck")}}
+  if(!prev){var dg=depotGeo(),tr=travelMin(dg,g.p);out.cost+=tr==null?20:tr*0.3;return out}
+  var pg=jobGeo(prev),tr2=travelMin(pg.d,g.p);out.travel=tr2;
+  var t=tr2==null?30:tr2;out.cost+=t;
+  out.spare=j.start-(prev.end+t);
+  if(out.spare<0){out.ok=false;out.why.push(prev.customer+" ends about "+tm(prev.end)+(tr2!=null?", ~"+tr2+" min drive":"")+", "+j.customer+" starts "+tm(j.start))}
+  else if(out.spare<15)out.cost+=15;
+  if(lead&&lead.movers&&j.movers&&j.movers>lead.movers){out.ok=false;out.why.push(lead.movers+"-man crew can't do a "+j.movers+"-man job")}
+  else if(lead&&lead.movers&&j.movers&&j.movers<lead.movers)out.cost+=8;
+  var s1=sideOf(pg.d),s2=sideOf(g.p);if(s1&&s2&&s1!==s2){out.cost+=45;out.why.push(s1+" then "+s2)}
+  return out;
+}
+function pairScope(jobs){return jobs.filter(function(j){return !subOf(j)})}
+function runsCost(runs,subs,unassigned,curTruck){
+  var c=0;runs.forEach(function(r){var prev=null,lead=null;r.jobs.forEach(function(j){var L=pairLink(prev,j,r.truck,lead);c+=L.cost+(L.ok?0:500);if(curTruck&&curTruck[j.key]!==r.truck.id)c+=2;if(!lead)lead=j;prev=j})});
+  return c+subs.length*240+unassigned.length*240;
+}
+var PMEMO={};
+function pairPlan(jobs){
+  var key=S.day+"|"+jobs.map(function(j){return [j.key,j.start,j.end,truckOf(j),subOf(j),j.movers,j.size,j.body.pickup,j.body.drop].join(":")}).join(",")+"|"+JSON.stringify((S.fleet.off&&S.fleet.off[S.day])||{})+"|"+S.fleet.trucks.map(function(t){return t.id+t.size}).join(",")+"|"+(window.EAM_GEO?1:0);
+  if(PMEMO.key===key)return PMEMO.val;
+  var val=pairPlan0(jobs);PMEMO={key:key,val:val};return val;
+}
+function pairPlan0(jobs){
+  var trucks=onRoad(S.day),pool=pairScope(jobs).slice().sort(function(a,b){return a.start-b.start||a.end-b.end}),cur={};
+  pool.forEach(function(j){cur[j.key]=truckOf(j)||""});
+  var best=null,bestCost=Infinity,nodes=0,state=trucks.map(function(t){return {truck:t,jobs:[]}}),subs=[];
+  function rec(i,cost){
+    if(++nodes>150000||cost>=bestCost)return;
+    if(i===pool.length){bestCost=cost;best={runs:state.map(function(r){return {truck:r.truck,jobs:r.jobs.slice()}}),subs:subs.slice()};return}
+    var j=pool[i],opts=[];
+    state.forEach(function(r,k){var prev=r.jobs[r.jobs.length-1]||null,L=pairLink(prev,j,r.truck,r.jobs[0]||null);if(L.ok)opts.push({k:k,c:L.cost+(cur[j.key]===r.truck.id?0:2)})});
+    opts.sort(function(a,b){return a.c-b.c});
+    var tried={};
+    opts.forEach(function(o){var r=state[o.k];if(!r.jobs.length){if(tried.empty)return;tried.empty=1}r.jobs.push(j);rec(i+1,cost+o.c);r.jobs.pop()});
+    subs.push(j);rec(i+1,cost+240);subs.pop();
+  }
+  rec(0,0);
+  /* the plan as it stands now */
+  var nowRuns=trucks.map(function(t){return {truck:t,jobs:pool.filter(function(j){return cur[j.key]===t.id})}}),nowUn=pool.filter(function(j){return !cur[j.key]});
+  var issues=[];
+  nowRuns.forEach(function(r){var prev=null,lead=null;r.jobs.forEach(function(j){var L=pairLink(prev,j,r.truck,lead);L.why.forEach(function(w){issues.push(r.truck.name+": "+w)});if(!lead)lead=j;prev=j})});
+  S.fleet.trucks.filter(function(t){return isOff(S.day,t.id)}).forEach(function(t){var l=pool.filter(function(j){return cur[j.key]===t.id});if(l.length)issues.push(t.name+" is out of service but has "+plural(l.length,"job")+" on it")});
+  var nowCost=runsCost(nowRuns,[],nowUn,null);
+  var sugCost=best?runsCost(best.runs,best.subs,[],null):Infinity;
+  var same=best&&pool.every(function(j){var r=best.runs.filter(function(x){return x.jobs.indexOf(j)>=0})[0];return (r?r.truck.id:"")===cur[j.key]})&&!nowUn.length;
+  var unplaced=pool.filter(function(j){var g=jobGeo(j);return !g.p||(j.body.drop&&!g.d)});
+  return {pool:pool,best:best,nowRuns:nowRuns,nowUn:nowUn,issues:issues,nowCost:nowCost,sugCost:sugCost,same:same,unplaced:unplaced,trucks:trucks};
+}
+function pairJobChip(j){
+  var g=jobGeo(j),where=[g.p&&g.p.name,g.d&&g.d.name&&(!g.p||g.d.name!==g.p.name)?g.d.name:""].filter(Boolean).join(" → ");
+  return '<button type="button" class="pj" data-job="'+esc(j.key)+'"><b>'+tm(j.start)+'</b> '+esc(j.customer)+'<span>'+esc([j.movers?j.movers+" men":"",j.size,where].filter(Boolean).join(" · "))+'</span></button>';
+}
+function pairRunHtml(r){
+  var h='<div class="prun"><span class="ptr">'+esc(r.truck.name)+(r.truck.size?" ("+esc(r.truck.size)+")":"")+'</span><div class="pseq">';
+  if(!r.jobs.length)return h+'<span class="muted">No jobs</span></div></div>';
+  var prev=null,lead=null;
+  r.jobs.forEach(function(j){
+    if(prev){var L=pairLink(prev,j,r.truck,lead);h+='<span class="plink'+(L.ok?(L.spare!=null&&L.spare<15?" w":""):" b")+'">'+(L.travel!=null?"~"+L.travel+" min drive":"drive time unknown")+(L.spare!=null?(L.spare>=0?", "+hrsMin(L.spare)+" spare":", "+hrsMin(-L.spare)+" short"):"")+'</span>'}
+    h+=pairJobChip(j);if(!lead)lead=j;prev=j});
+  return h+'</div></div>';
+}
+function hrsMin(m){m=Math.round(m);return m>=60?Math.floor(m/60)+"h"+(m%60?" "+(m%60)+"m":""):m+" min"}
+function pairHtml(jobs){
+  if(S.auth!=="in"||!S.events[weekStart(S.day)])return "";
+  var pool=pairScope(jobs);if(!pool.length||!S.fleet.trucks.length)return "";
+  if(!needGeo())return '<div class="pairs"><p class="muted">Working out pairings…</p></div>';
+  var P=pairPlan(jobs),B=P.best,status,cls="ok",apply=false;
+  if(!P.trucks.length)status="All our trucks are out of service this day: every job needs a subcontractor.",cls="bad";
+  else if(!B)status="Couldn’t work out a plan for this day.",cls="warn";
+  else if(!P.same&&B.runs.every(function(r){return r.jobs.every(function(j){return truckOf(j)===r.truck.id})})&&P.nowUn.every(function(j){return B.subs.indexOf(j)>=0})&&!P.issues.length){status="Trucks paired. "+B.subs.map(function(j){return j.customer}).join(", ")+(B.subs.length===1?" needs":" need")+" a subcontractor.";cls="warn"}
+  else if(P.same&&!P.issues.length)status="The trucks are paired well. Nothing to change.";
+  else if(P.same)status="Best pairing already, but check the notes below.",cls="warn";
+  else{apply=true;cls="warn";
+    var gain=Math.round(P.nowCost-P.sugCost);
+    status=P.nowUn.length?plural(P.nowUn.length,"job")+" still need"+(P.nowUn.length===1?"s":"")+" a truck. Suggested pairing below.":gain>5?"A better pairing saves about "+hrsMin(gain)+" of driving and waiting.":"Suggested pairing below."}
+  var h='<details class="pairs '+cls+'"'+(PAIR.open?" open":"")+'><summary><b>Pairing advice</b><span>'+esc(status)+'</span></summary><div class="pbody">';
+  if(B){h+='<p class="psub">'+(apply?"Suggested runs":"Runs")+' for '+esc(dLong(S.day))+'. Morning jobs start a truck; afternoon jobs follow where the crew fits and there’s time to get there.</p>';
+    B.runs.forEach(function(r){h+=pairRunHtml(r)});
+    if(B.subs.length)h+='<div class="prun"><span class="ptr sub">Subcontractor</span><div class="pseq">'+B.subs.map(pairJobChip).join("")+'</div></div><p class="psub">No truck of ours can take '+(B.subs.length===1?"this job":"these jobs")+' in time with the right crew and size.</p>'}
+  if(P.issues.length)h+='<div class="pissues"><b>With the trucks as assigned now:</b><ul>'+P.issues.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>';
+  if(P.unplaced.length)h+='<p class="psub">Couldn’t find the suburb for '+esc(P.unplaced.map(function(j){return j.customer}).join(", "))+'. Add the suburb or postcode to the address for better advice.</p>';
+  h+='<div class="pacts">'+(apply&&B?'<button class="btn primary small" type="button" data-act="papply">Assign trucks as suggested</button>':"")
+    +'<button class="btn small" type="button" data-act="psheet">Copy run sheet</button>'+(navigator.share?'<button class="btn small" type="button" data-act="pshare">Share run sheet</button>':"")+'</div>'
+    +'<p class="psub">Drive times are estimates from suburb to suburb.</p></div></details>';
+  return h;
+}
+function pairApply(){
+  var jobs=dayJobs(S.day),P=pairPlan(jobs),n=0;if(!P.best)return;
+  P.best.runs.forEach(function(r){r.jobs.forEach(function(j){if(truckOf(j)!==r.truck.id){saveAssign(j,{truck:r.truck.id});n++}})});
+  toast(n?plural(n,"job")+" moved to the suggested trucks.":"Nothing to change.");
+}
+/* a gentle nudge when the advice for today or tomorrow changes after a calendar refresh */
+function pairWatch(){
+  if(!window.EAM_GEO||S.auth!=="in")return;
+  var t=melParts(new Date()).date;[t,addDays(t,1)].forEach(function(d){
+    if(!S.events[weekStart(d)])return;var keep=S.day;S.day=d;
+    try{var P=pairPlan(dayJobs(d)),sig=P.best?P.best.runs.map(function(r){return r.jobs.map(function(j){return j.key}).join(",")}).join("|")+"#"+P.best.subs.map(function(j){return j.key}).join(","):"";
+      if(PAIR.sig[d]!=null&&PAIR.sig[d]!==sig&&!P.same)toast("New pairing advice for "+dLong(d)+". Open Dispatch to see it.");PAIR.sig[d]=sig}catch(e){}
+    S.day=keep});
+}
+/* ---------- run sheet in the daily schedule format ---------- */
+function payLine(b){
+  var p=String(b.pay||"");
+  if(/e\s?-?account/i.test(p))return "E Account";
+  var m=p.match(/collect\s*\$?\s*([\d,]+(?:\.\d+)?)/i);if(m)return "Collect $"+m[1]+" at job";
+  if(/paid in full/i.test(p))return "Paid in full";
+  return p.replace(/\/?\s*\$?\s*[\d.]+\s*(?:\/\s*hr|per\s*hour)[^/]*/ig,"").replace(/\s*\/\s*$/,"").trim();
+}
+function sheetJob(j,n){
+  var b=j.body,L=["Job "+n,"",tm(j.start).replace(/^(\d+)(am|pm)$/,"$1:00$2")+" start","",[j.customer,j.platform,j.size?j.size.replace("T"," Tonne"):"",j.movers?j.movers+" Men":""].filter(Boolean).join(" ")];
+  var pay=payLine(b);if(b.fixed)L.push("","Fixed quote");if(pay)L.push("",pay);
+  if(b.type)L.push("",b.type);
+  L.push("","📍 Pickup",b.pickup||"MISSING");
+  L.push("","🏁 Drop off",b.drop||(/(in[ -]?home|same (house|address)|within)/i.test(b.type)?"Same address":"MISSING"));
+  L.push("","📞 "+[j.customer.split(" ")[0],b.phone].filter(Boolean).join(" "));
+  return L.join("\n");
+}
+function sheetText(){
+  var jobs=dayJobs(S.day),t=melParts(new Date()).date,tomorrow=S.day===addDays(t,1);
+  var d=S.day,dt=new Date(d+"T00:00:00Z"),title=DL[dow(d)]+", "+(+d.slice(8))+" "+MONTHS[+d.slice(5,7)-1]+" "+d.slice(0,4);
+  var blocks=[],flags=[],own=0;
+  S.fleet.trucks.forEach(function(tr){var l=jobs.filter(function(j){return truckOf(j)===tr.id});if(!l.length)return;own++;
+    blocks.push(tr.name+(isOff(d,tr.id)?" (OUT OF SERVICE)":"")+"\n\n"+l.map(function(j,i){return sheetJob(j,i+1)}).join("\n\n---\n\n"))});
+  var sn={};jobs.forEach(function(j){var s=subOf(j);if(s)(sn[s]=sn[s]||[]).push(j)});
+  Object.keys(sn).sort().forEach(function(n){blocks.push("Subcontractor: "+n+"\n\n"+sn[n].map(function(j,i){return sheetJob(j,i+1)}).join("\n\n---\n\n"))});
+  var un=jobs.filter(needs);if(un.length)blocks.push("Not assigned to a truck yet\n\n"+un.map(function(j,i){return sheetJob(j,i+1)}).join("\n\n---\n\n"));
+  jobs.forEach(function(j){if(!j.body.pickup)flags.push("⚠️ MISSING: pickup address for "+j.customer+" — follow up with client");
+    if(!j.body.drop&&!/(in[ -]?home|same (house|address)|within)/i.test(j.body.type))flags.push("⚠️ MISSING: drop off address for "+j.customer+" — follow up with client");
+    if(!j.body.phone)flags.push("⚠️ MISSING: contact number for "+j.customer+" — follow up with client")});
+  var fl=analyse(jobs);jobs.forEach(function(j){fl[j.key].clash.forEach(function(c){flags.push("⚠️ "+j.customer+": "+c)})});
+  if(window.EAM_GEO){var P=pairPlan(jobs);P.issues.forEach(function(x){flags.push("⚠️ "+x)})}
+  if(un.length)flags.push("⚠️ "+plural(un.length,"job")+" not assigned to a truck yet");
+  if(offList(d).length)flags.push("Out of service: "+offList(d).map(function(x){return x.name}).join(", "));
+  var morning=jobs.filter(function(j){return j.start<720}).length;
+  var out=["---","",(tomorrow?"TOMORROW'S RUN SHEET — ":"RUN SHEET — ")+title,"Trucks running: "+own,"","---",""];
+  out.push(blocks.join("\n\n---\n\n"));
+  if(flags.length)out.push("","---","",flags.filter(function(x,i,a){return a.indexOf(x)===i}).join("\n"));
+  out.push("","✅ Schedule ready: "+plural(own,"truck")+", "+plural(jobs.length,"job")+" total. "+morning+" morning start"+(morning===1?"":"s")+", "+(jobs.length-morning)+" afternoon start"+(jobs.length-morning===1?"":"s")+".");
+  return out.join("\n");
+}
+function shareSheet(){var t=sheetText();if(navigator.share)navigator.share({title:"Run sheet",text:t}).catch(function(){});else copy(t,"Run sheet")}
+document.addEventListener("toggle",function(e){if(e.target&&e.target.classList&&e.target.classList.contains("pairs"))PAIR.open=e.target.open},true);
+setInterval(pairWatch,150000);
 
 /* ---------- events ---------- */
 function go(day){S.day=day;S.sel=null;var ws=weekStart(day);render();if(!S.events[ws])fetchWeek(ws,false)}
@@ -2283,6 +2487,9 @@ document.addEventListener("click",function(e){
   if(a==="textclose"){S.modal=null;$("overlay").innerHTML="";render();return}
   if(a==="tstart"||a==="tfinish"||a==="tclear"){var tj=findJob(S.sel);if(tj)saveAssign(tj,a==="tstart"?{t0:nowRel(tj.day),t1:null}:a==="tfinish"?{t1:Math.max(nowRel(tj.day),((S.assign[tj.key]||{}).t0||0)+1)}:{t0:null,t1:null});return}
   if(a==="finopen"){var ff=$("finFile");if(ff)ff.click();return}
+  if(a==="papply"){pairApply();return}
+  if(a==="psheet"){copy(sheetText(),"Run sheet");return}
+  if(a==="pshare"){shareSheet();return}
   if(a==="finpdf"){finPdf(t.dataset.ws);return}
   if(a==="finclear"){FIN.data=null;FIN.err="";render();return}
   if(a==="finedit"){FIN.edit=!FIN.edit;render();return}
