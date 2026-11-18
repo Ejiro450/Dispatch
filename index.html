@@ -60,7 +60,7 @@ body.gated .tabs,body.gated #qframe{display:none}
 .tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);border-radius:10px;padding:3px}
 .tabs button{border:0;background:transparent;color:#fff;font-weight:700;padding:7px 14px;border-radius:8px}
 @media (max-width:420px){.tabs button{padding:7px 9px;font-size:13.5px}}
-@media (max-width:440px){.tabs{gap:1px}.tabs button{padding:7px 6px;font-size:12.5px}}
+@media (max-width:760px){.tabs{flex-wrap:wrap}.tabs button{flex:1 1 auto;padding:7px 8px;font-size:13px}}
 .tabs button[aria-current="page"]{background:#fff;color:#063A80}
 #qframe{width:100%;border:1px solid var(--line);border-radius:14px;background:#fff;height:calc(100dvh - 120px - var(--sat) - env(safe-area-inset-bottom,0px));min-height:480px;display:block}
 body:not(.quotes) #qframe{display:none}
@@ -339,7 +339,7 @@ a.lnk{color:var(--royal);font-weight:700}
       <h1 id="appTitle">EAM Dispatch Board</h1>
       <div class="sub">Our trucks, crews and subcontractors against the jobs in the admin Outlook calendar</div>
     </div>
-    <nav class="tabs" id="tabs" aria-label="Sections"><button type="button" id="tabDispatch" aria-current="page">Dispatch</button><button type="button" id="tabQuotes">Quotes</button><button type="button" id="tabNumbers">Numbers</button><button type="button" id="tabSales">Sales</button><button type="button" id="tabChanges">Changes</button></nav>
+    <nav class="tabs" id="tabs" aria-label="Sections"><button type="button" id="tabDispatch" aria-current="page">Dispatch</button><button type="button" id="tabQuotes">Quotes</button><button type="button" id="tabNumbers">Sales Metrics</button><button type="button" id="tabSales">Admin Metrics</button><button type="button" id="tabChanges">System Monitoring</button></nav>
     <div class="sp"></div>
     <span class="who" id="who"></span>
     <button class="btn ghost" id="btnSheet" type="button">Copy run sheet</button>
@@ -361,9 +361,9 @@ a.lnk{color:var(--royal);font-weight:700}
 
   <div class="week" id="week"></div>
   <div id="notices"></div>
-  <section id="numbers" aria-label="Numbers"></section>
-  <section id="sales" aria-label="Sales performance"></section>
-  <section id="changes" aria-label="Bookings moved or deleted"></section>
+  <section id="numbers" aria-label="Sales Metrics"></section>
+  <section id="sales" aria-label="Admin Metrics"></section>
+  <section id="changes" aria-label="System Monitoring"></section>
   <div class="stats" id="stats"></div>
   <div class="board"><div class="grid" id="grid"><div class="empty">Loading the calendar&hellip;</div></div></div>
   <div class="legend">
@@ -632,7 +632,7 @@ function extraHtml(j){
   }
   var est=estValue(j);
   h+='<div class="fld"><label for="jobVal">Job price ($)</label><input type="number" id="jobVal" min="0" step="1" inputmode="decimal" value="'+(a.val!=null?a.val:"")+'" placeholder="'+(estInfo(j).how==="assumed"?"Estimated "+money(est)+": "+hrs(bookedH(j))+" at "+money(defRate())+"/hr, no price in the booking":"Estimated "+money(est)+" from the calendar note")+'"></div>';
-  if(sb&&!LOCK.unlocked)h+='<div class="fld"><span class="lbl">Paid to '+esc(sb)+'</span><span class="fresh">Partners only. Unlock the Numbers tab to see or enter what this job costs.</span></div>';
+  if(sb&&!LOCK.unlocked)h+='<div class="fld"><span class="lbl">Paid to '+esc(sb)+'</span><span class="fresh">Access is restricted.</span></div>';
   else if(sb){var v=valueOf(j),c=costOf(j);
     h+='<div class="fld"><label for="subCost">Paid to '+esc(sb)+' ($)</label><input type="number" id="subCost" min="0" step="1" inputmode="decimal" value="'+(c!=null?c:"")+'" placeholder="What this job costs you">'+(v!=null&&c!=null?'<span class="fresh">Margin on this job: '+money(v-c)+(v>0?" ("+Math.round((v-c)/v*100)+"%)":"")+'</span>':"")+'</div>'}
   return h;
@@ -671,12 +671,12 @@ function lockSay(m){var el=document.querySelector(".modal #lockMsg")||document.q
 ["pointerdown","keydown"].forEach(function(t){document.addEventListener(t,function(){if(LOCK.unlocked)LOCK.last=Date.now()},true)});
 setInterval(function(){if(LOCK.unlocked&&Date.now()-LOCK.last>15*60000)lockNow()},30000);
 document.addEventListener("visibilitychange",function(){if(document.hidden)LOCK.hiddenAt=Date.now();else if(LOCK.unlocked&&LOCK.hiddenAt&&Date.now()-LOCK.hiddenAt>5*60000)lockNow()});
-function gateHtml(what){
+function gateHtml(){
   var st=LOCK.state,b='<div class="lockbox"><h2>Access is restricted</h2>';
-  if(st==="set")return b+'<p>Enter the partner password to see the numbers and subcontractor costs. It locks again after 15 minutes without use, or when the app has been in the background for 5 minutes.</p><form id="lockOpen" autocomplete="off"><label class="lbl" for="pw">Partner password</label><input type="password" id="pw" autocomplete="current-password"><div class="acts"><button class="btn primary" type="submit">Unlock</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
-  if(st==="none")return b+'<p>No partner password has been set yet. Set one now. Only the partners should know it: anyone with it can see Numbers and what is paid to subcontractors.</p><form id="lockSet" autocomplete="off"><label class="lbl" for="pw1">New partner password (at least 8 characters)</label><input type="password" id="pw1" autocomplete="new-password"><label class="lbl" for="pw2">Type it again</label><input type="password" id="pw2" autocomplete="new-password"><div class="acts"><button class="btn primary" type="submit">Set password and open Numbers</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
-  if(st==="error")return b+'<p>'+esc(LOCK.err||"The lock couldn’t be checked.")+'</p><div class="acts"><button class="btn" type="button" data-act="lockretry">Try again</button></div></div>';
-  return b+'<p>Checking…</p></div>';
+  if(st==="set")return b+'<form id="lockOpen" autocomplete="off"><label class="lbl" for="pw">Password</label><input type="password" id="pw" autocomplete="current-password"><div class="acts"><button class="btn primary" type="submit">Unlock</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
+  if(st==="none")return b+'<form id="lockSet" autocomplete="off"><label class="lbl" for="pw1">Set a password (at least 8 characters)</label><input type="password" id="pw1" autocomplete="new-password"><label class="lbl" for="pw2">Type it again</label><input type="password" id="pw2" autocomplete="new-password"><div class="acts"><button class="btn primary" type="submit">Set password</button></div></form><p class="lmsg" id="lockMsg" role="status"></p></div>';
+  if(st==="error")return b+'<p>'+esc(LOCK.err||"Couldn’t check access.")+'</p><div class="acts"><button class="btn" type="button" data-act="lockretry">Try again</button></div></div>';
+  return b+'</div>';
 }
 function changeHtml(){
   return '<div class="scrim mid"><div class="modal" role="dialog" aria-label="Change partner password"><div class="hd"><h3>Change partner password</h3><button class="btn small" type="button" data-act="lockcancel">Cancel</button></div>'
@@ -1814,7 +1814,7 @@ function fleetHtml(){
     +'<div class="fld"><span class="lbl">Drivers and movers</span>'+(cr||'<span class="fresh">No crew yet.</span>')+'<div><button class="btn small" type="button" data-act="addcrew">Add a person</button></div></div>'
     +'<div class="fld"><label for="buf">Minutes to allow between jobs on the same truck</label><input type="number" id="buf" min="0" max="180" step="5" value="'+(+draft.buffer||0)+'" style="max-width:120px"></div>'
     +'<div class="fld"><label for="dfr">Hourly value to assume when a booking has no price ($)</label><input type="number" id="dfr" min="1" step="1" value="'+(+draft.defRate||120)+'" style="max-width:120px"></div>'
-    +'<div class="fld"><label for="wkh">Hours each truck can work in a week (used for the Numbers page)</label><input type="number" id="wkh" min="1" max="168" step="1" value="'+(+draft.weekHours||60)+'" style="max-width:120px"></div>'
+    +'<div class="fld"><label for="wkh">Hours each truck can work in a week (used for Sales Metrics)</label><input type="number" id="wkh" min="1" max="168" step="1" value="'+(+draft.weekHours||60)+'" style="max-width:120px"></div>'
     +'<div class="acts"><button class="btn primary" type="button" data-act="fleetsave">Save</button></div></div></div>';
 }
 function readDraft(){
@@ -1950,7 +1950,7 @@ function setTab(m){
   if(["quotes","numbers","sales","changes"].indexOf(m)<0)m="dispatch";
   TAB=m;["quotes","numbers","sales","changes"].forEach(function(c){document.body.classList.toggle(c,m===c)});
   [["tabDispatch","dispatch"],["tabQuotes","quotes"],["tabNumbers","numbers"],["tabSales","sales"],["tabChanges","changes"]].forEach(function(x){if(x[1]===m)$(x[0]).setAttribute("aria-current","page");else $(x[0]).removeAttribute("aria-current")});
-  $("appTitle").textContent={quotes:"EAM Quote Builder",numbers:"EAM Numbers",sales:"EAM Sales Review",changes:"EAM Changes",dispatch:"EAM Dispatch Board"}[m];
+  $("appTitle").textContent={quotes:"EAM Quote Builder",numbers:"EAM Sales Metrics",sales:"EAM Admin Metrics",changes:"EAM System Monitoring",dispatch:"EAM Dispatch Board"}[m];
   if(m==="quotes"&&S.auth==="in"){var f=$("qframe");if(!f.getAttribute("src"))f.setAttribute("src","quotes.html")}
   try{var want=m==="dispatch"?"":"#"+m;if(location.hash!==want)history.replaceState(null,"",want||location.pathname+location.search)}catch(e){}
   S.sel=null;nTried={};gateKey="";$("numbers").innerHTML="";$("sales").innerHTML="";$("changes").innerHTML="";

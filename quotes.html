@@ -506,6 +506,11 @@ legend{font:800 15px var(--display);padding:0 6px}
 .qty{display:flex;align-items:center;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--surface-2)}
 .qty button{border:0;background:none;width:34px;height:36px;font-size:18px;cursor:pointer;color:var(--ink)}
 .qty input{border:0;border-radius:0;text-align:center;padding:6px 2px;background:transparent}
+.qitems{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.qitems button{border:1px solid var(--line,#d5dbe5);background:transparent;color:inherit;border-radius:999px;padding:5px 11px;font:inherit;font-size:13px;cursor:pointer}
+.qitems button:hover{border-color:#004AAD}
+.mitem{display:grid;grid-template-columns:76px minmax(0,1fr) 36px;gap:8px;align-items:center;margin-top:8px}
+.itemacts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .custom{display:grid;grid-template-columns:minmax(0,1fr) 80px 110px 36px;gap:8px;align-items:center;margin-top:8px}
 @media (max-width:560px){.item{grid-template-columns:minmax(0,1fr) 128px}.item .price{grid-column:1}.custom{grid-template-columns:minmax(0,1fr) 70px 90px 36px}}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:5px;padding:10px 16px;font:700 14.5px var(--display);cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
@@ -832,10 +837,10 @@ body{min-height:100%}
           <p class="lede">Access details help the crew plan and justify extra time.</p>
           <div class="fields">
             <label class="f"><span><span id="m-date-lbl">Move date</span> <span class="req" id="m-date-req" aria-label="required">*</span></span><input id="m-date" type="date" data-k="move.date"></label>
-            <label class="check" style="align-self:end;padding-bottom:10px"><input id="m-flex" type="checkbox" data-k="move.flexible">Flexible date <span class="hint">&nbsp;(customer hasn't fixed a day)</span></label>
+            <label class="f">Move day<select id="m-flex" data-k="move.flexible" data-bool="1"><option value="no">Set date</option><option value="yes">Flexible</option></select></label>
             <label class="f">Start time
               <select id="m-time" data-k="move.time">
-                <option>7am</option><option>8–9am</option><option>9–10am</option><option>10–11am</option><option>11am–12pm</option><option>12–1pm</option><option>1–2pm</option><option>2–3pm</option><option>3–4pm</option><option>4–5pm</option><option>5–6pm</option><option>6–7pm</option>
+                <option>7am</option><option>8–9am</option><option>9–10am</option><option>10–11am</option><option>11am–12pm</option><option>12–1pm</option><option>1–2pm</option><option>2–3pm</option><option>3–4pm</option><option>4–5pm</option><option>5–6pm</option><option>6–7pm</option><option>Flexible</option>
               </select>
             </label>
             <label class="f">Size of move
@@ -877,6 +882,12 @@ body{min-height:100%}
                 <label class="f">Other special item <span class="hint">Optional</span><input id="sp-other" data-k="move.specialOther" placeholder="e.g. Upright freezer"></label>
                 <label class="f">Dismantle and reassemble <span class="hint">Included in the hourly time</span><input id="m-dismantle" data-k="move.dismantle" placeholder="e.g. 3 beds, 1 wardrobe"></label>
               </div>
+            </fieldset>
+            <fieldset class="full"><legend>Items to move <span class="hint">&nbsp;Optional. Printed on the quote, the job sheet and the calendar booking.</span></legend>
+              <div class="qitems" id="quickItems"></div>
+              <div id="itemList"></div>
+              <div class="itemacts"><button class="btn ghost" type="button" id="addItem">+ Add an item</button><button class="btn ghost" type="button" id="pasteItems">Paste a list</button></div>
+              <div id="pasteBox" hidden><label class="f full">Paste the customer's list <span class="hint">One item per line or separated by commas, e.g. "2 x dining chairs, fridge"</span><textarea id="pasteText"></textarea></label><div class="itemacts"><button class="btn" type="button" id="pasteAdd">Add these items</button><button class="btn ghost" type="button" id="pasteCancel">Cancel</button></div></div>
             </fieldset>
             <label class="f full">Job notes for the customer <span class="hint">Bulky items, parking, anything agreed. Printed on the quote.</span><textarea id="m-notes" data-k="move.notes"></textarea></label>
           </div>
@@ -930,7 +941,7 @@ body{min-height:100%}
           <div class="fields">
             <label class="f"><span>Prepared by <span class="req" aria-label="required">*</span></span><input id="f-rep" data-k="finish.rep" placeholder="Your name"></label>
             <label class="f">Quote valid for (days)<input id="f-valid" type="number" min="1" step="1" data-k="finish.validDays"></label>
-            <label class="f">Deposit to confirm booking<span class="hint" id="depRule" style="font-weight:500;font-size:14px;color:var(--ink);padding:10px 0"></span></label>
+            <label class="f">Deposit to confirm booking <span class="hint" id="depRule"></span><select id="f-depsel" data-k="finish.depositSel"><option value="">Standard rule</option><option value="10">10%</option><option value="20">20%</option><option value="30">30%</option><option value="40">40%</option><option value="50">50%</option><option value="60">60%</option><option value="70">70%</option><option value="80">80%</option><option value="90">90%</option><option value="100">100% (full amount)</option></select></label>
             <div></div>
             <label class="f full">Message to the customer <span class="hint">Optional. Appears at the top of the quote.</span><textarea id="f-msg" data-k="finish.message"></textarea></label>
             <label class="check full"><input id="f-larger" type="checkbox" data-k="finish.showLarger">Include "For Larger Moves" section <span class="hint">&nbsp;(ticked automatically for 3+ bedroom and large office moves)</span></label>
@@ -1079,7 +1090,7 @@ function blankQuote(){
     customer:{ name:"", company:"", phone:"", email:"", type:"Residential", source:"" },
     move:{ date:"", time:"8–9am", size:"2 bedroom",
       from:{ address:"", property:"House", stairs:0, lift:"Not needed", longWalk:false },
-      to:{ address:"", property:"House", stairs:0, lift:"Not needed", longWalk:false }, notes:"" },
+      to:{ address:"", property:"House", stairs:0, lift:"Not needed", longWalk:false }, notes:"", items:[] },
     pricing:{ mode:"hourly", truckId:(S.trucks[0]||{}).id||"", crew:(defaultCrew()||{}).name||"", movers:num((defaultCrew()||{}).movers)||2, rate:defaultCrew()?num(defaultCrew().rate):0, hours:S.defaultHours, initial:0, initialManual:false, deal:null, payment:"collect", callout:S.callout, fixedPrice:0, fixedCrew:"", fixedDesc:"" },
     addons: S.addons.map(a=>({ id:a.id, name:a.name, unit:a.unit, price:a.price, qty:0 })),
     custom: [],
@@ -1136,10 +1147,15 @@ function calc(q){
   const total = inc ? net : Math.round((net+gst)*100)/100;
   /* deposit rule: small jobs pay in full; bigger jobs pay a share before, balance after (thresholds come from Settings) */
   const upTo = num(S.fullPayUpTo), pct = Math.min(100, num(S.depositPctAbove) || 100);
-  const depositFull = total <= upTo;
-  const deposit = depositFull ? total : Math.round(total*pct)/100;
-  const depositPctShown = depositFull ? 100 : pct;
-  return { lines, subtotal, discount, net, gst, total, deposit, depositFull, depositPctShown, inc };
+  const autoFull = total <= upTo;
+  const depositAuto = autoFull ? total : Math.round(total*pct)/100;
+  /* a percentage chosen on the quote (10% to 100%) replaces the standard rule for that move */
+  const sel = Math.min(100, num(q.finish && q.finish.depositSel));
+  const depositCustom = sel >= 10;
+  const deposit = depositCustom ? Math.round(total*sel)/100 : depositAuto;
+  const depositFull = depositCustom ? sel >= 100 : autoFull;
+  const depositPctShown = depositFull ? 100 : (depositCustom ? sel : pct);
+  return { lines, subtotal, discount, net, gst, total, deposit, depositAuto, depositCustom, depositFull, depositPctShown, inc };
 }
 function headlineText(q){
   const h = S.headline ? S.headline+": " : "";
@@ -1157,6 +1173,9 @@ function specialList(q){ const s=(q.move&&q.move.special)||{}; const L=SPECIAL_I
 function specialText(q){ return specialList(q).join(", "); }
 function dismantleText(q){ return String((q.move&&q.move.dismantle)||"").trim(); }
 function isFlex(q){ return !!(q && q.move && q.move.flexible); }
+function timeText(q){ const t=q&&q.move&&q.move.time; return t==="Flexible" ? "flexible start time" : t ? "start "+t : ""; }
+function itemList(q){ return ((q&&q.move&&q.move.items)||[]).filter(i=>String(i.name||"").trim() && num(i.qty)>0); }
+function itemsText(q){ return itemList(q).map(i=>num(i.qty)+" x "+String(i.name).trim()).join(", "); }
 function moveDateText(q, long){ const f = long ? fmtLongDate : fmtDate; if(isFlex(q)) return q.move.date ? "Flexible, around "+fmtDate(q.move.date) : "Flexible"; return q.move.date ? f(q.move.date) : ""; }
 function recDate(x){ return x.moveFlexible ? (x.moveDate ? "Flexible, ~"+fmtShort(x.moveDate) : "Flexible") : fmtShort(x.moveDate); }
 function updateFlexUI(){ const f=isFlex(Q); const l=$("#m-date-lbl"), r=$("#m-date-req"); if(l) l.textContent = f ? "Preferred date (optional)" : "Move date"; if(r) r.hidden = f; if(f) $("#m-date").classList.remove("invalid"); }
@@ -1185,15 +1204,17 @@ function fillForm(){
   if(!Q.pricing.crew || !crewByName(Q.pricing.crew)){ const c = crewOf(Q); if(c){ Q.pricing.crew = c.name; Q.pricing.movers = num(c.movers)||2; } }
   $$("[data-k]").forEach(el=>{
     const v = getPath(Q, el.dataset.k);
+    if(el.dataset.bool){ el.value = v ? "yes" : "no"; return; }
     if(el.type==="checkbox") el.checked = !!v; else el.value = v==null ? "" : v;
     if(el.tagName==="SELECT" && String(el.value)!==String(v==null?"":v)) setPath(Q, el.dataset.k, el.dataset.k==="pricing.movers" ? +el.value : el.value);
   });
-  renderMode(); renderAddons(); renderCustom(); updateRateHint(); updateMinNote(); showGAttr(); updateFlexUI(); { const d=$("#depRule"); if(d){ const up=money(num(S.fullPayUpTo)).replace(/\.00$/,""), pc=Math.min(100,num(S.depositPctAbove)||100); d.textContent="Full amount for jobs up to "+up+". Above that, "+pc+"% before the move and the balance after."; } }
+  renderMode(); renderAddons(); renderCustom(); renderItems(); updateRateHint(); updateMinNote(); showGAttr(); updateFlexUI(); { const d=$("#depRule"); if(d){ const up=money(num(S.fullPayUpTo)).replace(/\.00$/,""), pc=Math.min(100,num(S.depositPctAbove)||100); d.textContent="Full amount for jobs up to "+up+". Above that, "+pc+"% before the move and the balance after."; } }
   $("#gstLede").textContent = gstInc() ? "Enter prices including GST, the way customers see them." : "Enter prices excluding GST. 10% GST is added on the quote.";
 }
 function onField(e){
   const el = e.target; if(!el.dataset || !el.dataset.k) return;
   let v = el.type==="checkbox" ? el.checked : el.value;
+  if(el.dataset.bool) v = el.value==="yes";
   if(el.type==="number") v = el.value==="" ? "" : num(el.value);
   if(el.dataset.k==="pricing.movers") v = +v;
   setPath(Q, el.dataset.k, v);
@@ -1235,6 +1256,30 @@ function renderAddons(){
       <div class="qty"><button type="button" data-aq="${i}" data-d="-1" aria-label="Less">−</button><input type="number" min="0" step="1" id="ad-q-${i}" data-ai="${i}" data-af="qty" value="${esc(a.qty)}" aria-label="${esc(a.name)} quantity"><button type="button" data-aq="${i}" data-d="1" aria-label="More">+</button></div>
     </div>`).join("") || `<div class="item"><span class="empty">No extras set up yet. Add them in Settings.</span></div>`;
 }
+const COMMON_ITEMS=["Fridge","Washing machine","Dryer","Couch","Armchair","Queen bed","King bed","Single bed","Wardrobe","Chest of drawers","Bedside table","Dining table","Dining chairs","TV","TV unit","Desk","Bookshelf","Outdoor setting","BBQ","Boxes"];
+function renderItems(){
+  if(!Q.move.items) Q.move.items=[];
+  const qi=$("#quickItems"); if(qi && !qi.childElementCount) qi.innerHTML=COMMON_ITEMS.map(n=>`<button type="button" data-qi="${esc(n)}">+ ${esc(n)}</button>`).join("");
+  $("#itemList").innerHTML = Q.move.items.map((it,i)=>`
+    <div class="mitem">
+      <input id="it-q-${i}" data-ii="${i}" data-if="qty" type="number" min="0" step="1" value="${esc(it.qty)}" aria-label="How many">
+      <input id="it-n-${i}" data-ii="${i}" data-if="name" placeholder="Item, e.g. Glass coffee table" value="${esc(it.name)}">
+      <button type="button" class="btn icon" data-idel="${i}" aria-label="Remove item">×</button>
+    </div>`).join("");
+}
+function addItem(name, qty){
+  if(!Q.move.items) Q.move.items=[];
+  let n=String(name||"").trim(); if(!n) return; n=n.charAt(0).toUpperCase()+n.slice(1);
+  const ex=Q.move.items.find(i=>String(i.name||"").trim().toLowerCase()===n.toLowerCase());
+  if(ex) ex.qty=num(ex.qty)+(qty||1); else Q.move.items.push({qty:qty||1,name:n});
+}
+function parseItems(t){
+  return String(t||"").split(/\n|,|;|•/).map(s=>s.replace(/^[\s*\-–·]+/,"").trim()).filter(Boolean).map(s=>{
+    let m=s.match(/^(\d+)\s*(?:x|×)\s*(.+)$/i)||s.match(/^(\d+)\s+(.+)$/); if(m) return [m[2].trim(), +m[1]];
+    m=s.match(/^(.+?)\s*(?:[x×]\s*(\d+)|\((\d+)\)|-\s*(\d+))$/i); if(m) return [m[1].trim(), +(m[2]||m[3]||m[4])];
+    return [s,1];
+  }).filter(p=>p[0]&&p[1]>0);
+}
 function renderCustom(){
   $("#customList").innerHTML = (Q.custom||[]).map((c,i)=>`
     <div class="custom">
@@ -1248,6 +1293,9 @@ function renderCustom(){
 /* ---------- summary ---------- */
 function renderSummary(){
   const c = calc(Q); renderDeal();
+  { const d=$("#depRule"); if(d){ const bal=Math.max(0,Math.round((c.total-c.deposit)*100)/100), up=money(num(S.fullPayUpTo)).replace(/\.00$/,""), pc=Math.min(100,num(S.depositPctAbove)||100);
+      d.textContent = c.depositCustom ? money(c.deposit)+" now"+(bal>0?", "+money(bal)+" after the move":"")+". Standard rule would be "+money(c.depositAuto)+"."
+        : (num(S.fullPayUpTo)>0 ? "Full amount for jobs up to "+up+", "+pc+"% above that" : pc+"% of the total")+". This quote: "+money(c.deposit)+"."; } }
   $("#s-no").textContent = Q.no + (editingExisting?" (editing)":"");
   const kv = [
     ["Customer", Q.customer.name||"Not entered"],
@@ -1256,6 +1304,7 @@ function renderSummary(){
     ["To", suburb(Q.move.to.address)||"Not entered"],
     ...(specialText(Q)?[["Special items", specialText(Q)]]:[]),
     ...(dismantleText(Q)?[["Dismantle", dismantleText(Q)]]:[]),
+    ...(itemList(Q).length?[["Items", itemList(Q).reduce((a,i)=>a+num(i.qty),0)+" ("+itemsText(Q)+")"]]:[]),
     ["Pricing", Q.pricing.mode==="hourly"?(Q.pricing.deal?"Off-peak deal: ":"")+"Initial booking "+money(minBooking(Q))+", then "+money(Q.pricing.rate)+"/hr":"Fixed price"]
   ];
   $("#s-kv").innerHTML = kv.map(([k,v])=>`<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
@@ -1369,9 +1418,9 @@ function drawQuote(JS, q, SS, k, skip){
   [q.customer.company, q.customer.phone, q.customer.email].filter(Boolean).forEach(s=>{ setF("normal",8.5); const L=doc.splitTextToSize(T(s),colW); doc.text(L,M,yl); yl+=L.length*LH(8.5*k)+0.4*k; });
   if(q.move.notes){ yl += 1.5*k; setF("bold",7.5,ROYAL); doc.text("JOB NOTES", M, yl, {charSpace:0.3}); yl += 3.8*k; yl = para(q.move.notes, M, yl, colW, {size:8, col:CHAR, gap:0}); }
   let yr = y+5*k; const kvW = 22;
-  [["Move date", moveDateText(q)+(q.move.time?", start "+q.move.time:"")],["Size", q.move.size],
+  [["Move date", moveDateText(q)+(timeText(q)?", "+timeText(q):"")],["Size", q.move.size],
    ["From", q.move.from.address, accessText(q.move.from)],["To", q.move.to.address, accessText(q.move.to)],
-   ["Special", specialText(q)],["Dismantle", dismantleText(q)?dismantleText(q)+" (included in hourly time)":""]]
+   ["Special", specialText(q)],["Dismantle", dismantleText(q)?dismantleText(q)+" (included in hourly time)":""],["Items", itemsText(q)]]
   .forEach(r=>{
     if(!r[1]) return;
     setF("normal",8,MUTED); doc.text(T(r[0]), xR, yr);
@@ -1787,6 +1836,7 @@ function jobTypeLines(q){
   L.push(m.size==="A few items" ? "Moving a few items" : m.size==="Other" ? "Moving "+(prop||"items") : m.size+(/office/i.test(m.size)?"":" "+(prop||"home"))+" move");
   if(specialText(q)) L.push("Special items: "+specialText(q));
   if(dismantleText(q)) L.push("Dismantle and reassemble: "+dismantleText(q));
+  if(itemsText(q)) L.push("Items: "+itemsText(q));
   String(m.notes||"").split(/\n+/).map(s=>s.trim()).filter(Boolean).forEach(s=>L.push(s.replace(/^Job type:\s*/i,"")));
   const acc=(a,w)=>{ const x=[num(a.stairs)>0?num(a.stairs)+" flight"+(num(a.stairs)===1?"":"s")+" of stairs":"", a.lift==="Lift available"?"lift available":a.lift==="No lift"?"no lift":"", a.longWalk?"long walk from truck":""].filter(Boolean); return x.length?w+": "+x.join(", "):""; };
   [acc(m.from,"Pickup"),acc(m.to,"Drop off")].filter(Boolean).forEach(s=>L.push(s));
@@ -1798,7 +1848,7 @@ function fmtLongDate(d){ if(!d) return ""; const x=new Date(String(d).slice(0,10
 function jobSheetText(q){
   const out=[];
   if(q.move.date || isFlex(q)) out.push("📅 "+moveDateText(q, true), "");
-  out.push((q.move.time||"")+" start", "");
+  out.push(q.move.time==="Flexible" ? "Flexible start time" : (q.move.time||"")+" start", "");
   out.push([q.customer.name, platformOf(q), crewLine(q)].filter(Boolean).join(" "), "");
   out.push(payLine(q), "");
   if(q.pricing.mode==="fixed") out.push("Fixed quote", "");
@@ -1848,6 +1898,7 @@ function calEvent(q){
   const subject = [q.customer.name, platformOf(q), q.finish.rep?"("+q.finish.rep+")":"", cl].filter(Boolean).join(" ");
   const B=[];
   if(q.pricing.mode==="fixed") B.push("FIXED QUOTE"); else B.push("Initial "+fmtNum(q.pricing.hours)+" hours booked");
+  if(q.move.time==="Flexible") B.push("START TIME FLEXIBLE (placed at 8am, confirm with the customer)");
   B.push(payLine(q));
   if(q.pricing.mode!=="fixed") B.push(money(q.pricing.rate).replace(/\.00$/,"")+" per hour prorated");
   B.push(jobTypeLines(q).join("\n"));
@@ -1862,7 +1913,7 @@ function calUrl(q){
   return "https://outlook.office.com/calendar/0/deeplink/compose?path=%2Fcalendar%2Faction%2Fcompose&rru=addevent"+
     "&subject="+enc(e.subject)+"&startdt="+enc(e.start)+"&enddt="+enc(e.end)+"&location="+enc(e.location)+"&body="+enc(e.body).replace(/%0A/g,"%0D%0A");
 }
-function calProblems(q){ const p=[]; if(isFlex(q)) return ["confirmed move date (untick Flexible date and set the day)"]; if(!q.move.date) p.push("move date"); if(!q.move.time) p.push("start time"); if(!q.customer.name) p.push("customer name"); return p; }
+function calProblems(q){ const p=[]; if(isFlex(q)) return ["confirmed move date (change Move day from Flexible to Set date)"]; if(!q.move.date) p.push("move date"); if(!q.move.time) p.push("start time"); if(!q.customer.name) p.push("customer name"); return p; }
 async function openUrl(url){
   if(IS_DESKTOP && window.eamDesktop.openExternal){ await window.eamDesktop.openExternal(url); return true; }
   const w=window.open(url,"_blank","noopener"); return !!w || true;
@@ -2024,6 +2075,7 @@ document.addEventListener("input", e=>{
   if(t.dataset.k) onField(e);
   else if(t.dataset.ai!=null){ const a=Q.addons[+t.dataset.ai]; a[t.dataset.af]=num(t.value); t.closest(".item").classList.toggle("on", num(a.qty)>0); touched(); }
   else if(t.dataset.ci!=null){ const c=Q.custom[+t.dataset.ci]; c[t.dataset.cf]= t.dataset.cf==="desc"?t.value:num(t.value); touched(); }
+  else if(t.dataset.ii!=null){ const it=Q.move.items[+t.dataset.ii]; if(it){ it[t.dataset.if]= t.dataset.if==="name"?t.value:(t.value===""?"":num(t.value)); touched(); } }
   else if(t.dataset.s){ setPath(E,t.dataset.s, t.type==="number"?t.value:t.value); eDirty=true; $("#setMsg").textContent="Unsaved changes"; }
   else if(t.id==="search") renderSaved();
 });
@@ -2045,6 +2097,8 @@ document.addEventListener("click", async e=>{
   if(b.dataset.mode){ Q.pricing.mode=b.dataset.mode; if(b.dataset.mode==="hourly" && !num(Q.pricing.rate)) { Q.pricing.rate=suggestedRate("",0,Q); $("#p-rate").value=Q.pricing.rate; } renderMode(); touched(); return; }
   if(b.dataset.aq!=null){ const a=Q.addons[+b.dataset.aq]; a.qty=Math.max(0,num(a.qty)+(+b.dataset.d)); const inp=$("#ad-q-"+b.dataset.aq); inp.value=a.qty; inp.closest(".item").classList.toggle("on",a.qty>0); touched(); return; }
   if(b.dataset.cdel!=null){ Q.custom.splice(+b.dataset.cdel,1); renderCustom(); touched(); return; }
+  if(b.dataset.idel!=null){ Q.move.items.splice(+b.dataset.idel,1); renderItems(); touched(); return; }
+  if(b.dataset.qi!=null){ addItem(b.dataset.qi,1); renderItems(); touched(); return; }
   if(b.dataset.deltruck!=null){ E.trucks.splice(+b.dataset.deltruck,1); eDirty=true; renderSettings(); return; }
   if(b.dataset.delprop!=null){ E.calc.props.splice(+b.dataset.delprop,1); eDirty=true; renderSettings(); return; }
   if(b.dataset.delloc!=null){ E.calc.locations.splice(+b.dataset.delloc,1); eDirty=true; renderSettings(); return; }
@@ -2082,6 +2136,10 @@ document.addEventListener("click", async e=>{
     case "addLoc": E.calc.locations.push({name:"",add:0}); eDirty=true; renderSettings(); break;
     case "addPkg": E.calc.offPeak.packages.push({hours:0,price:0,after:0}); eDirty=true; renderSettings(); break;
     case "addDisc": E.calc.discounts.push({source:"",crew:"",rate:0}); eDirty=true; renderSettings(); break;
+    case "addItem": if(!Q.move.items) Q.move.items=[]; Q.move.items.push({qty:1,name:""}); renderItems(); $("#it-n-"+(Q.move.items.length-1)).focus(); break;
+    case "pasteItems": $("#pasteBox").hidden=false; $("#pasteText").focus(); break;
+    case "pasteCancel": $("#pasteBox").hidden=true; $("#pasteText").value=""; break;
+    case "pasteAdd": { const L=parseItems($("#pasteText").value); L.forEach(p=>addItem(p[0],p[1])); $("#pasteText").value=""; $("#pasteBox").hidden=true; renderItems(); touched(); say($("#s-msg"),"ok", L.length ? "Added "+L.length+" item"+(L.length===1?"":"s")+" to the list." : "Nothing to add. Put one item per line."); } break;
     case "addCustom": Q.custom.push({desc:"",qty:1,price:0}); renderCustom(); $("#cu-d-"+(Q.custom.length-1)).focus(); break;
     case "addTruck": E.trucks.push({id:"",name:"",short:"",r2:0,r3:0}); eDirty=true; renderSettings(); break;
     case "addAddon": E.addons.push({id:"",name:"",unit:"each",price:0}); eDirty=true; renderSettings(); break;
