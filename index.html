@@ -241,6 +241,7 @@ body.quotes .daybar,body.quotes .week,body.quotes #notices,body.quotes .stats,bo
 .wrep,.wslots{text-align:left;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
 .wrow{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.wrow b{font-size:13px}.wrow span{font-weight:700}.wrow.sm span{font-weight:500;color:var(--muted);font-size:12px}
 .wbar{height:8px;border-radius:4px;background:var(--grid);margin:6px 0 4px;overflow:hidden}.wbar i{display:block;height:100%;border-radius:4px;background:var(--royal)}
+.wrank{margin:6px 0 0;font-size:13px}.wfocus{margin:6px 0 0;font-size:13px;font-weight:600;color:var(--royal)}.wmgr{margin:8px 0 2px;font-weight:700;font-size:13px}.wwatch{margin:0;padding-left:18px;font-size:12.5px}.wwatch li{margin-top:3px}
 .wkr{margin:6px 0 0;font-size:11.5px;color:var(--muted)}
 .wslots{background:var(--ok-bg);border-color:transparent}.wslots ul{margin:4px 0 0;padding-left:18px}.wslots li{margin-top:2px}
 .wlinks{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:12px}
@@ -1483,7 +1484,7 @@ function exportCsv(){
 var P_SALES="String "+NS+" Name eamSalesSettings";
 var SALES={cfg:null,cfgState:"unknown",data:{},busy:{},err:"",saveT:null};
 var SDAY=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],SDAYL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-function sCfg(){var c=SALES.cfg||{};return {target:c.target>0?c.target:12,weekTarget:c.weekTarget>0?c.weekTarget:72,split:c.split===true,alias:c.alias||{"Dayvido":"David"},hide:c.hide||[],off:c.off||{},weeks:c.weeks||{},kr:{resp:c.kr&&c.kr.resp>0?c.kr.resp:7,bid:c.kr&&c.kr.bid>0?c.kr.bid:5,fu:c.kr&&c.kr.fu>0?c.kr.fu:100}}}
+function sCfg(){var c=SALES.cfg||{};return {target:c.target>0?c.target:12,weekTarget:c.weekTarget>0?c.weekTarget:72,split:c.split===true,alias:c.alias||{"Dayvido":"David"},hide:c.hide||[],off:c.off||{},weeks:c.weeks||{},kr:{resp:c.kr&&c.kr.resp>0?c.kr.resp:7,bid:c.kr&&c.kr.bid>0?c.kr.bid:5,fu:c.kr&&c.kr.fu>0?c.kr.fu:100},mgr:Array.isArray(c.mgr)?c.mgr:[]}}
 function aliasMap(){var al=sCfg().alias,m={};Object.keys(al).forEach(function(k){m[k.toLowerCase()]=al[k]});return m}
 function repName(n){var m=aliasMap();return m[String(n||"").toLowerCase()]||n}
 function repsOf(j){var m=aliasMap(),r=j.reps.map(function(n){return m[n.toLowerCase()]||n}).filter(function(n,i,a){return a.indexOf(n)===i});return r.length?r:[""]}
@@ -1660,6 +1661,43 @@ function platAdvice(r,team){
   var low=function(k){return k!==top&&k!=="Not stated"&&(r.src[k]||0)/tot<0.15},others=team.sources.filter(low);
   SRCORDER.forEach(function(k){if(low(k)&&others.indexOf(k)<0)others.push(k)});
   return {k:"i",t:"Most of your hours came from "+top+" ("+Math.round(sh*100)+"%, "+fh(r.src[top])+" of "+fh(tot)+" hrs). Put more effort into booking from "+listJoin(others.slice(0,3))+" so the week doesn\u2019t depend on one platform."};
+}
+
+/* platform shares used by the welcome page: each rep's share against the other reps' share */
+function platShares(m,r){
+  var t=m.team,stated=function(k){return k!=="Not stated"},sum=function(src){return Object.keys(src).filter(stated).reduce(function(a,k){return a+src[k]},0)};
+  var tTot=sum(t.srcTot),rt=r?sum(r.src):0,plats=SRCORDER.slice();t.sources.filter(stated).forEach(function(k){if(plats.indexOf(k)<0)plats.push(k)});
+  return plats.map(function(k){var all=t.srcTot[k]||0,mine=r?(r.src[k]||0):0,oT=tTot-rt;
+    return {k:k,ts:tTot?all/tTot:0,os:oT>0?(all-mine)/oT:0,rs:rt>0?mine/rt:0}}).filter(function(x){return x.ts>=0.08});
+}
+/* rep-facing: one platform to focus on. Chosen by comparing with the other reps, but worded without them. */
+function repFocus(r,m){
+  var P=platShares(m,r);if(!P.length)return null;
+  var gap=P.filter(function(x){return x.os>=0.15&&x.rs<x.os/2}).sort(function(a,b){return (b.os-b.rs)-(a.os-a.rs)})[0];
+  if(gap)return "Focus on "+gap.k+" today: "+(gap.rs>0?"only "+Math.round(gap.rs*100)+"% of your hours came from it this week.":"no bookings from it yet this week.");
+  var busiest=P.slice().sort(function(a,b){return b.ts-a.ts});
+  if(!r.h)return "Focus on "+busiest[0].k+" today: it’s the busiest platform this week.";
+  var top=P.slice().sort(function(a,b){return b.rs-a.rs})[0];
+  if(top&&top.rs>=0.5){var alt=busiest.filter(function(x){return x.k!==top.k})[0];if(alt)return "Most of your hours came from "+top.k+". Focus on "+alt.k+" today so the week doesn’t depend on one platform."}
+  return null;
+}
+/* manager-facing: who is behind, judged on finished days (Monday looks at last week) */
+function mgrWatch(m){
+  var mon=m.running&&m.elapsed===1,out={mon:mon,watch:[],ok:[],lead:null,team:{h:0,t:0}};
+  m.reps.forEach(function(r){
+    var di=m.running?m.elapsed-1:7,todayH=m.running?(r.days[di-0]||{h:0}).h:0;
+    var h=mon?r.prev:(m.running?r.h-todayH:r.h),tgt=mon?r.target:(m.running?r.target*(m.elapsed-1)/7:r.target);
+    out.team.h+=h;out.team.t+=tgt;
+    var pct=tgt?h/tgt:null,slip=!mon&&r.verdict==="down",why=[];
+    if(pct!=null&&pct<0.75)why.push(fh(h)+" of "+fh(tgt)+" hrs"+(mon?" last week":" to yesterday")+" ("+Math.round(pct*100)+"%)");
+    if(slip)why.push("slipping against the 4-week average");
+    var gap=platShares(m,r).filter(function(x){return x.os>=0.15&&x.rs<x.os/2}).sort(function(a,b){return (b.os-b.rs)-(a.os-a.rs)})[0];
+    if(why.length)out.watch.push({name:r.name,pct:pct,t:r.name+": "+why.join(", ")+"."+(gap?" Weak on "+gap.k+" ("+Math.round(gap.rs*100)+"% of hours, the others "+Math.round(gap.os*100)+"%).":"")+" Check in today and encourage "+r.name.split(" ")[0]+" to step up."});
+    else out.ok.push(r.name);
+  });
+  out.watch.sort(function(a,b){return (a.pct==null?1:a.pct)-(b.pct==null?1:b.pct)});
+  var ranked=m.reps.slice().sort(function(a,b){return (mon?b.prev-a.prev:b.h-a.h)});out.lead=ranked[0]&&(mon?ranked[0].prev:ranked[0].h)>0?ranked[0]:null;
+  return out;
 }
 /* partners only (app, never the PDF): is a platform weak for everyone (few leads) or only for one rep? */
 function platCheck(m){
@@ -1850,6 +1888,7 @@ function salesSetHtml(){
     +'<div class="fld"><span class="lbl">Regular days off</span>'+(reps.length?'<div class="tw"><table class="offg"><thead><tr><th>Rep</th>'+SDAY.map(function(d){return '<th>'+d+'</th>'}).join("")+'</tr></thead><tbody>'+reps.map(function(n,ri){var o=c.off[n]||[];return '<tr><td>'+esc(n)+'</td>'+SDAY.map(function(d,di){return '<td><input type="checkbox" aria-label="'+esc(n+" off on "+SDAYL[di])+'" data-offrep="'+ri+'" data-offd="'+di+'"'+(o.indexOf(di)>=0?" checked":"")+'></td>'}).join("")+'</tr>'}).join("")+'</tbody></table></div>':'<span class="fresh">Reps appear here once they have bookings.</span>')+'<span class="fresh">Ticked days don\u2019t count towards the target. For a one-off change, tap the day in the daily table.</span></div>'
     +'<div class="fld"><label for="sAlias">Same person, different spelling (one per line, for example <i>Dayvido = David</i>)</label><textarea id="sAlias" rows="3">'+esc(al)+'</textarea></div>'
     +'<div class="fld"><label for="sHide">Names to leave out of the review (comma separated)</label><input type="text" id="sHide" value="'+esc(c.hide.join(", "))+'"></div>'
+    +'<div class="fld"><label for="sMgr">Sales manager (comma separated)</label><input type="text" id="sMgr" value="'+esc(c.mgr.join(", "))+'"><span class="fresh">When this person enters their name in the app, the welcome page shows the team and who needs a close eye, instead of a rep’s own week.</span></div>'
     +'<div class="acts"><button class="btn primary" type="button" data-act="ssave">Save</button></div><script type="application/json" id="sRepNames">'+JSON.stringify(reps).replace(/</g,"\\u003c")+'<\/script></div></div>';
 }
 function salesSave(){
@@ -1860,6 +1899,7 @@ function salesSave(){
   Object.keys(c.off).forEach(function(n){if(!(n in off))off[n]=c.off[n]});
   var al={};$("sAlias").value.split(/\n/).forEach(function(l){var p=l.split("=");if(p.length===2&&p[0].trim()&&p[1].trim())al[tc(p[0].trim())]=tc(p[1].trim())});c.alias=al;
   c.hide=$("sHide").value.split(",").map(function(x){return x.trim()}).filter(Boolean);
+  var mg=$("sMgr");if(mg)c.mgr=mg.value.split(",").map(function(x){return tc(x.trim())}).filter(Boolean);
   Object.keys(al).forEach(function(k){delete off[k]});c.off=off;
   SALES.cfg=c;saveSalesCfg();S.modal=null;$("overlay").innerHTML="";render();
 }
@@ -2424,10 +2464,16 @@ function myRep(){
   if(ME.mk!==k){ME.mk=k;ME.model=null;try{ME.model=salesModel(ws)}catch(e){}}
   var m=ME.model;if(!m)return null;
   var me=repName(ME.name).toLowerCase(),first=me.split(" ")[0];
+  if(sCfg().mgr.some(function(x){var l=String(x).toLowerCase();return l===me||l.split(" ")[0]===first}))return {mgr:true,m:m};
   var r=m.reps.filter(function(x){return x.name.toLowerCase()===me})[0]||m.reps.filter(function(x){return x.name.toLowerCase().split(" ")[0]===first})[0];
   if(!r)return {none:true};
   var di=dayDiff(ws,t),d=r.days[di]||{h:0,off:false};
-  return {r:r,T:m.T,today:d,kr:sCfg().kr};
+  return {r:r,T:m.T,today:d,kr:sCfg().kr,m:m};
+}
+function rankLine(me){
+  var m=me.m,r=me.r,n=m.reps.length;if(n<2)return "";
+  if(m.running&&m.elapsed===1&&!r.h){var k=m.reps.slice().sort(function(a,b){return b.prev-a.prev}).indexOf(r)+1;return r.prev>0?'<p class="wrank">Last week you finished <b>#'+k+' of '+n+'</b> for sales rep of the week ('+fh(r.prev)+' hrs).</p>':""}
+  return '<p class="wrank">Sales rep of the week'+(m.running?" so far":"")+': <b>#'+r.rank+' of '+n+'</b>'+(r.rank===1&&r.h>0?". You’re leading, keep it up.":".")+'</p>';
 }
 function slotsToSell(){
   var t=melParts(new Date()).date,out=[];
@@ -2444,7 +2490,13 @@ function welcomeExtra(){
     h+='<div class="wrep"><div class="wrow"><b>Your week</b><span>'+fh(r.h)+' of '+fh(r.target)+' hrs booked</span></div>'
       +'<div class="wbar" role="img" aria-label="'+fh(r.h)+' of '+fh(r.target)+' hours"><i style="width:'+Math.round(pct*100)+'%"></i></div>'
       +'<div class="wrow sm"><span>'+(left>0?fh(left)+" hrs to go":"Weekly target reached")+'</span><span>'+(me.today.off&&!me.today.assumed?"Day off today":"Today: "+fh(me.today.h)+" of "+me.T+" hrs")+'</span></div>'
+      +rankLine(me)+(function(){var f=null;try{f=repFocus(r,me.m)}catch(e){}return f?'<p class="wfocus">'+esc(f)+'</p>':""})()
       +'<p class="wkr">Reply in under '+me.kr.resp+' min · bid within '+me.kr.bid+' min · follow up every open bid</p></div>'}
+  else if(me&&me.mgr){var W=null;try{W=mgrWatch(me.m)}catch(e){}
+    if(W){h+='<div class="wrep"><div class="wrow"><b>Sales team '+(W.mon?"last week":"this week")+'</b><span>'+(W.mon?fh(W.team.h)+' of '+fh(W.team.t)+' hrs':fh(W.team.h)+' hrs by yesterday (pace '+fh(W.team.t)+')')+'</span></div>'
+      +(W.lead?'<p class="wkr">Leading: '+esc(W.lead.name)+'</p>':"")
+      +(W.watch.length?'<p class="wmgr">Keep a close eye on</p><ul class="wwatch">'+W.watch.map(function(x){return '<li>'+esc(x.t)+'</li>'}).join("")+'</ul>':'<p class="wfocus">Everyone is on pace. Keep the momentum going.</p>')
+      +(W.watch.length&&W.ok.length?'<p class="wkr">On track: '+esc(listJoin(W.ok))+'</p>':"")+'</div>'}}
   var sl=slotsToSell();
   if(sl&&sl.length)h+='<div class="wslots"><b>Slots to sell</b><ul>'+sl.slice(0,3).map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>';
   return h;
