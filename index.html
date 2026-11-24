@@ -241,6 +241,8 @@ body.quotes .daybar,body.quotes .week,body.quotes #notices,body.quotes .stats,bo
 .wrep,.wslots{text-align:left;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
 .wrow{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.wrow b{font-size:13px}.wrow span{font-weight:700}.wrow.sm span{font-weight:500;color:var(--muted);font-size:12px}
 .wbar{height:8px;border-radius:4px;background:var(--grid);margin:6px 0 4px;overflow:hidden}.wbar i{display:block;height:100%;border-radius:4px;background:var(--royal)}
+.wpin{display:flex;gap:8px;margin-top:6px}.wpin input{flex:1;min-width:0;font-size:16px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);letter-spacing:3px}
+.chg.app .cbadge{background:var(--job);color:var(--job-ink);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wrank{margin:6px 0 0;font-size:13px}.wfocus{margin:6px 0 0;font-size:13px;font-weight:600;color:var(--royal)}.wmgr{margin:8px 0 2px;font-weight:700;font-size:13px}.wwatch{margin:0;padding-left:18px;font-size:12.5px}.wwatch li{margin-top:3px}
 .wkr{margin:6px 0 0;font-size:11.5px;color:var(--muted)}
 .wslots{background:var(--ok-bg);border-color:transparent}.wslots ul{margin:4px 0 0;padding-left:18px}.wslots li{margin-top:2px}
@@ -606,6 +608,7 @@ function saveAssign(job,patch){
   function pk(f){return patch[f]!==undefined?patch[f]:cur[f]}
   var nx={truck:pk("truck"),crew:pk("crew"),sub:pk("sub")||"",nosub:!!pk("nosub"),day:job.day};
   ["t0","t1","cost","val"].forEach(function(f){nx[f]=numOrNull(pk(f))});
+  try{actLog(actAssignText(job,cur,nx))}catch(e){}
   var gone=!nx.truck&&!nx.crew.length&&!nx.sub&&!nx.nosub&&nx.t0==null&&nx.t1==null&&nx.cost==null&&nx.val==null;
   var a={};for(var k in S.assign)a[k]=S.assign[k];
   if(gone)delete a[job.key];else a[job.key]=nx;
@@ -664,7 +667,7 @@ function offDays(tid,from,to){var n=0;Object.keys(S.fleet.off||{}).forEach(funct
 function setOff(day,tid,off){
   var name=truckName(tid),apply=function(f){f.off=f.off&&typeof f.off==="object"?f.off:{};var o=f.off[day]||{};if(off)o[tid]=1;else delete o[tid];if(Object.keys(o).length)f.off[day]=o;else delete f.off[day];
     var cut=addDays(melParts(new Date()).date,-400);Object.keys(f.off).forEach(function(d){if(d<cut)delete f.off[d]});return f};
-  apply(S.fleet);render();
+  apply(S.fleet);render();actLog(name+(off?" put out of service":" back in service")+" for "+dLong(day));
   /* re-read the saved fleet first so another device's changes aren't overwritten */
   gfetch(BASE+"/calendars/"+encodeURIComponent(calId)+"?$select=id&$expand="+expandQ(P_FLEET)).then(function(c){
     var d=readProp(c);if(!d||!Array.isArray(d.trucks))d=JSON.parse(JSON.stringify(S.fleet));
@@ -784,7 +787,7 @@ document.addEventListener("submit",function(e){
     if(a!==b)return lockSay("The two passwords don’t match.");
     LOCK.busy=true;lockSay("Saving…");
     readLock().then(function(r){if(r){LOCK.rec=r;LOCK.state="set";LOCK.busy=false;gateKey="";render();return}
-      return writeLock(a).then(function(){LOCK.busy=false;open()})}).catch(function(e){fail(e&&e.message==="nocrypto"?"This browser can’t set a password. Use Safari or Chrome.":"Couldn’t save the password. "+errText(e))});
+      return writeLock(a).then(function(){LOCK.busy=false;open();actLog("Set the partner password")})}).catch(function(e){fail(e&&e.message==="nocrypto"?"This browser can’t set a password. Use Safari or Chrome.":"Couldn’t save the password. "+errText(e))});
   }else if(f.id==="lockOpen"){
     if(Date.now()<LOCK.waitUntil)return lockSay("Too many tries. Wait a minute, then try again.");
     var p=v("pw");if(!p)return;
@@ -801,7 +804,7 @@ document.addEventListener("submit",function(e){
     if(n1!==n2)return lockSay("The new passwords don’t match.");
     LOCK.busy=true;lockSay("Saving…");
     testLock(c).then(function(ok){if(!ok)return fail("The current password is wrong.");
-      return writeLock(n1).then(function(){LOCK.busy=false;S.modal=null;$("overlay").innerHTML="";toast("Partner password changed.")})}).catch(function(e){fail("Couldn’t change the password. "+errText(e))});
+      return writeLock(n1).then(function(){LOCK.busy=false;S.modal=null;$("overlay").innerHTML="";toast("Partner password changed.");actLog("Changed the partner password")})}).catch(function(e){fail("Couldn’t change the password. "+errText(e))});
   }
 });
 
@@ -1484,7 +1487,7 @@ function exportCsv(){
 var P_SALES="String "+NS+" Name eamSalesSettings";
 var SALES={cfg:null,cfgState:"unknown",data:{},busy:{},err:"",saveT:null};
 var SDAY=["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],SDAYL=["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
-function sCfg(){var c=SALES.cfg||{};return {target:c.target>0?c.target:12,weekTarget:c.weekTarget>0?c.weekTarget:72,split:c.split===true,alias:c.alias||{"Dayvido":"David"},hide:c.hide||[],off:c.off||{},weeks:c.weeks||{},kr:{resp:c.kr&&c.kr.resp>0?c.kr.resp:7,bid:c.kr&&c.kr.bid>0?c.kr.bid:5,fu:c.kr&&c.kr.fu>0?c.kr.fu:100},mgr:Array.isArray(c.mgr)?c.mgr:[]}}
+function sCfg(){var c=SALES.cfg||{};return {target:c.target>0?c.target:12,weekTarget:c.weekTarget>0?c.weekTarget:72,split:c.split===true,alias:c.alias||{"Dayvido":"David"},hide:c.hide||[],off:c.off||{},weeks:c.weeks||{},kr:{resp:c.kr&&c.kr.resp>0?c.kr.resp:7,bid:c.kr&&c.kr.bid>0?c.kr.bid:5,fu:c.kr&&c.kr.fu>0?c.kr.fu:100},mgr:Array.isArray(c.mgr)?c.mgr:[],mgrPin:c.mgrPin&&c.mgrPin.hash?c.mgrPin:null}}
 function aliasMap(){var al=sCfg().alias,m={};Object.keys(al).forEach(function(k){m[k.toLowerCase()]=al[k]});return m}
 function repName(n){var m=aliasMap();return m[String(n||"").toLowerCase()]||n}
 function repsOf(j){var m=aliasMap(),r=j.reps.map(function(n){return m[n.toLowerCase()]||n}).filter(function(n,i,a){return a.indexOf(n)===i});return r.length?r:[""]}
@@ -1854,6 +1857,7 @@ function krPanel(m){
 function krSaveForm(){
   var names=[];try{names=JSON.parse($("krNames").textContent)}catch(e){}
   var ws=S.sWeek,w=KR.data.weeks[ws]=KR.data.weeks[ws]||{};
+  actLog("Entered key results for the week of "+dLong(ws));
   document.querySelectorAll("[data-kr]").forEach(function(inp){var n=names[+inp.dataset.ki];if(!n)return;var o=w[n]=w[n]||{},v=inp.value.trim();if(v==="")delete o[inp.dataset.kr];else o[inp.dataset.kr]=+v});
   Object.keys(w).forEach(function(n){if(!Object.keys(w[n]).length)delete w[n]});
   KR.edit=false;KR.draft={};render();saveKR();
@@ -1889,9 +1893,12 @@ function salesSetHtml(){
     +'<div class="fld"><label for="sAlias">Same person, different spelling (one per line, for example <i>Dayvido = David</i>)</label><textarea id="sAlias" rows="3">'+esc(al)+'</textarea></div>'
     +'<div class="fld"><label for="sHide">Names to leave out of the review (comma separated)</label><input type="text" id="sHide" value="'+esc(c.hide.join(", "))+'"></div>'
     +'<div class="fld"><label for="sMgr">Sales manager (comma separated)</label><input type="text" id="sMgr" value="'+esc(c.mgr.join(", "))+'"><span class="fresh">When this person enters their name in the app, the welcome page shows the team and who needs a close eye, instead of a rep’s own week.</span></div>'
+    +'<div class="fld"><label for="sMgrPin">Manager PIN for the team view (4 to 8 digits)</label><input type="password" id="sMgrPin" inputmode="numeric" maxlength="8" autocomplete="new-password" placeholder="'+(c.mgrPin?"PIN is set. Type a new one to change it":"Not set")+'" style="max-width:280px">'+(c.mgrPin?'<label class="tin"><input type="checkbox" id="sMgrPinRm"> Remove the PIN</label>':"")+'<span class="fresh">The manager types it on the welcome page, once per phone. Give it to them in person. Without a PIN the team view stays locked.</span></div>'
     +'<div class="acts"><button class="btn primary" type="button" data-act="ssave">Save</button></div><script type="application/json" id="sRepNames">'+JSON.stringify(reps).replace(/</g,"\\u003c")+'<\/script></div></div>';
 }
 function salesSave(){
+  var pin=$("sMgrPin")?$("sMgrPin").value.trim():"",pinRm=!!($("sMgrPinRm")&&$("sMgrPinRm").checked);
+  if(pin&&!/^\d{4,8}$/.test(pin)){toast("The manager PIN must be 4 to 8 digits.");return}
   var c=sCfg(),reps=[];try{reps=JSON.parse($("sRepNames").textContent)}catch(e){}
   c.target=Math.max(1,+$("sTarget").value||12);c.kr={resp:Math.max(0.5,+$("sKr1").value||7),bid:Math.max(0.5,+$("sKr2").value||5),fu:Math.min(100,Math.max(1,+$("sKr4").value||100))};c.weekTarget=Math.max(1,+$("sWeekT").value||72);
   var sp=document.querySelector('input[name="sSplit"]:checked');c.split=!!sp&&sp.value==="split";
@@ -1901,7 +1908,10 @@ function salesSave(){
   c.hide=$("sHide").value.split(",").map(function(x){return x.trim()}).filter(Boolean);
   var mg=$("sMgr");if(mg)c.mgr=mg.value.split(",").map(function(x){return tc(x.trim())}).filter(Boolean);
   Object.keys(al).forEach(function(k){delete off[k]});c.off=off;
-  SALES.cfg=c;saveSalesCfg();S.modal=null;$("overlay").innerHTML="";render();
+  if(pinRm)c.mgrPin=null;
+  var fin=function(){SALES.cfg=c;saveSalesCfg();S.modal=null;$("overlay").innerHTML="";actLog("Changed Admin Metrics targets and rota"+(pin?" (new manager PIN set)":pinRm?" (manager PIN removed)":""));render()};
+  if(pin){var salt=crypto.getRandomValues(new Uint8Array(16));derive(pin,salt,210000).then(function(h){c.mgrPin={v:1,salt:b64u8(salt),iter:210000,hash:h};fin()},function(){toast("This browser can’t set a PIN.")});return}
+  fin();
 }
 
 /* ---------- Sales: PDF review ---------- */
@@ -2197,12 +2207,13 @@ function renderChanges(){
   gateKey="";
   if(CHG.view==="unknown")chgLoadView();
   var seg=function(act,cur,opts){return '<div class="seg" role="group">'+opts.map(function(o){return '<button type="button" data-act="'+act+'" data-v="'+o[0]+'" aria-pressed="'+(String(cur)===String(o[0]))+'">'+o[1]+'</button>'}).join("")+'</div>'};
-  var h='<div class="nbar"><h2>Bookings moved or deleted</h2>'+seg("cdays",CHG.days,[[7,"7 days"],[30,"30 days"],[90,"90 days"]])+seg("ctype",CHG.type,[["all","All"],["moved","Moved"],["deleted","Deleted"]])
+  var h='<div class="nbar"><h2>Bookings moved or deleted</h2>'+seg("cdays",CHG.days,[[7,"7 days"],[30,"30 days"],[90,"90 days"]])+seg("ctype",CHG.type,[["all","All"],["moved","Moved"],["deleted","Deleted"],["app","Done in the app"]])
     +'<span class="sp"></span><button class="btn primary small" type="button" data-act="cnow"'+(CHG.busy?" disabled":"")+'>'+(CHG.busy?"Checking…":"Check now")+'</button><button class="btn small" type="button" data-act="ccsv">Download CSV</button><button class="btn small" type="button" data-act="lock">Lock</button></div>';
   var m=CHG.mon||{};
   h+='<p class="note">'+(m.last?"Last checked "+fDay(m.last.slice(0,10))+" at "+fMin(m.last)+". Watching since "+fDay(m.since.slice(0,10))+" "+m.since.slice(0,4)+". ":"")
     +"The calendar is checked whenever anyone opens the app, and every 10 minutes while it’s open. Moves show the time Outlook recorded the change. Outlook doesn’t record when something is deleted, so deletions show the time between two checks.</p>";
   if(CHG.err)h+='<div class="notice warn"><p>'+esc(CHG.err)+'</p></div>';
+  if(CHG.type==="app"){el.innerHTML=h.replace(/<p class="note">[\s\S]*?<\/p>/,'<p class="note">Changes made with the app’s own buttons (trucks, subcontractors, crew, out of service, settings), with the name entered on that phone or computer under “Who are you?”. Bookings moved or deleted straight in Outlook show under All, without a name.</p>')+actHtml();return}
   if(CHG.view!=="ok"){el.innerHTML=h+'<div class="npanel"><p class="none">'+(CHG.view==="error"?"The change log couldn’t be loaded. Press Check now to try again.":"Loading the change log…")+'</p></div>';return}
   if(!m.cal){el.innerHTML=h+'<div class="npanel"><p class="none">'+(CHG.busy?"Taking the first snapshot of the calendar…":"Monitoring hasn’t started yet. Press Check now to take the first snapshot. Changes made after that will show here.")+'</p></div>';return}
   var all=chgList(),cnt=function(f){return all.filter(f).length};
@@ -2230,6 +2241,64 @@ function chgCsv(){
 function chgAuto(){if(S.auth==="in"&&!document.hidden)chgRun(false)}
 setInterval(chgAuto,10*60000);
 document.addEventListener("visibilitychange",function(){if(!document.hidden&&Date.now()-CHG.lastRun>3*60000)chgAuto()});
+
+/* ---------- App activity: who changed what using the app's buttons (name from "Who are you?") ----------
+   Saved in the "EAM Change Log" calendar, one event per month ("EAM app activity YYYY-MM"). Changes made
+   straight in Outlook can't carry a name: those still show in the moved/deleted list without one. */
+var ACT_LOG="EAM app activity ",ACT={q:[],t:null,months:{},view:"unknown",busy:false,via:"",cal:null};
+function actWho(){return (typeof ME!=="undefined"&&ME.name)||"Name not set"}
+function actLog(s){if(!s||S.auth!=="in")return;ACT.q.push({k:Date.now().toString(36)+Math.random().toString(36).slice(2,6),at:melIso(new Date()),by:actWho(),s:String(s).slice(0,240)});clearTimeout(ACT.t);ACT.t=setTimeout(actFlush,3000)}
+function actCal(){if(ACT.cal)return Promise.resolve(ACT.cal);return chgMon().then(function(m){return chgCal(m)}).then(function(c){ACT.cal=c.id;return c.id})}
+function actFlush(){
+  if(ACT.busy||!ACT.q.length||S.auth!=="in")return;ACT.busy=true;
+  var batch=ACT.q.splice(0),by={};batch.forEach(function(x){(by[x.at.slice(0,7)]=by[x.at.slice(0,7)]||[]).push(x)});
+  actCal().then(function(cal){
+    return Object.keys(by).reduce(function(p,ym){return p.then(function(){
+      return chgFind(cal,ACT_LOG+ym).then(function(ev){
+        var old=ev?b64d(ev.body&&ev.body.content):null,list=(old&&old.list)||[],seen={};
+        list.forEach(function(x){seen[x.k]=1});by[ym].forEach(function(x){if(!seen[x.k])list.push(x)});
+        if(list.length>4000)list=list.slice(-4000);
+        return chgPut(cal,ev,ACT_LOG+ym,{v:1,list:list},"Changes made in the EAM app in "+MN[+ym.slice(5,7)-1]+" "+ym.slice(0,4)+", with the name entered on each device. Please don't edit or delete this event.").then(function(){ACT.months[ym]=list});
+      })})},Promise.resolve());
+  }).then(function(){ACT.busy=false;if(ACT.q.length)actFlush();if(TAB==="changes")render()},function(){ACT.busy=false;ACT.q=batch.concat(ACT.q);ACT.cal=null;clearTimeout(ACT.t);ACT.t=setTimeout(actFlush,60000)});
+}
+document.addEventListener("visibilitychange",function(){if(document.hidden)actFlush()});
+function actLoad(){
+  if(ACT.view==="loading")return;ACT.view="loading";
+  gfetch(BASE+"/calendars?$select=id,name&$top=100").then(function(r){
+    var c=((r&&r.value)||[]).filter(function(x){return x.name===CHG_NAME})[0];if(!c)return;ACT.cal=c.id;
+    return Promise.all(chgMonthsFor(CHG.days).map(function(k){return chgFind(c.id,ACT_LOG+k).then(function(ev){var d=ev?b64d(ev.body&&ev.body.content):null;ACT.months[k]=(d&&d.list)||[]})}));
+  }).then(function(){ACT.view="ok";render()},function(e){ACT.view="error";render()});
+}
+function actList(){
+  var cut=addDays(melParts(new Date()).date,-CHG.days),all=[],seen={};
+  Object.keys(ACT.months).forEach(function(k){(ACT.months[k]||[]).forEach(function(x){if(x.at.slice(0,10)>=cut&&!seen[x.k]){seen[x.k]=1;all.push(x)}})});
+  ACT.q.forEach(function(x){if(!seen[x.k])all.push(x)});
+  return all.sort(function(p,q){return q.at<p.at?-1:1});
+}
+function actHtml(){
+  if(ACT.view==="unknown")actLoad();
+  if(ACT.view!=="ok")return '<div class="npanel"><p class="none">'+(ACT.view==="error"?"The app activity couldn’t be loaded.":"Loading changes made in the app…")+'</p></div>';
+  var list=actList();
+  if(!list.length)return '<div class="npanel"><p class="none">No changes made in the app in the last '+CHG.days+' days.</p></div>';
+  var day="",rows="";
+  list.forEach(function(x){var d=x.at.slice(0,10);
+    if(d!==day){if(rows)rows+='</div>';day=d;rows+='<h3 class="cday">'+DL[dow(d)]+" "+(+d.slice(8))+" "+MN[+d.slice(5,7)-1]+'</h3><div class="clist">'}
+    rows+='<div class="chg app"><span class="cbadge">'+esc(x.by)+'</span><div class="cmain"><span>'+esc(x.s)+'</span></div><div class="cwhen"><b>'+fMin(x.at)+'</b><small>in the app</small></div></div>'});
+  return '<div class="npanel">'+rows+'</div></div>';
+}
+/* one readable line for a truck / subcontractor / crew change on a job */
+function actWhere(j,a){a=a||{};if(a.truck&&!(j.hint&&!a.nosub))return truckName(a.truck);if(a.sub)return "subcontractor "+a.sub;if(a.nosub||!j.hint)return "not assigned";return "subcontractor "+j.hint}
+function actAssignText(j,cur,nx){
+  var parts=[],w0=actWhere(j,cur),w1=actWhere(j,nx);
+  if(w0!==w1)parts.push(w0==="not assigned"?"put on "+w1:w1==="not assigned"?"taken off "+w0:"moved from "+w0+" to "+w1);
+  var c0=(cur.crew||[]).slice().sort().join(","),c1=(nx.crew||[]).slice().sort().join(",");
+  if(c0!==c1)parts.push("crew set to "+((nx.crew||[]).map(crewName).join(", ")||"nobody"));
+  if(cur.t0!=nx.t0||cur.t1!=nx.t1)parts.push("actual times updated");
+  if(cur.cost!=nx.cost)parts.push("subcontractor cost updated");
+  if(cur.val!=nx.val)parts.push("job value updated");
+  return parts.length?j.customer+" ("+DN[dow(j.day)]+" "+(+j.day.slice(8))+" "+MN[+j.day.slice(5,7)-1]+", "+tm(j.start)+"): "+parts.join("; ")+(ACT.via?" (via "+ACT.via+")":""):"";
+}
 
 /* ---------- render ---------- */
 var $=function(id){return document.getElementById(id)};
@@ -2356,7 +2425,7 @@ function listHtml(jobs,flags){
 function renderOverlay(jobs,flags){
   var el=$("overlay"),keep=document.activeElement&&document.activeElement.id;
   if(S.modal==="whoami"){if(!el.querySelector("#whoName")){el.innerHTML=whoHtml();var wi=$("whoName");if(wi)try{wi.focus()}catch(e){}}return}
-  if(S.modal==="welcome"){var wsm=el.querySelector(".wsum");if(!wsm)el.innerHTML=welcomeHtml();else{var st=welcomeSum();if(wsm.textContent!==st)wsm.textContent=st;var wx=el.querySelector(".wx"),xh=welcomeExtra();if(wx&&ME.lastX!==xh){wx.innerHTML=xh;ME.lastX=xh}}return}
+  if(S.modal==="welcome"){var wsm=el.querySelector(".wsum");if(!wsm)el.innerHTML=welcomeHtml();else{var st=welcomeSum();if(wsm.textContent!==st)wsm.textContent=st;var wx=el.querySelector(".wx"),xh=welcomeExtra();if(wx&&ME.lastX!==xh){var pin0=$("mgrPin"),pv=pin0&&pin0.value,pf=pin0&&document.activeElement===pin0;wx.innerHTML=xh;ME.lastX=xh;var pin1=$("mgrPin");if(pin1&&pv){pin1.value=pv}if(pin1&&pf)try{pin1.focus()}catch(e){}}}return}
   if(S.modal==="salesset"){if(!el.querySelector("#sTarget"))el.innerHTML=salesSetHtml();return}
   if(S.modal==="lockchange"){if(!el.querySelector("#lockChange")){el.innerHTML=changeHtml();var pf=el.querySelector("input");if(pf)try{pf.focus()}catch(e){}}return}
   if(S.modal==="fleet"){if(!el.querySelector(".modal"))el.innerHTML=fleetHtml();return}
@@ -2419,6 +2488,7 @@ function meSave(){
   var i=$("whoName"),v=i?String(i.value).replace(/\s+/g," ").trim():"";
   if(!v){var er=$("whoErr");if(er)er.textContent="Type your name to continue.";return}
   v=v.slice(0,40).replace(/\b[a-z]/g,function(c){return c.toUpperCase()});
+  if(v!==ME.name)lsSet("eamMgrOk",null);
   ME.name=v;lsSet("eamWho",JSON.stringify({name:v}));
   ME.shown=true;lsSet("eamWelcomed",melParts(new Date()).date+"|"+v);
   S.modal="welcome";$("overlay").innerHTML="";render();
@@ -2455,7 +2525,7 @@ function whoChip(){
   if(S.auth!=="in")return "";
   return ME.name?'<button class="whob" type="button" data-act="whoagain" title="'+esc("Signed in as "+S.who+". Tap to change who is using this device.")+'">'+esc(ME.name)+'</button>':esc(S.who);
 }
-document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target&&e.target.id==="whoName"){e.preventDefault();meSave()}if(e.key==="Escape"&&TOUR.i>=0)tourEnd()});
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target&&e.target.id==="whoName"){e.preventDefault();meSave()}if(e.key==="Escape"&&TOUR.i>=0)tourEnd();if(e.key==="Enter"&&e.target&&e.target.id==="mgrPin"){e.preventDefault();mgrUnlock()}});
 /* rep's own week on the welcome page (same counting as Admin Metrics: hours on the day the booking was added) */
 function myRep(){
   if(!ME.name)return null;var t=melParts(new Date()).date,ws=weekStart(t);
@@ -2469,6 +2539,15 @@ function myRep(){
   if(!r)return {none:true};
   var di=dayDiff(ws,t),d=r.days[di]||{h:0,off:false};
   return {r:r,T:m.T,today:d,kr:sCfg().kr,m:m};
+}
+function mgrOk(){var P=sCfg().mgrPin;return !!(P&&lsGet("eamMgrOk")===P.hash.slice(0,24)+"|"+ME.name)}
+function mgrUnlock(){
+  var P=sCfg().mgrPin,i=$("mgrPin"),er=$("mgrErr"),v=i?i.value.trim():"";ME.touched=true;if(!P||!v)return;
+  if(ME.pinWait&&Date.now()<ME.pinWait){if(er)er.textContent="Too many tries. Wait a minute and try again.";return}
+  derive(v,u8b64(P.salt),P.iter||210000).then(function(h){
+    if(h===P.hash){ME.pinFails=0;lsSet("eamMgrOk",P.hash.slice(0,24)+"|"+ME.name);ME.lastX=null;actLog("Unlocked the sales team view");var wx=document.querySelector(".wx");if(wx)wx.innerHTML=welcomeExtra();render()}
+    else{ME.pinFails=(ME.pinFails||0)+1;if(ME.pinFails>=5){ME.pinWait=Date.now()+60000;ME.pinFails=0}if(er)er.textContent="That PIN isn’t right.";if(i){i.value="";i.focus()}}
+  },function(){if(er)er.textContent="This browser can’t check the PIN."});
 }
 function rankLine(me){
   var m=me.m,r=me.r,n=m.reps.length;if(n<2)return "";
@@ -2492,6 +2571,8 @@ function welcomeExtra(){
       +'<div class="wrow sm"><span>'+(left>0?fh(left)+" hrs to go":"Weekly target reached")+'</span><span>'+(me.today.off&&!me.today.assumed?"Day off today":"Today: "+fh(me.today.h)+" of "+me.T+" hrs")+'</span></div>'
       +rankLine(me)+(function(){var f=null;try{f=repFocus(r,me.m)}catch(e){}return f?'<p class="wfocus">'+esc(f)+'</p>':""})()
       +'<p class="wkr">Reply in under '+me.kr.resp+' min · bid within '+me.kr.bid+' min · follow up every open bid</p></div>'}
+  else if(me&&me.mgr&&!mgrOk()){var MP=sCfg().mgrPin;
+    h+='<div class="wrep"><div class="wrow"><b>Sales team view</b><span>Locked</span></div>'+(MP?'<p class="wkr">Enter your manager PIN to see the team.</p><div class="wpin"><input type="password" id="mgrPin" inputmode="numeric" maxlength="8" autocomplete="off" placeholder="PIN" aria-label="Manager PIN"><button class="btn primary small" type="button" data-act="mgrpin">Unlock</button></div><p class="whoerr" id="mgrErr" role="alert"></p>':'<p class="wkr">A partner needs to set a manager PIN in Admin Metrics → Targets and rota before the team view can open.</p>')+'</div>'}
   else if(me&&me.mgr){var W=null;try{W=mgrWatch(me.m)}catch(e){}
     if(W){h+='<div class="wrep"><div class="wrow"><b>Sales team '+(W.mon?"last week":"this week")+'</b><span>'+(W.mon?fh(W.team.h)+' of '+fh(W.team.t)+' hrs':fh(W.team.h)+' hrs by yesterday (pace '+fh(W.team.t)+')')+'</span></div>'
       +(W.lead?'<p class="wkr">Leading: '+esc(W.lead.name)+'</p>':"")
@@ -2577,7 +2658,7 @@ function saveFleet(){
   var f={trucks:draft.trucks.filter(function(t){return t.name.trim()}).map(function(t){return {id:t.id,name:t.name.trim(),size:t.size}}),
          crew:draft.crew.filter(function(c){return c.name.trim()}).map(function(c){return {id:c.id,name:c.name.trim()}}),buffer:draft.buffer,weekHours:draft.weekHours||60,defRate:draft.defRate||120,off:S.fleet.off||{},run:draft.run||0};if(S.fleet.depot)f.depot=S.fleet.depot;
   S.fleet=f;draft=null;S.modal=null;$("overlay").innerHTML="";render();
-  pushFleet(f).catch(function(e){toast("The fleet list wasn't saved. "+errText(e))});
+  pushFleet(f).catch(function(e){toast("The fleet list wasn't saved. "+errText(e))});actLog("Changed the Trucks and crew settings");
 }
 
 /* ---------- text out ---------- */
@@ -2813,6 +2894,7 @@ function lockedHtml(P){
 function setDayTrucks(day,runIds){
   var apply=function(f){f.off=f.off&&typeof f.off==="object"?f.off:{};var o={};(f.trucks||[]).forEach(function(t){if(runIds.indexOf(t.id)<0)o[t.id]=1});if(Object.keys(o).length)f.off[day]=o;else delete f.off[day];return f};
   var before=JSON.parse(JSON.stringify(S.fleet.off||{}));apply(S.fleet);render();
+  actLog("Trucks for "+dLong(day)+": "+listJoin(S.fleet.trucks.filter(function(t){return runIds.indexOf(t.id)>=0}).map(function(t){return t.name}))+" running, "+(listJoin(S.fleet.trucks.filter(function(t){return runIds.indexOf(t.id)<0}).map(function(t){return t.name}))||"none")+" out of service (via Use these trucks)");
   return gfetch(BASE+"/calendars/"+encodeURIComponent(calId)+"?$select=id&$expand="+expandQ(P_FLEET)).then(function(c){
     var d=readProp(c);if(!d||!Array.isArray(d.trucks))d=JSON.parse(JSON.stringify(S.fleet));
     apply(d);return pushFleet(d).then(function(){S.fleet.off=d.off;render()});
@@ -2821,7 +2903,7 @@ function setDayTrucks(day,runIds){
 function pairFleetApply(){
   var P=pairPlan(dayJobs(S.day)),C=P.choice;if(!C)return;
   var ids=C.set.map(function(t){return t.id}),day=S.day,offN=C.off.map(function(t){return t.name});
-  setDayTrucks(day,ids).then(function(){var n=pairApply(true);toast(listJoin(offN)+(offN.length===1?" is":" are")+" out of service on "+dLong(day)+"."+(n?" "+plural(n,"job")+" moved to the running trucks.":""))},function(){});
+  setDayTrucks(day,ids).then(function(){ACT.via="Use these trucks";var n=pairApply(true);toast(listJoin(offN)+(offN.length===1?" is":" are")+" out of service on "+dLong(day)+"."+(n?" "+plural(n,"job")+" moved to the running trucks.":""))},function(){});
 }
 function pairJobChip(j){
   var g=jobGeo(j),where=[g.p&&g.p.name,g.d&&g.d.name&&(!g.p||g.d.name!==g.p.name)?g.d.name:""].filter(Boolean).join(" → ");
@@ -2872,7 +2954,8 @@ function pairHtml(jobs){
 }
 function pairApply(silent){
   var jobs=dayJobs(S.day),P=pairPlan(jobs),n=0;if(!P.best)return 0;
-  P.best.runs.forEach(function(r){r.jobs.forEach(function(j){if(truckOf(j)!==r.truck.id){saveAssign(j,{truck:r.truck.id});n++}})});
+  if(!ACT.via)ACT.via="Assign trucks as suggested";
+  try{P.best.runs.forEach(function(r){r.jobs.forEach(function(j){if(truckOf(j)!==r.truck.id){saveAssign(j,{truck:r.truck.id});n++}})})}finally{ACT.via=""}
   if(!silent)toast(n?plural(n,"job")+" moved to the suggested trucks.":"Nothing to change.");
   return n;
 }
@@ -2945,7 +3028,7 @@ document.addEventListener("click",function(e){
   if(t.id==="refresh"||t.dataset.act==="refresh"){S.err=null;if(!S.fleetLoaded||!calId)loadFleet();fetchWeek(weekStart(S.day),true);return}
   if(t.id==="btnFleet"||t.dataset.act==="fleet"){draft=null;S.modal="fleet";S.sel=null;render();return}
   if(t.id==="btnSheet"){copy(sheetText(),"Run sheet");return}
-  if(t.id==="btnOut"){lsSet("eamWho",null);lsSet("eamWelcomed",null);signOut();return}
+  if(t.id==="btnOut"){actFlush();lsSet("eamWho",null);lsSet("eamWelcomed",null);lsSet("eamMgrOk",null);signOut();return}
   if(t.dataset.act==="welcomego"){if(e.target!==t&&t.classList.contains("scrim")&&e.target.closest(".welcome")&&!e.target.closest("button")){ME.touched=true;return}welcomeClose();return}
   if(t.dataset.act==="tourstart"){S.modal=null;$("overlay").innerHTML="";render();setTimeout(tourStart,300);return}
   if(t.dataset.act==="tournext"){tourNext(1);return}
@@ -2953,6 +3036,7 @@ document.addEventListener("click",function(e){
   if(t.dataset.act==="tourskip"){tourEnd();return}
   if(t.dataset.act==="whoagain"){S.modal="whoami";S.sel=null;$("overlay").innerHTML="";render();return}
   if(t.dataset.act==="whosave"){meSave();return}
+  if(t.dataset.act==="mgrpin"){mgrUnlock();return}
   if(t.id==="tabDispatch"){setTab("dispatch");return}
   if(t.id==="tabQuotes"){setTab("quotes");return}
   if(t.id==="tabNumbers"){setTab("numbers");return}
@@ -2980,7 +3064,7 @@ document.addEventListener("click",function(e){
   if(a==="finclear"){FIN.data=null;FIN.err="";render();return}
   if(a==="finedit"){FIN.edit=!FIN.edit;render();return}
   if(a==="finsave"){var fd=($("finFrom")||{}).value,fa=+(($("finAmt")||{}).value);if(!/^\d{4}-\d{2}-\d{2}$/.test(fd||"")||!(fa>=0)){toast("Enter a start date and an amount.");return}
-    var cfg=JSON.parse(JSON.stringify(FIN.cfg||finDefaults()));cfg.daily=cfg.daily.filter(function(z){return z.from!==fd});cfg.daily.push({from:fd,amt:fa});FIN.edit=false;saveFinCfg(cfg);return}
+    var cfg=JSON.parse(JSON.stringify(FIN.cfg||finDefaults()));cfg.daily=cfg.daily.filter(function(z){return z.from!==fd});cfg.daily.push({from:fd,amt:fa});FIN.edit=false;saveFinCfg(cfg);actLog("Changed the daily running cost (from "+dLong(fd)+")");return}
   if(a==="findel"){var cfg2=JSON.parse(JSON.stringify(FIN.cfg||finDefaults()));cfg2.daily.splice(+t.dataset.i,1);if(cfg2.daily.length)saveFinCfg(cfg2);return}
   if(a==="nmode"){S.nMode=t.dataset.m;nTried={};render();return}
   if(a==="nprev"||a==="nnext"){var pb=pBounds(S.nMode||"week",S.nAnchor||melParts(new Date()).date,a==="nnext"?1:-1);S.nAnchor=pb.from;render();return}
@@ -2997,9 +3081,9 @@ document.addEventListener("click",function(e){
   if(a==="sset"){S.modal="salesset";render();return}
   if(a==="scancel"){S.modal=null;$("overlay").innerHTML="";render();return}
   if(a==="ssave"){salesSave();return}
-  if(a==="cdays"){CHG.days=+t.dataset.v;CHG.view="unknown";render();return}
+  if(a==="cdays"){CHG.days=+t.dataset.v;CHG.view="unknown";ACT.view="unknown";render();return}
   if(a==="ctype"){CHG.type=t.dataset.v;render();return}
-  if(a==="cnow"){CHG.view="unknown";chgRun(true);return}
+  if(a==="cnow"){CHG.view="unknown";ACT.view="unknown";actFlush();chgRun(true);return}
   if(a==="ccsv"){chgCsv();return}
   if(a==="lock"){lockNow();return}
   if(a==="lockretry"){LOCK.state="unknown";gateKey="";render();return}
