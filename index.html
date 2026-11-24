@@ -237,8 +237,22 @@ body.quotes .daybar,body.quotes .week,body.quotes #notices,body.quotes .stats,bo
 .who{font-size:12px;opacity:.85;overflow-wrap:anywhere}
 .whob{font:inherit;font-size:12.5px;font-weight:700;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:4px 12px 4px 10px;cursor:pointer}.whob::before{content:"\25CF";color:#6ed39b;margin-right:6px;font-size:9px;vertical-align:2px}
 .whoask{max-width:380px;display:flex;flex-direction:column;gap:10px;text-align:left}.whoask h3{margin:0;font-family:var(--display);font-size:20px}.whoask .wlogo{width:64px;height:64px;object-fit:contain}.whoask input{font-size:17px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}.whoerr{margin:0;color:var(--bad);font-size:13px;min-height:1em}
+.wx{width:100%;display:flex;flex-direction:column;gap:8px;margin-bottom:6px}.wx:empty{display:none}
+.wrep,.wslots{text-align:left;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+.wrow{display:flex;justify-content:space-between;gap:8px;align-items:baseline}.wrow b{font-size:13px}.wrow span{font-weight:700}.wrow.sm span{font-weight:500;color:var(--muted);font-size:12px}
+.wbar{height:8px;border-radius:4px;background:var(--grid);margin:6px 0 4px;overflow:hidden}.wbar i{display:block;height:100%;border-radius:4px;background:var(--royal)}
+.wkr{margin:6px 0 0;font-size:11.5px;color:var(--muted)}
+.wslots{background:var(--ok-bg);border-color:transparent}.wslots ul{margin:4px 0 0;padding-left:18px}.wslots li{margin-top:2px}
+.wlinks{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:12px}
+#tour{position:fixed;inset:0;z-index:60;pointer-events:none}
+#tour .thole{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(6,20,45,.58);outline:2px solid var(--sky);transition:all .25s ease}
+#tour .tcard{position:fixed;pointer-events:auto;background:var(--panel);color:var(--ink);border-radius:14px;padding:14px 16px;box-shadow:0 16px 40px rgba(0,0,0,.35);transition:top .25s ease,left .25s ease}
+#tour h4{margin:2px 0 4px;font-family:var(--display);font-size:16px}#tour p{margin:0;font-size:13.5px;color:var(--muted)}
+.tstep{font-size:11px;font-weight:700;color:var(--royal);text-transform:uppercase;letter-spacing:.4px}
+.tacts{display:flex;gap:8px;justify-content:flex-end;align-items:center;margin-top:12px}.tacts .wnot{margin-right:auto}
+@media (prefers-reduced-motion:reduce){#tour .thole,#tour .tcard{transition:none}}
 .wscrim{background:rgba(6,20,45,.62);z-index:40}
-.welcome{width:min(420px,100%);background:var(--panel);border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:wpop .45s cubic-bezier(.2,.9,.3,1.2) both}
+.welcome{max-height:calc(100vh - 32px);overflow-y:auto;width:min(420px,100%);background:var(--panel);border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:wpop .45s cubic-bezier(.2,.9,.3,1.2) both}
 .wart{display:block;width:100%;height:auto}
 .wbody{padding:4px 24px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
 .wbody .wlogo{width:58px;height:58px;object-fit:contain;margin-top:10px}
@@ -514,7 +528,9 @@ function parseEvent(e){
   j.pending=/pending/i.test(sub);
   j.flex=/flexib/i.test(sub+" "+(e.summary||""));
   j.interstate=/inters?t?ate/i.test(sub);
-  var hint=sub.match(/assigned to\s+([A-Za-z][A-Za-z .'-]*)/i);j.hint=hint?tc(hint[1].trim()):"";
+  var hint=sub.match(/assigned to\s+([A-Za-z][A-Za-z .'-]*)/i);
+  if(!hint){var bt=String(e.summary||"").replace(/<[^>]+>/g," ").replace(/&nbsp;/g," ");hint=bt.match(/assigned to\s+([A-Za-z][A-Za-z.'-]*(?: [A-Z][A-Za-z.'-]*)?)/i);if(hint&&/^(truck|us|our|the|a|an|me|you)\b/i.test(hint[1]))hint=null}
+  j.hint=hint?tc(hint[1].trim()):"";
   j.route=[shortLoc(b.pickup),shortLoc(b.drop)].filter(Boolean).join(" → ");
   return j;
 }
@@ -616,7 +632,7 @@ function boot(){
 
 /* ---------- board maths ---------- */
 function dayJobs(day){return (S.events[weekStart(day)]||[]).filter(function(j){return j.day===day}).sort(function(a,b){return a.start-b.start||a.end-b.end})}
-function truckOf(j){var a=S.assign[j.key];if(!a||!a.truck)return "";return S.fleet.trucks.some(function(t){return t.id===a.truck})?a.truck:""}
+function truckOf(j){var a=S.assign[j.key];if(!a||!a.truck)return "";if(j.hint&&!a.nosub)return "";return S.fleet.trucks.some(function(t){return t.id===a.truck})?a.truck:""}
 function subOf(j){if(truckOf(j))return "";var a=S.assign[j.key];if(a){if(a.sub)return a.sub;if(a.nosub)return ""}return j.hint||""}
 function needs(j){return !truckOf(j)&&!subOf(j)}
 function subNames(){var o={};Object.keys(S.events).forEach(function(w){S.events[w].forEach(function(j){if(j.hint)o[j.hint]=1})});Object.keys(S.assign).forEach(function(k){if(S.assign[k].sub)o[S.assign[k].sub]=1});return Object.keys(o).sort()}
@@ -2300,7 +2316,7 @@ function listHtml(jobs,flags){
 function renderOverlay(jobs,flags){
   var el=$("overlay"),keep=document.activeElement&&document.activeElement.id;
   if(S.modal==="whoami"){if(!el.querySelector("#whoName")){el.innerHTML=whoHtml();var wi=$("whoName");if(wi)try{wi.focus()}catch(e){}}return}
-  if(S.modal==="welcome"){var wsm=el.querySelector(".wsum");if(!wsm)el.innerHTML=welcomeHtml();else{var st=welcomeSum();if(wsm.textContent!==st)wsm.textContent=st}return}
+  if(S.modal==="welcome"){var wsm=el.querySelector(".wsum");if(!wsm)el.innerHTML=welcomeHtml();else{var st=welcomeSum();if(wsm.textContent!==st)wsm.textContent=st;var wx=el.querySelector(".wx"),xh=welcomeExtra();if(wx&&ME.lastX!==xh){wx.innerHTML=xh;ME.lastX=xh}}return}
   if(S.modal==="salesset"){if(!el.querySelector("#sTarget"))el.innerHTML=salesSetHtml();return}
   if(S.modal==="lockchange"){if(!el.querySelector("#lockChange")){el.innerHTML=changeHtml();var pf=el.querySelector("input");if(pf)try{pf.focus()}catch(e){}}return}
   if(S.modal==="fleet"){if(!el.querySelector(".modal"))el.innerHTML=fleetHtml();return}
@@ -2343,7 +2359,7 @@ function meCheck(){
   if(!ME.name){S.modal="whoami";return}
   var t=melParts(new Date()).date;
   if(!ME.shown&&lsGet("eamWelcomed")!==t+"|"+ME.name){ME.shown=true;lsSet("eamWelcomed",t+"|"+ME.name);S.modal="welcome";
-    setTimeout(function(){if(S.modal==="welcome"){S.modal=null;$("overlay").innerHTML="";render()}},9000)}
+    setTimeout(function(){if(S.modal==="welcome"&&!ME.touched)welcomeClose()},15000)}
 }
 function knownNames(){
   var o={};(S.fleet.crew||[]).forEach(function(c){if(c.name)o[tc(c.name)]=1});
@@ -2366,7 +2382,7 @@ function meSave(){
   ME.name=v;lsSet("eamWho",JSON.stringify({name:v}));
   ME.shown=true;lsSet("eamWelcomed",melParts(new Date()).date+"|"+v);
   S.modal="welcome";$("overlay").innerHTML="";render();
-  setTimeout(function(){if(S.modal==="welcome"){S.modal=null;$("overlay").innerHTML="";render()}},9000);
+  setTimeout(function(){if(S.modal==="welcome"&&!ME.touched)welcomeClose()},15000);
 }
 function welcomeSum(){
   var t=melParts(new Date()).date,ws=weekStart(t);
@@ -2391,16 +2407,92 @@ function welcomeHtml(){
     +'<g class="wwheel" style="transform-origin:230px 146px"><circle cx="230" cy="146" r="11" fill="#1d2430"/><circle cx="230" cy="146" r="5" fill="#c9d3e0"/><rect x="229" y="137" width="2" height="18" fill="#1d2430"/></g>'
     +'<g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"><line x1="60" y1="104" x2="84" y2="104"/><line x1="48" y1="118" x2="84" y2="118"/><line x1="66" y1="132" x2="84" y2="132"/></g></g></svg>'
     +'<div class="wbody"><img class="wlogo" src="logo.png" alt=""><p class="wgreet">'+g+'</p><h2>Welcome, '+esc(ME.name)+'</h2>'
-    +'<p class="wsum">'+esc(welcomeSum())+'</p>'
+    +'<p class="wsum">'+esc(welcomeSum())+'</p><div class="wx">'+welcomeExtra()+'</div>'
     +'<button class="btn primary" type="button" data-act="welcomego">Let’s go</button>'
-    +'<button class="wnot" type="button" data-act="whoagain">Not '+esc(ME.name.split(" ")[0])+'?</button></div></div></div>';
+    +'<div class="wlinks"><button class="wnot" type="button" data-act="tourstart">Show me around</button><span>·</span><button class="wnot" type="button" data-act="whoagain">Not '+esc(ME.name.split(" ")[0])+'?</button></div></div></div></div>';
 }
 function whoChip(){
   if(S.auth!=="in")return "";
   return ME.name?'<button class="whob" type="button" data-act="whoagain" title="'+esc("Signed in as "+S.who+". Tap to change who is using this device.")+'">'+esc(ME.name)+'</button>':esc(S.who);
 }
-document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target&&e.target.id==="whoName"){e.preventDefault();meSave()}});
-
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target&&e.target.id==="whoName"){e.preventDefault();meSave()}if(e.key==="Escape"&&TOUR.i>=0)tourEnd()});
+/* rep's own week on the welcome page (same counting as Admin Metrics: hours on the day the booking was added) */
+function myRep(){
+  if(!ME.name)return null;var t=melParts(new Date()).date,ws=weekStart(t);
+  if(!SALES.data[ws]){loadCreated(ws);return null}
+  var k=ws+"|"+SALES.data[ws].length+"|"+JSON.stringify(SALES.cfg||{}).length+"|"+t;
+  if(ME.mk!==k){ME.mk=k;ME.model=null;try{ME.model=salesModel(ws)}catch(e){}}
+  var m=ME.model;if(!m)return null;
+  var me=repName(ME.name).toLowerCase(),first=me.split(" ")[0];
+  var r=m.reps.filter(function(x){return x.name.toLowerCase()===me})[0]||m.reps.filter(function(x){return x.name.toLowerCase().split(" ")[0]===first})[0];
+  if(!r)return {none:true};
+  var di=dayDiff(ws,t),d=r.days[di]||{h:0,off:false};
+  return {r:r,T:m.T,today:d,kr:sCfg().kr};
+}
+function slotsToSell(){
+  var t=melParts(new Date()).date,out=[];
+  if(!window.EAM_GEO){needGeo();return null}
+  [t,addDays(t,1)].forEach(function(d,i){
+    if(!S.events[weekStart(d)])return;var keep=S.day;S.day=d;
+    try{var P=pairPlan(dayJobs(d));(P.fill||[]).forEach(function(f){if(f.s)out.push((i?"Tomorrow":"Today")+" · "+f.s)})}catch(e){}
+    S.day=keep});
+  return out;
+}
+function welcomeExtra(){
+  var h="",me=myRep();
+  if(me&&me.r){var r=me.r,pct=r.target?Math.min(1,r.h/r.target):0,left=Math.max(0,r.target-r.h);
+    h+='<div class="wrep"><div class="wrow"><b>Your week</b><span>'+fh(r.h)+' of '+fh(r.target)+' hrs booked</span></div>'
+      +'<div class="wbar" role="img" aria-label="'+fh(r.h)+' of '+fh(r.target)+' hours"><i style="width:'+Math.round(pct*100)+'%"></i></div>'
+      +'<div class="wrow sm"><span>'+(left>0?fh(left)+" hrs to go":"Weekly target reached")+'</span><span>'+(me.today.off&&!me.today.assumed?"Day off today":"Today: "+fh(me.today.h)+" of "+me.T+" hrs")+'</span></div>'
+      +'<p class="wkr">Reply in under '+me.kr.resp+' min · bid within '+me.kr.bid+' min · follow up every open bid</p></div>'}
+  var sl=slotsToSell();
+  if(sl&&sl.length)h+='<div class="wslots"><b>Slots to sell</b><ul>'+sl.slice(0,3).map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>';
+  return h;
+}
+/* ---------- first-time tour ---------- */
+var TOUR={i:-1,steps:[],timer:null};
+function tourSteps(){
+  return [
+    {sel:"#tabs",t:"Your two tabs",b:"Dispatch is the day’s trucks and jobs. Quotes builds a quote and checks a truck is free. The other tabs are for the partners."},
+    {sel:"#week",t:"Pick a day",b:"Tap a day to see its jobs. The bar shows how full the day is."},
+    {sel:"#pairs .pairs",t:"Pairing advice",b:"Which trucks to run, which jobs go together, slots to sell and jobs that are too tight. Open it at the start of every shift."},
+    {sel:".board",t:"Trucks and jobs",b:"Each truck’s jobs against the clock. Tap a job to set its truck and crew, or mark it subcontracted."},
+    {sel:"#btnSheet",t:"Run sheet",b:"Copies the run sheet for the day you’re viewing, ready for the crew WhatsApp."},
+    {sel:"#who",t:"That’s you",b:"Tap your name if someone else picks up this phone."}
+  ];
+}
+function tourVisible(el){if(!el)return false;var r=el.getBoundingClientRect();return r.width>0&&r.height>0}
+function tourStart(){
+  if(typeof setTab==="function"&&TAB!=="dispatch")setTab("dispatch");
+  TOUR.steps=tourSteps();TOUR.i=-1;tourNext(1);
+  clearInterval(TOUR.timer);TOUR.timer=setInterval(tourPlace,400);
+}
+function tourEnd(){TOUR.i=-1;clearInterval(TOUR.timer);var d=document.getElementById("tour");if(d)d.remove();lsSet("eamTour","1")}
+function tourNext(dir){
+  var i=TOUR.i;do{i+=dir}while(i>=0&&i<TOUR.steps.length&&!tourVisible(document.querySelector(TOUR.steps[i].sel)));
+  if(i<0)return;if(i>=TOUR.steps.length){tourEnd();return}
+  TOUR.i=i;var el=document.querySelector(TOUR.steps[i].sel);try{el.scrollIntoView({block:"center",behavior:"smooth"})}catch(e){el.scrollIntoView()}
+  tourDraw();setTimeout(tourPlace,350);
+}
+function tourDraw(){
+  var d=document.getElementById("tour");if(!d){d=document.createElement("div");d.id="tour";document.body.appendChild(d)}
+  var st=TOUR.steps[TOUR.i],shown=TOUR.steps.filter(function(s){return tourVisible(document.querySelector(s.sel))}),n=shown.indexOf(st)+1;
+  d.innerHTML='<div class="thole"></div><div class="tcard" role="dialog" aria-label="Tour"><div class="tstep">'+n+' of '+shown.length+'</div><h4>'+esc(st.t)+'</h4><p>'+esc(st.b)+'</p><div class="tacts"><button class="wnot" type="button" data-act="tourskip">Skip</button>'
+    +(n>1?'<button class="btn small" type="button" data-act="tourback">Back</button>':"")+'<button class="btn primary small" type="button" data-act="tournext">'+(n===shown.length?"Done":"Next")+'</button></div></div>';
+  tourPlace();
+}
+function tourPlace(){
+  var d=document.getElementById("tour");if(!d||TOUR.i<0)return;var st=TOUR.steps[TOUR.i],el=document.querySelector(st.sel);
+  if(!tourVisible(el)){tourNext(1);return}
+  var r=el.getBoundingClientRect(),pad=6,hole=d.querySelector(".thole"),card=d.querySelector(".tcard");
+  var top=Math.max(4,r.top-pad),h=Math.min(r.height+pad*2,innerHeight-top-4);
+  hole.style.cssText="top:"+top+"px;left:"+Math.max(4,r.left-pad)+"px;width:"+Math.min(r.width+pad*2,innerWidth-8)+"px;height:"+h+"px";
+  var cw=Math.min(320,innerWidth-24),ch=card.offsetHeight||150,below=top+h+12,ct=below+ch<innerHeight-8?below:Math.max(8,top-ch-12);
+  if(ct+ch>innerHeight-8)ct=Math.max(8,innerHeight-ch-8);
+  card.style.cssText="top:"+ct+"px;left:"+Math.max(12,Math.min(innerWidth-cw-12,r.left))+"px;width:"+cw+"px";
+}
+window.addEventListener("resize",tourPlace);
+function welcomeClose(){S.modal=null;$("overlay").innerHTML="";render();if(!lsGet("eamTour")&&S.auth==="in")setTimeout(tourStart,300)}
 var draft=null;
 function fleetHtml(){
   if(!draft)draft={trucks:S.fleet.trucks.map(function(t){return {id:t.id,name:t.name,size:t.size}}),crew:S.fleet.crew.map(function(c){return {id:c.id,name:c.name}}),buffer:S.fleet.buffer,weekHours:S.fleet.weekHours||60,defRate:defRate(),run:S.fleet.run||0};
@@ -2521,13 +2613,15 @@ function runsCost(runs,subs,unassigned,curTruck){
 var PMEMO={};
 function pairPlan(jobs){
   var key=S.day+"|"+jobs.map(function(j){return [j.key,j.start,j.end,truckOf(j),subOf(j),j.movers,j.size,j.body.pickup,j.body.drop].join(":")}).join(",")+"|"+JSON.stringify((S.fleet.off&&S.fleet.off[S.day])||{})+"|"+S.fleet.trucks.map(function(t){return t.id+t.size}).join(",")+"|"+(S.fleet.run||0)+"|"+(S.fleet.buffer||0)+"|"+(window.EAM_GEO?1:0);
-  if(PMEMO.key===key)return PMEMO.val;
+  if(PMEMO[key])return PMEMO[key].val;
   var val=pairPlan0(jobs);
+  if(allAssigned(jobs)){try{lockPlan(jobs,val)}catch(e){}var ks0=Object.keys(PMEMO);if(ks0.length>=6)ks0.sort(function(x,y){return PMEMO[x].t-PMEMO[y].t}).slice(0,ks0.length-5).forEach(function(x){delete PMEMO[x]});PMEMO[key]={val:val,t:Date.now()};return val}
   try{val.choice=truckChoice(jobs,val)}catch(e){val.choice=null}
   var use=val.choice&&val.choice.changed?val.choice.P:val;val.use=use;
   try{val.resched=reschedule(jobs,use)}catch(e){val.resched=null}
   try{val.fill=fillers(use)}catch(e){val.fill=[]}
-  PMEMO={key:key,val:val};return val;
+  var ks=Object.keys(PMEMO);if(ks.length>=6)ks.sort(function(x,y){return PMEMO[x].t-PMEMO[y].t}).slice(0,ks.length-5).forEach(function(x){delete PMEMO[x]});
+  PMEMO[key]={val:val,t:Date.now()};return val;
 }
 function pairPlan0(jobs,useTrucks,cap){
   var trucks=useTrucks||onRoad(S.day),pool=pairScope(jobs).slice().sort(function(a,b){return a.start-b.start||a.end-b.end}),cur={};cap=cap||150000;
@@ -2591,24 +2685,29 @@ function fillers(P){
   var B=P&&P.best,out=[],gap=Math.max(30,S.fleet.buffer||0),nw=melParts(new Date()),now=S.day===nw.date?nw.min:-1;if(!B||S.day<nw.date)return out;
   B.runs.forEach(function(r){
     var tl=truckLabel(r.truck);
-    if(!r.jobs.length){if(now<900)out.push({t:tl+" is running with no jobs yet. Room for a full day of bookings."});return}
+    if(!r.jobs.length){if(now<900)out.push({t:tl+" is running with no jobs yet. Room for a full day of bookings.",s:r.truck.name+": free all day"});return}
     var f=r.jobs[0],g=jobGeo(f),len=f.start-420-gap;
     if(f.start>=540&&len>=60&&now<360){len=Math.min(len,240);len-=len%30;
-      out.push({t:tl+": first job is "+hm(f.start)+" ("+f.customer+(g.p?", "+g.p.name:"")+"). Look for a 7am job of up to "+hrsTxt(len)+" in metro Melbourne"+(g.p?", ideally near "+g.p.name:"")+(f.movers?", for a "+f.movers+"-man crew (the same crew does "+hm(f.start)+")":"")+(r.truck.size?", "+r.truck.size+" or smaller":"")+"."})}
+      out.push({s:r.truck.name+": 7am job, up to "+hrsTxt(len).replace("hours","hrs")+(g.p?", near "+g.p.name:"")+(f.movers?", "+f.movers+" movers":""),t:tl+": first job is "+hm(f.start)+" ("+f.customer+(g.p?", "+g.p.name:"")+"). Look for a 7am job of up to "+hrsTxt(len)+" in metro Melbourne"+(g.p?", ideally near "+g.p.name:"")+(f.movers?", for a "+f.movers+"-man crew (the same crew does "+hm(f.start)+")":"")+(r.truck.size?", "+r.truck.size+" or smaller":"")+"."})}
     var l=r.jobs[r.jobs.length-1];
     if(l.end<=780&&now<Math.ceil((l.end+gap)/30)*30-60){var from=Math.ceil((l.end+gap)/30)*30,lg=jobGeo(l);
-      out.push({t:tl+": last job ends about "+hm(l.end)+" ("+l.customer+(lg.d?", "+lg.d.name:"")+"). Room for an afternoon job from about "+hm(from)+(lg.d?", ideally near "+lg.d.name:"")+"."})}
+      out.push({s:r.truck.name+": free from "+hm(from)+(lg.d?", near "+lg.d.name:""),t:tl+": last job ends about "+hm(l.end)+" ("+l.customer+(lg.d?", "+lg.d.name:"")+"). Room for an afternoon job from about "+hm(from)+(lg.d?", ideally near "+lg.d.name:"")+"."})}
   });
   return out;
 }
 function reschedule(jobs,P){
   var B=P&&P.best;if(!B)return null;var trucks=P.trucks;if(!trucks||!trucks.length)return null;
-  var res={moves:[],tight:[]};
-  /* tight links on the suggested runs */
-  B.runs.forEach(function(r){var prev=null,lead=null;r.jobs.forEach(function(j){if(prev){var L=pairLink(prev,j,r.truck,lead);if(L.ok&&L.spare!=null&&L.spare<15){var need=Math.ceil((15-L.spare)/15)*15;
-    res.tight.push(truckLabel(r.truck)+": only "+hrsMin(Math.max(0,L.spare))+" between "+prev.customer+" (ends ~"+hm(prev.end)+") and "+j.customer+" ("+hm(j.start)+")"+(L.travel!=null?" with ~"+L.travel+" min drive":"")+". If "+j.customer.split(" ")[0]+" can start "+hm(j.start+need)+(j.flex?" (booking says flexible)":"")+", the crew isn’t rushed.")}}if(!lead)lead=j;prev=j})});
+  var res={moves:[],tight:tightOf(B.runs)};
   if(!B.subs.length)return res;
   var pool=pairScope(jobs),base=B.subs.length,opts=[],D=[-120,-90,-60,-30,30,60,90,120,150,180,240];
+  return reschedMoves(jobs,trucks,pool,base,opts,D,res);
+}
+function tightOf(runs){var out=[];
+  runs.forEach(function(r){var prev=null,lead=null;r.jobs.forEach(function(j){if(prev){var L=pairLink(prev,j,r.truck,lead);if(L.ok&&L.spare!=null&&L.spare<15){var need=Math.ceil((15-L.spare)/15)*15;
+    out.push(truckLabel(r.truck)+": only "+hrsMin(Math.max(0,L.spare))+" between "+prev.customer+" (ends ~"+hm(prev.end)+") and "+j.customer+" ("+hm(j.start)+")"+(L.travel!=null?" with ~"+L.travel+" min drive":"")+". If "+j.customer.split(" ")[0]+" can start "+hm(j.start+need)+(j.flex?" (booking says flexible)":"")+", the crew isn’t rushed.")}}if(!lead)lead=j;prev=j})});
+  return out;
+}
+function reschedMoves(jobs,trucks,pool,base,opts,D,res){
   pool.forEach(function(j){D.forEach(function(d){
     var ns=j.start+d,ne=j.end+d;if(ns<420||ne>1170)return;
     var c={};for(var k in j)c[k]=j[k];c.start=ns;c.end=ne;
@@ -2622,6 +2721,41 @@ function reschedule(jobs,P){
     var saved=base-o.n;
     res.moves.push({t:"Move "+o.j.customer+" from "+hm(o.j.start)+" to "+hm(o.to)+(o.flex?" (booking says flexible)":"")+". "+(o.tr?truckLabel(o.tr)+" can then take it"+(o.after?" after "+o.after.customer:" first")+", ":"")+(o.n?"saving "+plural(saved,"subcontractor job")+".":"and no subcontractor is needed."),key:o.j.key})});
   return res;
+}
+
+/* once every job of the day has a truck or a subcontractor, the advice follows the board as dispatched */
+function allAssigned(jobs){return jobs.length>0&&jobs.every(function(j){return !needs(j)})}
+function lockPlan(jobs,val){
+  val.locked=true;
+  var runs=S.fleet.trucks.map(function(t){return {truck:t,jobs:jobs.filter(function(j){return truckOf(j)===t.id})}}).filter(function(r){return !isOff(S.day,r.truck.id)||r.jobs.length});
+  val.best={runs:runs,subs:[]};val.same=true;val.subsAll=jobs.filter(function(j){return subOf(j)});
+  var R=runLimit(),used=runs.filter(function(r){return r.jobs.length}).map(function(r){return r.truck}),running=onRoad(S.day),ch=null;
+  if(R&&used.length>R)val.issues.push("Jobs are on "+used.length+" trucks but the roster runs "+R+".");
+  else if(R&&running.length>R){
+    var keep=used.slice(),spare=running.filter(function(t){return keep.indexOf(t)<0}).sort(function(a,b){return (numSize(a.size)||0)-(numSize(b.size)||0)});
+    while(keep.length<R&&spare.length)keep.push(spare.shift());
+    var off=running.filter(function(t){return keep.indexOf(t)<0});
+    if(off.length)ch={R:R,set:keep,off:off,P:val,changed:true,subs:0,running:running.length,locked:true,why:[listJoin(off.map(function(t){return t.name}))+(off.length===1?" has":" have")+" no jobs this day."]};
+  }
+  val.choice=ch;val.use=val;
+  val.resched={moves:[],tight:tightOf(runs)};
+  var keepRuns=runs.filter(function(r){return !(ch&&ch.off.indexOf(r.truck)>=0)&&!isOff(S.day,r.truck.id)});
+  try{val.fill=fillers({best:{runs:keepRuns,subs:[]}})}catch(e){val.fill=[]}
+}
+function lockedHtml(P){
+  var C=P.choice,cls=C||P.issues.length?"warn":"ok";
+  var status=C?"All jobs assigned. Put "+listJoin(C.off.map(function(t){return t.name}))+" out of service: no jobs.":P.issues.length?"All jobs assigned. Check the notes below.":"All jobs assigned. The advice follows the board.";
+  var h='<details class="pairs '+cls+'"'+(PAIR.open?" open":"")+'><summary><b>Pairing advice</b><span>'+esc(status)+'</span></summary><div class="pbody">';
+  if(C)h+='<div class="pblock w"><b>Trucks to run ('+C.R+'-truck roster)</b><p>'+esc(C.why.join(" "))+' Run '+esc(listJoin(C.set.map(truckLabel)))+' and put '+esc(listJoin(C.off.map(truckLabel)))+' out of service.</p><div class="pacts"><button class="btn primary small" type="button" data-act="pfleet">Put '+esc(listJoin(C.off.map(function(t){return t.name})))+' out of service</button></div></div>';
+  h+='<p class="psub">Every job for '+esc(dLong(S.day))+' has a truck or a subcontractor, so this follows the board as dispatched.</p>';
+  P.best.runs.forEach(function(r){if(r.jobs.length||!(C&&C.off.indexOf(r.truck)>=0))h+=pairRunHtml(r)});
+  if(P.subsAll.length){var by={};P.subsAll.forEach(function(j){var n=subOf(j);(by[n]=by[n]||[]).push(j)});
+    Object.keys(by).sort().forEach(function(n){h+='<div class="prun"><span class="ptr sub">'+esc(n==="Subcontractor"?n:"Sub: "+n)+'</span><div class="pseq">'+by[n].map(pairJobChip).join("")+'</div></div>'})}
+  if(P.resched.tight.length)h+='<div class="pblock"><b>Tight changeovers</b><ul>'+P.resched.tight.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>';
+  if(P.fill&&P.fill.length)h+='<div class="pblock g"><b>Room for more bookings</b><ul>'+P.fill.map(function(x){return '<li>'+esc(x.t)+'</li>'}).join("")+'</ul><p class="psub">Pass these to sales so the trucks aren’t idle.</p></div>';
+  if(P.issues.length)h+='<div class="pissues"><b>Check:</b><ul>'+P.issues.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>';
+  h+='<div class="pacts"><button class="btn small" type="button" data-act="psheet">Copy run sheet</button>'+(navigator.share?'<button class="btn small" type="button" data-act="pshare">Share run sheet</button>':"")+'</div><p class="psub">Drive times are estimates from suburb to suburb.</p></div></details>';
+  return h;
 }
 /* put the right trucks out of service for the day in one save, then move jobs onto the running trucks */
 function setDayTrucks(day,runIds){
@@ -2655,7 +2789,8 @@ function pairHtml(jobs){
   if(S.auth!=="in"||!S.events[weekStart(S.day)])return "";
   var pool=pairScope(jobs);if(!pool.length||!S.fleet.trucks.length)return "";
   if(!needGeo())return '<div class="pairs"><p class="muted">Working out pairings…</p></div>';
-  var P0=pairPlan(jobs),C=P0.choice,P=P0.use||P0,B=P.best,status,cls="ok",apply=false,swap=!!(C&&C.changed);
+  var P0=pairPlan(jobs);if(P0.locked)return lockedHtml(P0);
+  var C=P0.choice,P=P0.use||P0,B=P.best,status,cls="ok",apply=false,swap=!!(C&&C.changed);
   if(swap){cls="warn";status="Run "+listJoin(C.set.map(truckLabel))+" and put "+listJoin(C.off.map(function(t){return t.name}))+" out of service.";}
   else if(!P.trucks.length)status="All our trucks are out of service this day: every job needs a subcontractor.",cls="bad";
   else if(!B)status="Couldn’t work out a plan for this day.",cls="warn";
@@ -2759,7 +2894,11 @@ document.addEventListener("click",function(e){
   if(t.id==="btnFleet"||t.dataset.act==="fleet"){draft=null;S.modal="fleet";S.sel=null;render();return}
   if(t.id==="btnSheet"){copy(sheetText(),"Run sheet");return}
   if(t.id==="btnOut"){lsSet("eamWho",null);lsSet("eamWelcomed",null);signOut();return}
-  if(t.dataset.act==="welcomego"){if(e.target!==t&&t.classList.contains("scrim")&&e.target.closest(".welcome")&&!e.target.closest("button"))return;S.modal=null;$("overlay").innerHTML="";render();return}
+  if(t.dataset.act==="welcomego"){if(e.target!==t&&t.classList.contains("scrim")&&e.target.closest(".welcome")&&!e.target.closest("button")){ME.touched=true;return}welcomeClose();return}
+  if(t.dataset.act==="tourstart"){S.modal=null;$("overlay").innerHTML="";render();setTimeout(tourStart,300);return}
+  if(t.dataset.act==="tournext"){tourNext(1);return}
+  if(t.dataset.act==="tourback"){tourNext(-1);return}
+  if(t.dataset.act==="tourskip"){tourEnd();return}
   if(t.dataset.act==="whoagain"){S.modal="whoami";S.sel=null;$("overlay").innerHTML="";render();return}
   if(t.dataset.act==="whosave"){meSave();return}
   if(t.id==="tabDispatch"){setTab("dispatch");return}
@@ -2823,7 +2962,7 @@ document.addEventListener("change",function(e){
   if(t.id==="selTruck"){var j=findJob(S.sel);if(!j)return;
     if(t.value==="__sub")saveAssign(j,{truck:"",sub:subOf(j)||j.hint||"Subcontractor",nosub:false,crew:[]});
     else if(t.value==="")saveAssign(j,{truck:"",sub:"",nosub:!!j.hint});
-    else saveAssign(j,{truck:t.value,sub:"",nosub:false});return}
+    else saveAssign(j,{truck:t.value,sub:"",nosub:!!j.hint});return}
   if(t.id==="jobVal"||t.id==="subCost"){var mj=findJob(S.sel);if(mj){var pv={};pv[t.id==="jobVal"?"val":"cost"]=t.value===""?null:Math.max(0,+t.value||0);saveAssign(mj,pv)}return}
   if(t.id==="tStart"||t.id==="tEnd"){var kj=findJob(S.sel);if(!kj)return;var ka=S.assign[kj.key]||{},tv=t.value?(+t.value.slice(0,2))*60+(+t.value.slice(3,5)):null;
     if(t.id==="tStart")saveAssign(kj,{t0:tv});
@@ -2841,7 +2980,7 @@ document.addEventListener("drop",function(e){var l=e.target.closest&&e.target.cl
   if(to&&to.indexOf("sub:")!==0&&isOff(j.day,to)){toast(truckName(to)+" is out of service on this day.");render();return}
   if(to.indexOf("sub:")===0){if(subOf(j)!==to.slice(4))saveAssign(j,{truck:"",sub:to.slice(4),nosub:false,crew:[]});else render()}
   else if(to===""){if(!needs(j))saveAssign(j,{truck:"",sub:"",nosub:!!j.hint});else render()}
-  else if(truckOf(j)!==to)saveAssign(j,{truck:to,sub:"",nosub:false});else render()});
+  else if(truckOf(j)!==to)saveAssign(j,{truck:to,sub:"",nosub:!!j.hint});else render()});
 document.addEventListener("dragend",function(){dragKey=null;document.querySelectorAll(".lane.over").forEach(function(l){l.classList.remove("over")})});
 
 if(NARROW.addEventListener)NARROW.addEventListener("change",function(){render()});
