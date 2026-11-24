@@ -85,6 +85,7 @@ body.quotes #pairs,body.numbers #pairs,body.sales #pairs,body.changes #pairs,bod
 .plink{font-size:11.5px;color:var(--muted);white-space:nowrap}.plink::before{content:"\2192  "}.plink.w{color:var(--warn);font-weight:700}.plink.b{color:var(--bad);font-weight:700}
 .pissues{font-size:13px;background:var(--warn-bg);color:var(--ink);border-radius:8px;padding:8px 12px}.pissues ul{margin:4px 0 0;padding-left:18px}
 .pacts{display:flex;flex-wrap:wrap;gap:8px}
+.pblock{font-size:13px;border:1px solid var(--line);border-radius:8px;padding:8px 12px;display:flex;flex-direction:column;gap:6px}.pblock p{margin:0}.pblock ul{margin:0;padding-left:18px}.pblock li+li{margin-top:3px}.pblock.w{background:var(--warn-bg);border-color:transparent}.pblock.g{background:var(--ok-bg);border-color:transparent}
 @media (max-width:600px){.prun{grid-template-columns:1fr}}
 .oos{margin-top:6px;align-self:flex-start;font:inherit;font-size:11.5px;font-weight:700;border:1px solid var(--line);background:var(--card,transparent);color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer}
 .oos:hover{color:var(--ink);border-color:var(--muted)}
@@ -234,6 +235,25 @@ body.quotes #qframe{flex:1 1 auto;height:auto;min-height:0;width:1px;min-width:1
 body.quotes #gate,body.quotes #overlay{display:none}
 body.quotes .daybar,body.quotes .week,body.quotes #notices,body.quotes .stats,body.quotes .board,body.quotes .legend,body.quotes #btnSheet,body.quotes #btnFleet,body.quotes header.top .sub{display:none}
 .who{font-size:12px;opacity:.85;overflow-wrap:anywhere}
+.whob{font:inherit;font-size:12.5px;font-weight:700;color:#fff;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:4px 12px 4px 10px;cursor:pointer}.whob::before{content:"\25CF";color:#6ed39b;margin-right:6px;font-size:9px;vertical-align:2px}
+.whoask{max-width:380px;display:flex;flex-direction:column;gap:10px;text-align:left}.whoask h3{margin:0;font-family:var(--display);font-size:20px}.whoask .wlogo{width:64px;height:64px;object-fit:contain}.whoask input{font-size:17px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}.whoerr{margin:0;color:var(--bad);font-size:13px;min-height:1em}
+.wscrim{background:rgba(6,20,45,.62);z-index:40}
+.welcome{width:min(420px,100%);background:var(--panel);border-radius:20px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35);animation:wpop .45s cubic-bezier(.2,.9,.3,1.2) both}
+.wart{display:block;width:100%;height:auto}
+.wbody{padding:4px 24px 22px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px}
+.wbody .wlogo{width:58px;height:58px;object-fit:contain;margin-top:10px}
+.wgreet{margin:4px 0 0;color:var(--muted);font-weight:700;letter-spacing:.4px;text-transform:uppercase;font-size:12px}
+.welcome h2{margin:0;font-family:var(--display);font-size:26px;color:var(--ink)}
+.wsum{margin:2px 0 10px;color:var(--muted);font-size:14px}
+.welcome .btn.primary{min-width:160px}.wnot{font:inherit;font-size:12.5px;background:none;border:0;color:var(--muted);text-decoration:underline;cursor:pointer;margin-top:2px}
+.wtruck{animation:wbob 1.1s ease-in-out infinite}.wwheel{animation:wspin .6s linear infinite}.wlane{animation:wroad .7s linear infinite}.wsun{animation:wglow 3s ease-in-out infinite}
+@keyframes wpop{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes wbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes wspin{to{transform:rotate(360deg)}}
+@keyframes wroad{to{transform:translateX(-48px)}}
+@keyframes wglow{0%,100%{opacity:1}50%{opacity:.82}}
+@media (prefers-reduced-motion:reduce){.welcome,.wtruck,.wwheel,.wlane,.wsun{animation:none}}
+
 .scrim .drawer{padding-top:calc(18px + var(--sat));padding-bottom:calc(18px + env(safe-area-inset-bottom,0px))}
 
 header.top{background:var(--navy);color:#fff;border-radius:14px;padding:14px 18px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center}
@@ -358,7 +378,7 @@ a.lnk{color:var(--royal);font-weight:700}
   .legend span:last-child{display:none}
   .drawer{width:100%;border-left:0}
   .btn.small{padding:7px 11px;font-size:13px}
-  .who{display:none}
+  .who{display:block;order:-1}.who:empty{display:none}
   header.top>div:first-child{display:none}
   header.top{gap:8px}
   .week{grid-template-columns:repeat(7,minmax(74px,1fr));overflow-x:auto}
@@ -492,6 +512,7 @@ function parseEvent(e){
   j.size=sz?sz[1]+"T":"";
   var mv=sub.match(/(\d)\s*(?:men|man|movers?)/i);j.movers=mv?+mv[1]:null;
   j.pending=/pending/i.test(sub);
+  j.flex=/flexib/i.test(sub+" "+(e.summary||""));
   j.interstate=/inters?t?ate/i.test(sub);
   var hint=sub.match(/assigned to\s+([A-Za-z][A-Za-z .'-]*)/i);j.hint=hint?tc(hint[1].trim()):"";
   j.route=[shortLoc(b.pickup),shortLoc(b.drop)].filter(Boolean).join(" → ");
@@ -555,7 +576,7 @@ function loadFleet(){
     calId=c.id;return gfetch(BASE+"/calendars/"+encodeURIComponent(calId)+"?$select=id&$expand="+expandQ(P_FLEET));
   }).then(function(c){
     var d=readProp(c);
-    S.fleet=d&&Array.isArray(d.trucks)?{trucks:d.trucks,crew:Array.isArray(d.crew)?d.crew:[],buffer:typeof d.buffer==="number"?d.buffer:30,weekHours:typeof d.weekHours==="number"?d.weekHours:60,defRate:typeof d.defRate==="number"?d.defRate:120,off:d.off&&typeof d.off==="object"?d.off:{}}:JSON.parse(JSON.stringify(DEFAULT_FLEET));
+    S.fleet=d&&Array.isArray(d.trucks)?{trucks:d.trucks,crew:Array.isArray(d.crew)?d.crew:[],buffer:typeof d.buffer==="number"?d.buffer:30,weekHours:typeof d.weekHours==="number"?d.weekHours:60,defRate:typeof d.defRate==="number"?d.defRate:120,off:d.off&&typeof d.off==="object"?d.off:{},run:typeof d.run==="number"?d.run:0,depot:d.depot||""}:JSON.parse(JSON.stringify(DEFAULT_FLEET));
     S.fleetLoaded=true;render();
   },function(e){S.fleetLoaded=true;S.fleet=JSON.parse(JSON.stringify(DEFAULT_FLEET));if(!S.err)S.err=errText(e);render()});
 }
@@ -2163,7 +2184,7 @@ function render(){
   $("fresh").textContent=S.loading?"Loading calendar…":(S.fetched[ws]?"Calendar read "+tm(melParts(new Date(S.fetched[ws])).min):"");
   $("refresh").disabled=S.loading||S.auth!=="in";
   document.body.classList.toggle("gated",S.auth!=="in");
-  $("who").textContent=S.auth==="in"?S.who:"";$("btnOut").hidden=S.auth!=="in";
+  var wc=whoChip();if(ME.lastChip!==wc){$("who").innerHTML=wc;ME.lastChip=wc}$("btnOut").hidden=S.auth!=="in";
   var g="";
   if(S.auth==="wait")g='<h2>Opening the board</h2><p>Checking your Microsoft sign-in.</p>';
   else if(S.auth==="out")g='<h2>Sign in to see the jobs</h2><p>Use the EAM admin Outlook account. The board reads its calendar and saves truck and crew choices there.</p>'+(S.err?'<p style="color:var(--bad)">'+esc(S.err)+'</p>':"")+'<button class="btn primary" type="button" data-act="signin">Sign in with Microsoft</button>';
@@ -2200,7 +2221,7 @@ function render(){
 
   $("grid").className=NARROW.matches?"grid list":"grid";
   $("grid").innerHTML=have?(NARROW.matches?listHtml(jobs,flags):boardHtml(jobs,flags,today)):'<div class="empty">'+(S.loading||S.auth==="wait"?"Loading the calendar…":"No calendar data yet.")+'</div>';
-  renderOverlay(jobs,flags);
+  meCheck();renderOverlay(jobs,flags);
   if(TAB==="numbers")renderNumbers();
   if(TAB==="sales")renderSales();
   if(TAB==="changes")renderChanges();
@@ -2278,6 +2299,8 @@ function listHtml(jobs,flags){
 /* ---------- drawer and dialogs ---------- */
 function renderOverlay(jobs,flags){
   var el=$("overlay"),keep=document.activeElement&&document.activeElement.id;
+  if(S.modal==="whoami"){if(!el.querySelector("#whoName")){el.innerHTML=whoHtml();var wi=$("whoName");if(wi)try{wi.focus()}catch(e){}}return}
+  if(S.modal==="welcome"){var wsm=el.querySelector(".wsum");if(!wsm)el.innerHTML=welcomeHtml();else{var st=welcomeSum();if(wsm.textContent!==st)wsm.textContent=st}return}
   if(S.modal==="salesset"){if(!el.querySelector("#sTarget"))el.innerHTML=salesSetHtml();return}
   if(S.modal==="lockchange"){if(!el.querySelector("#lockChange")){el.innerHTML=changeHtml();var pf=el.querySelector("input");if(pf)try{pf.focus()}catch(e){}}return}
   if(S.modal==="fleet"){if(!el.querySelector(".modal"))el.innerHTML=fleetHtml();return}
@@ -2309,15 +2332,85 @@ function renderOverlay(jobs,flags){
     +'</aside></div>';
   if(keep&&$(keep))$(keep).focus();
 }
+/* ---------- Who is using the app: asked once per device after sign-in, then a welcome once a day ----------
+   Everyone signs in with the shared admin account, so the name is kept on this device only (localStorage). */
+var ME={name:"",shown:false};
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{if(v==null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}}
+(function(){try{var v=JSON.parse(lsGet("eamWho")||"null");ME.name=v&&v.name?String(v.name):""}catch(e){ME.name=""}})();
+function meCheck(){
+  if(S.auth!=="in"||S.modal||S.sel)return;
+  if(!ME.name){S.modal="whoami";return}
+  var t=melParts(new Date()).date;
+  if(!ME.shown&&lsGet("eamWelcomed")!==t+"|"+ME.name){ME.shown=true;lsSet("eamWelcomed",t+"|"+ME.name);S.modal="welcome";
+    setTimeout(function(){if(S.modal==="welcome"){S.modal=null;$("overlay").innerHTML="";render()}},9000)}
+}
+function knownNames(){
+  var o={};(S.fleet.crew||[]).forEach(function(c){if(c.name)o[tc(c.name)]=1});
+  Object.keys(S.events).forEach(function(w){S.events[w].forEach(function(j){(j.reps||[]).forEach(function(r){if(r&&r.length<25)o[r]=1})})});
+  if(ME.name)o[ME.name]=1;return Object.keys(o).sort();
+}
+function whoHtml(){
+  return '<div class="scrim mid"><div class="modal whoask" role="dialog" aria-label="Who are you?">'
+    +'<img class="wlogo" src="logo.png" alt="EAM Global Movers">'
+    +'<h3>Who are you?</h3><p class="fresh">Everyone signs in with the company account, so tell the app who is using this '+(/iPhone|Android|Mobile/i.test(navigator.userAgent)?"phone":"device")+'.</p>'
+    +'<input type="text" id="whoName" list="whoList" maxlength="40" autocomplete="given-name" autocapitalize="words" placeholder="Your first name" value="'+esc(ME.name)+'" aria-label="Your name">'
+    +'<datalist id="whoList">'+knownNames().map(function(n){return '<option value="'+esc(n)+'">'}).join("")+'</datalist>'
+    +'<p class="whoerr" id="whoErr" role="alert"></p>'
+    +'<div class="acts"><button class="btn primary" type="button" data-act="whosave">Continue</button></div></div></div>';
+}
+function meSave(){
+  var i=$("whoName"),v=i?String(i.value).replace(/\s+/g," ").trim():"";
+  if(!v){var er=$("whoErr");if(er)er.textContent="Type your name to continue.";return}
+  v=v.slice(0,40).replace(/\b[a-z]/g,function(c){return c.toUpperCase()});
+  ME.name=v;lsSet("eamWho",JSON.stringify({name:v}));
+  ME.shown=true;lsSet("eamWelcomed",melParts(new Date()).date+"|"+v);
+  S.modal="welcome";$("overlay").innerHTML="";render();
+  setTimeout(function(){if(S.modal==="welcome"){S.modal=null;$("overlay").innerHTML="";render()}},9000);
+}
+function welcomeSum(){
+  var t=melParts(new Date()).date,ws=weekStart(t);
+  if(!S.events[ws])return "Getting today’s jobs ready…";
+  var jobs=dayJobs(t),run=onRoad(t).length,need=jobs.filter(needs).length;
+  if(!jobs.length)return "No jobs booked for today yet. A good day to fill the calendar.";
+  return "Today: "+plural(jobs.length,"job")+", "+plural(run,"truck")+" running"+(need?", "+need+" still need"+(need===1?"s":"")+" a truck.":".");
+}
+function welcomeHtml(){
+  var m=melParts(new Date()).min,g=m<720?"Good morning":m<1020?"Good afternoon":"Good evening";
+  return '<div class="scrim mid wscrim" data-act="welcomego"><div class="welcome" role="dialog" aria-label="Welcome">'
+    +'<svg class="wart" viewBox="0 0 360 170" aria-hidden="true">'
+    +'<defs><linearGradient id="wsky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#063A80"/><stop offset="1" stop-color="#38B6FF"/></linearGradient></defs>'
+    +'<rect width="360" height="170" fill="url(#wsky)"/>'
+    +'<circle class="wsun" cx="285" cy="52" r="22" fill="#FFD166"/>'
+    +'<g fill="#0b2c5e" opacity=".55"><rect x="10" y="78" width="26" height="62"/><rect x="40" y="62" width="20" height="78"/><rect x="64" y="88" width="30" height="52"/><rect x="98" y="40" width="16" height="100"/><polygon points="106,18 110,40 102,40"/><rect x="118" y="70" width="24" height="70"/><rect x="146" y="56" width="18" height="84"/><rect x="168" y="84" width="34" height="56"/><rect x="206" y="66" width="22" height="74"/><rect x="232" y="92" width="28" height="48"/><rect x="264" y="74" width="20" height="66"/><rect x="288" y="86" width="30" height="54"/><rect x="322" y="70" width="30" height="70"/></g>'
+    +'<rect y="140" width="360" height="30" fill="#1d2430"/><g class="wlane"><rect x="0" y="153" width="24" height="4" fill="#fff" opacity=".8"/><rect x="48" y="153" width="24" height="4" fill="#fff" opacity=".8"/><rect x="96" y="153" width="24" height="4" fill="#fff" opacity=".8"/><rect x="144" y="153" width="24" height="4" fill="#fff" opacity=".8"/><rect x="192" y="153" width="24" height="4" fill="#fff" opacity=".8"/><rect x="240" y="153" width="24" height="4" fill="#fff" opacity=".8"/><rect x="288" y="153" width="24" height="4" fill="#fff" opacity=".8"/><rect x="336" y="153" width="24" height="4" fill="#fff" opacity=".8"/><rect x="384" y="153" width="24" height="4" fill="#fff" opacity=".8"/></g>'
+    +'<g class="wtruck"><rect x="96" y="92" width="112" height="52" rx="4" fill="#ffffff"/><rect x="96" y="92" width="112" height="9" rx="3" fill="#004AAD"/>'
+    +'<text x="152" y="128" text-anchor="middle" font-family="Montserrat,Manrope,sans-serif" font-weight="800" font-size="17" fill="#063A80">EAM</text>'
+    +'<path d="M210 104h28l16 20v20h-44z" fill="#38B6FF"/><path d="M216 109h20l11 14h-31z" fill="#dff3ff"/><rect x="250" y="134" width="6" height="5" fill="#FFD166"/>'
+    +'<g class="wwheel" style="transform-origin:128px 146px"><circle cx="128" cy="146" r="11" fill="#1d2430"/><circle cx="128" cy="146" r="5" fill="#c9d3e0"/><rect x="127" y="137" width="2" height="18" fill="#1d2430"/></g>'
+    +'<g class="wwheel" style="transform-origin:230px 146px"><circle cx="230" cy="146" r="11" fill="#1d2430"/><circle cx="230" cy="146" r="5" fill="#c9d3e0"/><rect x="229" y="137" width="2" height="18" fill="#1d2430"/></g>'
+    +'<g stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".7"><line x1="60" y1="104" x2="84" y2="104"/><line x1="48" y1="118" x2="84" y2="118"/><line x1="66" y1="132" x2="84" y2="132"/></g></g></svg>'
+    +'<div class="wbody"><img class="wlogo" src="logo.png" alt=""><p class="wgreet">'+g+'</p><h2>Welcome, '+esc(ME.name)+'</h2>'
+    +'<p class="wsum">'+esc(welcomeSum())+'</p>'
+    +'<button class="btn primary" type="button" data-act="welcomego">Let’s go</button>'
+    +'<button class="wnot" type="button" data-act="whoagain">Not '+esc(ME.name.split(" ")[0])+'?</button></div></div></div>';
+}
+function whoChip(){
+  if(S.auth!=="in")return "";
+  return ME.name?'<button class="whob" type="button" data-act="whoagain" title="'+esc("Signed in as "+S.who+". Tap to change who is using this device.")+'">'+esc(ME.name)+'</button>':esc(S.who);
+}
+document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target&&e.target.id==="whoName"){e.preventDefault();meSave()}});
+
 var draft=null;
 function fleetHtml(){
-  if(!draft)draft={trucks:S.fleet.trucks.map(function(t){return {id:t.id,name:t.name,size:t.size}}),crew:S.fleet.crew.map(function(c){return {id:c.id,name:c.name}}),buffer:S.fleet.buffer,weekHours:S.fleet.weekHours||60,defRate:defRate()};
+  if(!draft)draft={trucks:S.fleet.trucks.map(function(t){return {id:t.id,name:t.name,size:t.size}}),crew:S.fleet.crew.map(function(c){return {id:c.id,name:c.name}}),buffer:S.fleet.buffer,weekHours:S.fleet.weekHours||60,defRate:defRate(),run:S.fleet.run||0};
   var tr=draft.trucks.map(function(t,i){return '<div class="rowi"><input type="text" id="tn'+i+'" data-tn="'+i+'" value="'+esc(t.name)+'" placeholder="Name or rego" aria-label="Truck name"><select id="ts'+i+'" data-ts="'+i+'" aria-label="Truck size">'+SIZES.map(function(s){return '<option value="'+s+'"'+(s===(t.size||"")?" selected":"")+'>'+(s||"Size not set")+'</option>'}).join("")+'</select><button class="btn small" type="button" data-rmt="'+i+'">Remove</button></div>'}).join("");
   var cr=draft.crew.map(function(c,i){return '<div class="rowi one"><input type="text" id="cn'+i+'" data-cn="'+i+'" value="'+esc(c.name)+'" placeholder="Name" aria-label="Crew member name"><button class="btn small" type="button" data-rmc="'+i+'">Remove</button></div>'}).join("");
   return '<div class="scrim mid"><div class="modal" role="dialog" aria-label="Trucks and crew">'
     +'<div class="hd"><h3>Trucks and crew</h3><button class="btn small" type="button" data-act="fleetcancel">Cancel</button></div>'
     +'<div class="fld"><span class="lbl">Trucks</span>'+(tr||'<span class="fresh">No trucks yet.</span>')+'<div><button class="btn small" type="button" data-act="addtruck">Add a truck</button></div></div>'
     +'<div class="fld"><span class="lbl">Drivers and movers</span>'+(cr||'<span class="fresh">No crew yet.</span>')+'<div><button class="btn small" type="button" data-act="addcrew">Add a person</button></div></div>'
+    +'<div class="fld"><label for="runN">Trucks the roster can run each day (0 = all of them)</label><input type="number" id="runN" min="0" max="20" step="1" value="'+(+draft.run||0)+'" style="max-width:120px"><span class="fresh">With crew for 2 trucks, set 2. Pairing advice then says which truck to put out of service each day.</span></div>'
     +'<div class="fld"><label for="buf">Minutes to allow between jobs on the same truck</label><input type="number" id="buf" min="0" max="180" step="5" value="'+(+draft.buffer||0)+'" style="max-width:120px"></div>'
     +'<div class="fld"><label for="dfr">Hourly value to assume when a booking has no price ($)</label><input type="number" id="dfr" min="1" step="1" value="'+(+draft.defRate||120)+'" style="max-width:120px"></div>'
     +'<div class="fld"><label for="wkh">Hours each truck can work in a week (used for Sales Metrics)</label><input type="number" id="wkh" min="1" max="168" step="1" value="'+(+draft.weekHours||60)+'" style="max-width:120px"></div>'
@@ -2331,13 +2424,14 @@ function readDraft(){
   var b=$("buf");if(b)draft.buffer=Math.max(0,Math.min(180,+b.value||0));
   var w=$("wkh");if(w)draft.weekHours=Math.max(1,Math.min(168,+w.value||60));
   var r=$("dfr");if(r)draft.defRate=Math.max(1,+r.value||120);
+  var rn=$("runN");if(rn)draft.run=Math.max(0,Math.min(20,Math.round(+rn.value||0)));
 }
 function redrawFleet(){$("overlay").innerHTML=fleetHtml()}
 function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
 function saveFleet(){
   readDraft();
   var f={trucks:draft.trucks.filter(function(t){return t.name.trim()}).map(function(t){return {id:t.id,name:t.name.trim(),size:t.size}}),
-         crew:draft.crew.filter(function(c){return c.name.trim()}).map(function(c){return {id:c.id,name:c.name.trim()}}),buffer:draft.buffer,weekHours:draft.weekHours||60,defRate:draft.defRate||120,off:S.fleet.off||{}};
+         crew:draft.crew.filter(function(c){return c.name.trim()}).map(function(c){return {id:c.id,name:c.name.trim()}}),buffer:draft.buffer,weekHours:draft.weekHours||60,defRate:draft.defRate||120,off:S.fleet.off||{},run:draft.run||0};if(S.fleet.depot)f.depot=S.fleet.depot;
   S.fleet=f;draft=null;S.modal=null;$("overlay").innerHTML="";render();
   pushFleet(f).catch(function(e){toast("The fleet list wasn't saved. "+errText(e))});
 }
@@ -2426,16 +2520,21 @@ function runsCost(runs,subs,unassigned,curTruck){
 }
 var PMEMO={};
 function pairPlan(jobs){
-  var key=S.day+"|"+jobs.map(function(j){return [j.key,j.start,j.end,truckOf(j),subOf(j),j.movers,j.size,j.body.pickup,j.body.drop].join(":")}).join(",")+"|"+JSON.stringify((S.fleet.off&&S.fleet.off[S.day])||{})+"|"+S.fleet.trucks.map(function(t){return t.id+t.size}).join(",")+"|"+(window.EAM_GEO?1:0);
+  var key=S.day+"|"+jobs.map(function(j){return [j.key,j.start,j.end,truckOf(j),subOf(j),j.movers,j.size,j.body.pickup,j.body.drop].join(":")}).join(",")+"|"+JSON.stringify((S.fleet.off&&S.fleet.off[S.day])||{})+"|"+S.fleet.trucks.map(function(t){return t.id+t.size}).join(",")+"|"+(S.fleet.run||0)+"|"+(S.fleet.buffer||0)+"|"+(window.EAM_GEO?1:0);
   if(PMEMO.key===key)return PMEMO.val;
-  var val=pairPlan0(jobs);PMEMO={key:key,val:val};return val;
+  var val=pairPlan0(jobs);
+  try{val.choice=truckChoice(jobs,val)}catch(e){val.choice=null}
+  var use=val.choice&&val.choice.changed?val.choice.P:val;val.use=use;
+  try{val.resched=reschedule(jobs,use)}catch(e){val.resched=null}
+  try{val.fill=fillers(use)}catch(e){val.fill=[]}
+  PMEMO={key:key,val:val};return val;
 }
-function pairPlan0(jobs){
-  var trucks=onRoad(S.day),pool=pairScope(jobs).slice().sort(function(a,b){return a.start-b.start||a.end-b.end}),cur={};
+function pairPlan0(jobs,useTrucks,cap){
+  var trucks=useTrucks||onRoad(S.day),pool=pairScope(jobs).slice().sort(function(a,b){return a.start-b.start||a.end-b.end}),cur={};cap=cap||150000;
   pool.forEach(function(j){cur[j.key]=truckOf(j)||""});
   var best=null,bestCost=Infinity,nodes=0,state=trucks.map(function(t){return {truck:t,jobs:[]}}),subs=[];
   function rec(i,cost){
-    if(++nodes>150000||cost>=bestCost)return;
+    if(++nodes>cap||cost>=bestCost)return;
     if(i===pool.length){bestCost=cost;best={runs:state.map(function(r){return {truck:r.truck,jobs:r.jobs.slice()}}),subs:subs.slice()};return}
     var j=pool[i],opts=[];
     state.forEach(function(r,k){var prev=r.jobs[r.jobs.length-1]||null,L=pairLink(prev,j,r.truck,r.jobs[0]||null);if(L.ok)opts.push({k:k,c:L.cost+(cur[j.key]===r.truck.id?0:2)})});
@@ -2456,6 +2555,88 @@ function pairPlan0(jobs){
   var unplaced=pool.filter(function(j){var g=jobGeo(j);return !g.p||(j.body.drop&&!g.d)});
   return {pool:pool,best:best,nowRuns:nowRuns,nowUn:nowUn,issues:issues,nowCost:nowCost,sugCost:sugCost,same:same,unplaced:unplaced,trucks:trucks};
 }
+/* ---------- dispatch strategies ----------
+   1. Which trucks to run: the roster has crew for S.fleet.run trucks a day (e.g. 2). Try every set of that many
+      trucks and pick the one that leaves the fewest jobs for subcontractors, then the least driving and waiting,
+      then the smaller trucks (two 4.5T beat a 4.5T and an 8T when no job needs the 8T). The rest go out of service.
+   2. Fill the early slot: a truck whose first job starts at 9am or later can do a short 7am job first.
+   3. Too tight: when a job can't fit on our trucks, find the one time change that fits it (flexible bookings first). */
+function runLimit(){var n=Math.round(+S.fleet.run||0);return n>0&&n<S.fleet.trucks.length?n:0}
+function combos(a,k){var out=[];(function go(i,cur){if(cur.length===k){out.push(cur.slice());return}for(var x=i;x<a.length;x++){cur.push(a[x]);go(x+1,cur);cur.pop()}})(0,[]);return out}
+function setKey(ts){return ts.map(function(t){return t.id}).sort().join(",")}
+function bigJobs(pool){return pool.filter(function(j){var n=numSize(j.size);return n&&n>4.6})}
+function truckLabel(t){return t.name+(t.size?" ("+t.size+")":"")}
+function truckChoice(jobs,curP){
+  var R=runLimit();if(!R)return null;
+  var pool=pairScope(jobs);if(!pool.length)return null;
+  var cur=onRoad(S.day),curK=setKey(cur),opts=[];
+  combos(S.fleet.trucks,R).forEach(function(set){
+    var P=setKey(set)===curK?curP:pairPlan0(jobs,set,40000),B=P.best;if(!B)return;
+    var size=set.reduce(function(s,t){return s+(numSize(t.size)||0)},0);
+    opts.push({set:set,P:P,subs:B.subs.length,cost:runsCost(B.runs,B.subs,[],null),size:size,isCur:setKey(set)===curK});
+  });
+  if(!opts.length)return null;
+  opts.sort(function(a,b){return a.subs-b.subs||(a.cost+(a.isCur?0:15)+a.size*0.5)-(b.cost+(b.isCur?0:15)+b.size*0.5)});
+  var best=opts[0],off=S.fleet.trucks.filter(function(t){return best.set.indexOf(t)<0}),big=bigJobs(pool);
+  var why=[],bigOn=best.set.some(function(t){return (numSize(t.size)||0)>4.6});
+  if(big.length&&bigOn)why.push(listJoin(big.map(function(j){return j.customer}))+(big.length===1?" is":" are")+" booked as "+(big.length===1?"an ":"")+big.map(function(j){return j.size}).filter(function(x,i,a){return a.indexOf(x)===i}).join("/")+" job"+(big.length===1?"":"s")+", so the bigger truck goes out.");
+  else if(big.length)why.push("Running the bigger truck wouldn’t save a subcontractor, so "+listJoin(big.map(function(j){return j.customer}))+" goes to a subcontractor.");
+  else if(best.set.every(function(t){return (numSize(t.size)||0)<=4.6}))why.push("No job needs more than 4.5T, so the smaller trucks cover it.");
+  if(best.subs)why.push(plural(best.subs,"job")+" still need"+(best.subs===1?"s":"")+" a subcontractor with these trucks.");
+  return {R:R,set:best.set,off:off,P:best.P,changed:!best.isCur,subs:best.subs,why:why,running:cur.length};
+}
+function hm(m){var h=Math.floor(m/60),mm=m%60;return (h%12||12)+(mm?":"+(mm<10?"0":"")+mm:"")+(h<12?"am":"pm")}
+function hrsTxt(m){var h=m/60;return h===1?"1 hour":(Math.round(h*2)/2)+" hours"}
+function fillers(P){
+  var B=P&&P.best,out=[],gap=Math.max(30,S.fleet.buffer||0),nw=melParts(new Date()),now=S.day===nw.date?nw.min:-1;if(!B||S.day<nw.date)return out;
+  B.runs.forEach(function(r){
+    var tl=truckLabel(r.truck);
+    if(!r.jobs.length){if(now<900)out.push({t:tl+" is running with no jobs yet. Room for a full day of bookings."});return}
+    var f=r.jobs[0],g=jobGeo(f),len=f.start-420-gap;
+    if(f.start>=540&&len>=60&&now<360){len=Math.min(len,240);len-=len%30;
+      out.push({t:tl+": first job is "+hm(f.start)+" ("+f.customer+(g.p?", "+g.p.name:"")+"). Look for a 7am job of up to "+hrsTxt(len)+" in metro Melbourne"+(g.p?", ideally near "+g.p.name:"")+(f.movers?", for a "+f.movers+"-man crew (the same crew does "+hm(f.start)+")":"")+(r.truck.size?", "+r.truck.size+" or smaller":"")+"."})}
+    var l=r.jobs[r.jobs.length-1];
+    if(l.end<=780&&now<Math.ceil((l.end+gap)/30)*30-60){var from=Math.ceil((l.end+gap)/30)*30,lg=jobGeo(l);
+      out.push({t:tl+": last job ends about "+hm(l.end)+" ("+l.customer+(lg.d?", "+lg.d.name:"")+"). Room for an afternoon job from about "+hm(from)+(lg.d?", ideally near "+lg.d.name:"")+"."})}
+  });
+  return out;
+}
+function reschedule(jobs,P){
+  var B=P&&P.best;if(!B)return null;var trucks=P.trucks;if(!trucks||!trucks.length)return null;
+  var res={moves:[],tight:[]};
+  /* tight links on the suggested runs */
+  B.runs.forEach(function(r){var prev=null,lead=null;r.jobs.forEach(function(j){if(prev){var L=pairLink(prev,j,r.truck,lead);if(L.ok&&L.spare!=null&&L.spare<15){var need=Math.ceil((15-L.spare)/15)*15;
+    res.tight.push(truckLabel(r.truck)+": only "+hrsMin(Math.max(0,L.spare))+" between "+prev.customer+" (ends ~"+hm(prev.end)+") and "+j.customer+" ("+hm(j.start)+")"+(L.travel!=null?" with ~"+L.travel+" min drive":"")+". If "+j.customer.split(" ")[0]+" can start "+hm(j.start+need)+(j.flex?" (booking says flexible)":"")+", the crew isn’t rushed.")}}if(!lead)lead=j;prev=j})});
+  if(!B.subs.length)return res;
+  var pool=pairScope(jobs),base=B.subs.length,opts=[],D=[-120,-90,-60,-30,30,60,90,120,150,180,240];
+  pool.forEach(function(j){D.forEach(function(d){
+    var ns=j.start+d,ne=j.end+d;if(ns<420||ne>1170)return;
+    var c={};for(var k in j)c[k]=j[k];c.start=ns;c.end=ne;
+    var list=jobs.map(function(x){return x===j?c:x}),Q=pairPlan0(list,trucks,20000);if(!Q.best)return;
+    var n=Q.best.subs.length;if(n>=base)return;
+    var tr=Q.best.runs.filter(function(r){return r.jobs.indexOf(c)>=0})[0],after=null;
+    if(tr){var i=tr.jobs.indexOf(c);after=i>0?tr.jobs[i-1]:null}
+    opts.push({j:j,d:d,to:ns,n:n,flex:!!j.flex,cost:runsCost(Q.best.runs,Q.best.subs,[],null),tr:tr&&tr.truck,after:after,c:c})})});
+  opts.sort(function(a,b){return a.n-b.n||(b.flex-a.flex)||Math.abs(a.d)-Math.abs(b.d)||a.cost-b.cost});
+  var seen={};opts.forEach(function(o){if(seen[o.j.key]||res.moves.length>=2)return;seen[o.j.key]=1;
+    var saved=base-o.n;
+    res.moves.push({t:"Move "+o.j.customer+" from "+hm(o.j.start)+" to "+hm(o.to)+(o.flex?" (booking says flexible)":"")+". "+(o.tr?truckLabel(o.tr)+" can then take it"+(o.after?" after "+o.after.customer:" first")+", ":"")+(o.n?"saving "+plural(saved,"subcontractor job")+".":"and no subcontractor is needed."),key:o.j.key})});
+  return res;
+}
+/* put the right trucks out of service for the day in one save, then move jobs onto the running trucks */
+function setDayTrucks(day,runIds){
+  var apply=function(f){f.off=f.off&&typeof f.off==="object"?f.off:{};var o={};(f.trucks||[]).forEach(function(t){if(runIds.indexOf(t.id)<0)o[t.id]=1});if(Object.keys(o).length)f.off[day]=o;else delete f.off[day];return f};
+  var before=JSON.parse(JSON.stringify(S.fleet.off||{}));apply(S.fleet);render();
+  return gfetch(BASE+"/calendars/"+encodeURIComponent(calId)+"?$select=id&$expand="+expandQ(P_FLEET)).then(function(c){
+    var d=readProp(c);if(!d||!Array.isArray(d.trucks))d=JSON.parse(JSON.stringify(S.fleet));
+    apply(d);return pushFleet(d).then(function(){S.fleet.off=d.off;render()});
+  }).catch(function(e){S.fleet.off=before;render();toast("That wasn’t saved. "+errText(e));throw e});
+}
+function pairFleetApply(){
+  var P=pairPlan(dayJobs(S.day)),C=P.choice;if(!C)return;
+  var ids=C.set.map(function(t){return t.id}),day=S.day,offN=C.off.map(function(t){return t.name});
+  setDayTrucks(day,ids).then(function(){var n=pairApply(true);toast(listJoin(offN)+(offN.length===1?" is":" are")+" out of service on "+dLong(day)+"."+(n?" "+plural(n,"job")+" moved to the running trucks.":""))},function(){});
+}
 function pairJobChip(j){
   var g=jobGeo(j),where=[g.p&&g.p.name,g.d&&g.d.name&&(!g.p||g.d.name!==g.p.name)?g.d.name:""].filter(Boolean).join(" → ");
   return '<button type="button" class="pj" data-job="'+esc(j.key)+'"><b>'+tm(j.start)+'</b> '+esc(j.customer)+'<span>'+esc([j.movers?j.movers+" men":"",j.size,where].filter(Boolean).join(" · "))+'</span></button>';
@@ -2474,8 +2655,9 @@ function pairHtml(jobs){
   if(S.auth!=="in"||!S.events[weekStart(S.day)])return "";
   var pool=pairScope(jobs);if(!pool.length||!S.fleet.trucks.length)return "";
   if(!needGeo())return '<div class="pairs"><p class="muted">Working out pairings…</p></div>';
-  var P=pairPlan(jobs),B=P.best,status,cls="ok",apply=false;
-  if(!P.trucks.length)status="All our trucks are out of service this day: every job needs a subcontractor.",cls="bad";
+  var P0=pairPlan(jobs),C=P0.choice,P=P0.use||P0,B=P.best,status,cls="ok",apply=false,swap=!!(C&&C.changed);
+  if(swap){cls="warn";status="Run "+listJoin(C.set.map(truckLabel))+" and put "+listJoin(C.off.map(function(t){return t.name}))+" out of service.";}
+  else if(!P.trucks.length)status="All our trucks are out of service this day: every job needs a subcontractor.",cls="bad";
   else if(!B)status="Couldn’t work out a plan for this day.",cls="warn";
   else if(!P.same&&B.runs.every(function(r){return r.jobs.every(function(j){return truckOf(j)===r.truck.id})})&&P.nowUn.every(function(j){return B.subs.indexOf(j)>=0})&&!P.issues.length){status="Trucks paired. "+B.subs.map(function(j){return j.customer}).join(", ")+(B.subs.length===1?" needs":" need")+" a subcontractor.";cls="warn"}
   else if(P.same&&!P.issues.length)status="The trucks are paired well. Nothing to change.";
@@ -2483,21 +2665,29 @@ function pairHtml(jobs){
   else{apply=true;cls="warn";
     var gain=Math.round(P.nowCost-P.sugCost);
     status=P.nowUn.length?plural(P.nowUn.length,"job")+" still need"+(P.nowUn.length===1?"s":"")+" a truck. Suggested pairing below.":gain>5?"A better pairing saves about "+hrsMin(gain)+" of driving and waiting.":"Suggested pairing below."}
+  if(!swap&&P0.resched&&P0.resched.moves.length&&cls==="ok")cls="warn";
   var h='<details class="pairs '+cls+'"'+(PAIR.open?" open":"")+'><summary><b>Pairing advice</b><span>'+esc(status)+'</span></summary><div class="pbody">';
-  if(B){h+='<p class="psub">'+(apply?"Suggested runs":"Runs")+' for '+esc(dLong(S.day))+'. Morning jobs start a truck; afternoon jobs follow where the crew fits and there’s time to get there.</p>';
+  if(C){h+='<div class="pblock'+(swap?" w":"")+'"><b>Trucks to run ('+C.R+'-truck roster)</b><p>'+(swap?"Run "+esc(listJoin(C.set.map(truckLabel)))+". Put "+esc(listJoin(C.off.map(truckLabel)))+" out of service for the day."+(C.running>C.R?" Right now "+C.running+" trucks are marked as running.":""):"Right trucks out: "+esc(listJoin(C.set.map(truckLabel)))+" running, "+esc(listJoin(C.off.map(truckLabel)))+" out of service.")+(C.why.length?" "+esc(C.why.join(" ")):"")+'</p>'
+    +(swap?'<div class="pacts"><button class="btn primary small" type="button" data-act="pfleet">Use these trucks</button></div><p class="psub">Marks '+esc(listJoin(C.off.map(function(t){return t.name})))+' out of service for this day and moves its jobs onto the running trucks as shown below.</p>':"")+'</div>'}
+  if(B){h+='<p class="psub">'+(swap?"Runs with these trucks":apply?"Suggested runs":"Runs")+' for '+esc(dLong(S.day))+'. Morning jobs start a truck; afternoon jobs follow where the crew fits and there’s time to get there.</p>';
     B.runs.forEach(function(r){h+=pairRunHtml(r)});
     if(B.subs.length)h+='<div class="prun"><span class="ptr sub">Subcontractor</span><div class="pseq">'+B.subs.map(pairJobChip).join("")+'</div></div><p class="psub">No truck of ours can take '+(B.subs.length===1?"this job":"these jobs")+' in time with the right crew and size.</p>'}
-  if(P.issues.length)h+='<div class="pissues"><b>With the trucks as assigned now:</b><ul>'+P.issues.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>';
+  var R2=P0.resched;
+  if(R2&&R2.moves.length)h+='<div class="pblock w"><b>Too tight: best time to change</b><ul>'+R2.moves.map(function(m,i){return '<li>'+(i?"Or: ":"")+esc(m.t)+'</li>'}).join("")+'</ul><p class="psub">Check with the customer first. Once the time is changed in Outlook, the advice updates.</p></div>';
+  if(R2&&R2.tight.length)h+='<div class="pblock"><b>Tight changeovers</b><ul>'+R2.tight.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>';
+  if(P0.fill&&P0.fill.length)h+='<div class="pblock g"><b>Room for more bookings</b><ul>'+P0.fill.map(function(x){return '<li>'+esc(x.t)+'</li>'}).join("")+'</ul><p class="psub">Pass these to sales so the trucks aren’t idle.</p></div>';
+  if(!swap&&P.issues.length)h+='<div class="pissues"><b>With the trucks as assigned now:</b><ul>'+P.issues.map(function(x){return '<li>'+esc(x)+'</li>'}).join("")+'</ul></div>';
   if(P.unplaced.length)h+='<p class="psub">Couldn’t find the suburb for '+esc(P.unplaced.map(function(j){return j.customer}).join(", "))+'. Add the suburb or postcode to the address for better advice.</p>';
-  h+='<div class="pacts">'+(apply&&B?'<button class="btn primary small" type="button" data-act="papply">Assign trucks as suggested</button>':"")
+  h+='<div class="pacts">'+(!swap&&apply&&B?'<button class="btn primary small" type="button" data-act="papply">Assign trucks as suggested</button>':"")
     +'<button class="btn small" type="button" data-act="psheet">Copy run sheet</button>'+(navigator.share?'<button class="btn small" type="button" data-act="pshare">Share run sheet</button>':"")+'</div>'
-    +'<p class="psub">Drive times are estimates from suburb to suburb.</p></div></details>';
+    +'<p class="psub">Drive times are estimates from suburb to suburb.'+(runLimit()?"":" Set how many trucks the roster can run each day in Trucks and crew to get advice on which truck to put out of service.")+'</p></div></details>';
   return h;
 }
-function pairApply(){
-  var jobs=dayJobs(S.day),P=pairPlan(jobs),n=0;if(!P.best)return;
+function pairApply(silent){
+  var jobs=dayJobs(S.day),P=pairPlan(jobs),n=0;if(!P.best)return 0;
   P.best.runs.forEach(function(r){r.jobs.forEach(function(j){if(truckOf(j)!==r.truck.id){saveAssign(j,{truck:r.truck.id});n++}})});
-  toast(n?plural(n,"job")+" moved to the suggested trucks.":"Nothing to change.");
+  if(!silent)toast(n?plural(n,"job")+" moved to the suggested trucks.":"Nothing to change.");
+  return n;
 }
 /* a gentle nudge when the advice for today or tomorrow changes after a calendar refresh */
 function pairWatch(){
@@ -2568,7 +2758,10 @@ document.addEventListener("click",function(e){
   if(t.id==="refresh"||t.dataset.act==="refresh"){S.err=null;if(!S.fleetLoaded||!calId)loadFleet();fetchWeek(weekStart(S.day),true);return}
   if(t.id==="btnFleet"||t.dataset.act==="fleet"){draft=null;S.modal="fleet";S.sel=null;render();return}
   if(t.id==="btnSheet"){copy(sheetText(),"Run sheet");return}
-  if(t.id==="btnOut"){signOut();return}
+  if(t.id==="btnOut"){lsSet("eamWho",null);lsSet("eamWelcomed",null);signOut();return}
+  if(t.dataset.act==="welcomego"){if(e.target!==t&&t.classList.contains("scrim")&&e.target.closest(".welcome")&&!e.target.closest("button"))return;S.modal=null;$("overlay").innerHTML="";render();return}
+  if(t.dataset.act==="whoagain"){S.modal="whoami";S.sel=null;$("overlay").innerHTML="";render();return}
+  if(t.dataset.act==="whosave"){meSave();return}
   if(t.id==="tabDispatch"){setTab("dispatch");return}
   if(t.id==="tabQuotes"){setTab("quotes");return}
   if(t.id==="tabNumbers"){setTab("numbers");return}
@@ -2586,6 +2779,7 @@ document.addEventListener("click",function(e){
   if(a==="tstart"||a==="tfinish"||a==="tclear"){var tj=findJob(S.sel);if(tj)saveAssign(tj,a==="tstart"?{t0:nowRel(tj.day),t1:null}:a==="tfinish"?{t1:Math.max(nowRel(tj.day),((S.assign[tj.key]||{}).t0||0)+1)}:{t0:null,t1:null});return}
   if(a==="finopen"){var ff=$("finFile");if(ff)ff.click();return}
   if(a==="papply"){pairApply();return}
+  if(a==="pfleet"){pairFleetApply();return}
   if(a==="psheet"){copy(sheetText(),"Run sheet");return}
   if(a==="pshare"){shareSheet();return}
   if(a==="kredit"){KR.edit=true;KR.draft={};render();return}
