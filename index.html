@@ -249,6 +249,7 @@ body.quotes .daybar,body.quotes .week,body.quotes #notices,body.quotes .stats,bo
 .wrank{margin:6px 0 0;font-size:13px}.wfocus{margin:6px 0 0;font-size:13px;font-weight:600;color:var(--royal)}.wmgr{margin:8px 0 2px;font-weight:700;font-size:13px}.wwatch{margin:0;padding-left:18px;font-size:12.5px}.wwatch li{margin-top:3px}
 .wkr{margin:6px 0 0;font-size:11.5px;color:var(--muted)}
 .wslots{background:var(--ok-bg);border-color:transparent}.wslots ul{margin:4px 0 0;padding-left:18px}.wslots li{margin-top:2px}
+.wver{margin:6px 0 0;font-size:11px;color:var(--muted)}
 .wlinks{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:12px}
 #tour{position:fixed;inset:0;z-index:60;pointer-events:none}
 #tour .thole{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(6,20,45,.58);outline:2px solid var(--sky);transition:all .25s ease}
@@ -1820,7 +1821,7 @@ function renderSales(){
   var adjN=0;
   for(var di=0;di<7;di++){var td=t.days[di];grid+='<tr><td>'+shortDay(addDays(ws,di))+'</td>'+m.reps.map(function(r,ri){var x=r.days[di];if(x.adj)adjN++;
       if(ADJ.edit){var dv=ADJ.draft[ri+"|"+di],val=dv!==undefined?dv:fh(x.h).replace(/,/g,"");
-        return '<td class="r"><input class="adjin'+(x.adj?" on":"")+'" type="number" inputmode="decimal" min="0" max="24" step="0.25" data-adjr="'+ri+'" data-adjd="'+di+'" value="'+esc(val)+'"'+(x.future?" disabled":"")+' aria-label="'+esc(r.name+", "+dayName(addDays(ws,di))+", hours")+'"><small class="adjcal">cal '+fh(x.cal)+'</small></td>'}
+        return '<td class="r"><input class="adjin'+(x.adj?" on":"")+'" type="number" inputmode="decimal" min="0" step="0.25" data-adjr="'+ri+'" data-adjd="'+di+'" value="'+esc(val)+'"'+(x.future?" disabled":"")+' aria-label="'+esc(r.name+", "+dayName(addDays(ws,di))+", hours")+'"><small class="adjcal">cal '+fh(x.cal)+'</small></td>'}
       var tip=x.adj?"Edited: "+fh(x.h)+" hrs. Calendar shows "+fh(x.cal)+" hrs"+(x.adj.cal!=null&&Math.abs(x.adj.cal-x.cal)>0.01?" (it showed "+fh(x.adj.cal)+" when edited)":"")+". Changed by "+(x.adj.by||"someone")+(x.adj.at?" on "+fDay(x.adj.at.slice(0,10))+", "+fMin(x.adj.at):"")+(x.adj.note?". Reason: "+x.adj.note:"")+". ":"";
       return '<td class="r"><button type="button" class="cellb '+x.st+(x.adj?" adj":"")+'" data-act="soff" data-rep="'+esc(r.name)+'" data-di="'+di+'" title="'+esc(tip+(x.assumed?"Taken as the day off because it was the lowest day. Tap the real day off to change it.":lbl[x.st]+". Tap to mark as "+(x.off?"a working shift":"a day off")))+'">'+(x.off&&x.h===0?(x.assumed?"Off?":"Off"):fh(x.h)+(x.adj?"*":"")+(x.off?(x.assumed?" (off?)":" (off)"):""))+'</button></td>'}).join("")+'<td class="r">'+fh(td.h)+'</td></tr>'}
   grid+='</tbody><tfoot><tr><td>Total</td>'+m.reps.map(function(r){return '<td class="r"><b>'+fh(r.h)+'</b></td>'}).join("")+'<td class="r"><b>'+fh(t.h)+'</b></td></tr><tr><td>Target'+(m.running?" so far":"")+'</td>'+m.reps.map(function(r){return '<td class="r">'+fh(r.targetToDate)+'</td>'}).join("")+'<td class="r">'+fh(t.targetToDate)+'</td></tr><tr><td>Achieved</td>'+m.reps.map(function(r){return '<td class="r"><b>'+(r.pct==null?"\u2013":Math.round(r.pct*100)+"%")+'</b></td>'}).join("")+'<td class="r"><b>'+(t.pct==null?"\u2013":Math.round(t.pct*100)+"%")+'</b></td></tr></tfoot></table></div>';
@@ -1882,12 +1883,12 @@ function adjSaveForm(){
   document.querySelectorAll("[data-adjr]").forEach(function(inp){if(inp.disabled)return;
     var n=names[+inp.dataset.adjr],di=+inp.dataset.adjd,r=m.reps.filter(function(x){return x.name===n})[0];if(!r)return;
     var x=r.days[di],raw=inp.value.trim(),v=raw===""?null:+raw,o=w[n]=w[n]||{},had=o[di];
-    if(v!=null&&(isNaN(v)||v<0||v>24)){bad=true;return}
+    if(v!=null&&(isNaN(v)||v<0)){bad=true;return}
     if(v==null||Math.abs(v-x.cal)<0.01){if(had){delete o[di];changes.push(n+"’s hours for "+dayName(x.day)+" back to the calendar ("+fh(x.cal)+")")}}
     else if(!had||Math.abs(had.h-v)>0.001){o[di]={h:Math.round(v*100)/100,cal:Math.round(x.cal*100)/100,by:(typeof ME!=="undefined"&&ME.name)||"",at:at,note:note};changes.push(n+"’s hours for "+dayName(x.day)+": calendar "+fh(x.cal)+", now "+fh(v)+(note?" ("+note+")":""))}
     if(!Object.keys(o).length)delete w[n];
   });
-  if(bad){toast("Hours must be between 0 and 24.");return}
+  if(bad){toast("Hours can’t be negative.");return}
   if(!Object.keys(w).length)delete ADJ.data.weeks[ws];
   ADJ.edit=false;ADJ.draft={};ADJ.note="";render();
   if(!changes.length){toast("No hours changed.");return}
@@ -2561,11 +2562,11 @@ function welcomeHtml(){
     +'<div class="wbody"><img class="wlogo" src="logo.png" alt=""><p class="wgreet">'+g+'</p><h2>Welcome, '+esc(ME.name)+'</h2>'
     +'<p class="wsum">'+esc(welcomeSum())+'</p><div class="wx">'+welcomeExtra()+'</div>'
     +'<button class="btn primary" type="button" data-act="welcomego">Let’s go</button>'
-    +'<div class="wlinks"><button class="wnot" type="button" data-act="tourstart">Show me around</button><span>·</span><button class="wnot" type="button" data-act="whoagain">Not '+esc(ME.name.split(" ")[0])+'?</button></div></div></div></div>';
+    +'<p class="wver">App update '+APP_UPDATE+'</p><div class="wlinks"><button class="wnot" type="button" data-act="tourstart">Show me around</button><span>·</span><button class="wnot" type="button" data-act="whoagain">Not '+esc(ME.name.split(" ")[0])+'?</button></div></div></div></div>';
 }
 function whoChip(){
   if(S.auth!=="in")return "";
-  return ME.name?'<button class="whob" type="button" data-act="whoagain" title="'+esc("Signed in as "+S.who+". Tap to change who is using this device.")+'">'+esc(ME.name)+'</button>':esc(S.who);
+  return ME.name?'<button class="whob" type="button" data-act="whoagain" title="'+esc("Signed in as "+S.who+". App update "+APP_UPDATE+". Tap to change who is using this device.")+'">'+esc(ME.name)+'</button>':esc(S.who);
 }
 document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target&&e.target.id==="whoName"){e.preventDefault();meSave()}if(e.key==="Escape"&&TOUR.i>=0)tourEnd();if(e.key==="Enter"&&e.target&&e.target.id==="mgrPin"){e.preventDefault();mgrUnlock()}});
 /* rep's own week on the welcome page (same counting as Admin Metrics: hours on the day the booking was added) */
@@ -2682,7 +2683,7 @@ function fleetHtml(){
     +'<div class="fld"><label for="buf">Minutes to allow between jobs on the same truck</label><input type="number" id="buf" min="0" max="180" step="5" value="'+(+draft.buffer||0)+'" style="max-width:120px"></div>'
     +'<div class="fld"><label for="dfr">Hourly value to assume when a booking has no price ($)</label><input type="number" id="dfr" min="1" step="1" value="'+(+draft.defRate||120)+'" style="max-width:120px"></div>'
     +'<div class="fld"><label for="wkh">Hours each truck can work in a week (used for Sales Metrics)</label><input type="number" id="wkh" min="1" max="168" step="1" value="'+(+draft.weekHours||60)+'" style="max-width:120px"></div>'
-    +'<div class="acts"><button class="btn primary" type="button" data-act="fleetsave">Save</button></div></div></div>';
+    +'<div class="acts"><span class="wver" style="margin:0 auto 0 0">App update '+APP_UPDATE+'</span><button class="btn primary" type="button" data-act="fleetsave">Save</button></div></div></div>';
 }
 function readDraft(){
   if(!draft)return;
@@ -3209,7 +3210,20 @@ boot();
 setInterval(function(){if(!document.hidden&&S.auth==="in"&&!S.modal)fetchWeek(weekStart(S.day),true,true)},120000);
 document.addEventListener("visibilitychange",function(){if(!document.hidden&&S.auth==="in"&&!S.modal){var ws=weekStart(S.day);if(!S.fetched[ws]||Date.now()-S.fetched[ws]>60000)fetchWeek(ws,true,true)}});
 setInterval(function(){if(!document.hidden&&!S.modal&&!S.sel)render()},60000);
-if("serviceWorker" in navigator&&location.protocol==="https:")navigator.serviceWorker.register("sw.js").catch(function(){});
+/* app updates: look for a new version when the app comes back to the front, and reload once it has taken over */
+var APP_UPDATE="29";
+if("serviceWorker" in navigator&&location.protocol==="https:"){
+  navigator.serviceWorker.register("sw.js",{updateViaCache:"none"}).then(function(reg){
+    var chk=function(){try{reg.update()}catch(e){}};
+    document.addEventListener("visibilitychange",function(){if(!document.hidden)chk()});setInterval(chk,20*60000);
+  }).catch(function(){});
+  var hadCtl=!!navigator.serviceWorker.controller,reloading=false;
+  navigator.serviceWorker.addEventListener("controllerchange",function(){
+    if(!hadCtl){hadCtl=true;return}if(reloading)return;
+    var ae=document.activeElement,busy=S.modal||(typeof ADJ!=="undefined"&&ADJ.edit)||(typeof KR!=="undefined"&&KR.edit)||(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName));
+    if(!busy){reloading=true;location.reload()}else toast("A new version of the app is ready. Close and reopen the app to use it.");
+  });
+}
 window.__dispatch={parseEvent:parseEvent,parseBody:parseBody,shortLoc:shortLoc,S:S};
 })();
 </script>
