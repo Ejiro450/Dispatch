@@ -131,6 +131,9 @@ body.sales .daybar,body.sales .week,body.sales .stats,body.sales .board,body.sal
 .shout .slab{font-size:11px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--sc)}
 .shout h4{margin:2px 0 2px;font-size:18px}.shout .sst{font-size:12px;color:#5d6878}.shout p{margin:8px 0 0;font-size:14px;line-height:1.5}
 .krc{font-weight:800;border-radius:5px;padding:1px 6px;white-space:nowrap;font-size:12.5px}.krc.g{background:var(--ok-bg,#e3f5ea);color:var(--ok)}.krc.b{background:var(--bad-bg);color:var(--bad)}.krc.w{background:var(--warn-bg);color:var(--warn)}.krc.n{background:var(--grid);color:var(--muted);font-weight:600}
+.adjbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-bottom:10px}.adjbar .sub{margin:0}.adjbar .krset{flex:1 1 100%;display:flex;gap:8px;flex-wrap:wrap}.adjbar #adjNote{flex:1;min-width:200px;padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;font-size:13px;background:var(--panel);color:var(--ink)}
+.adjin{width:66px;font:inherit;padding:5px 6px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink);text-align:right}.adjin.on{border-color:var(--royal);background:var(--job)}.adjin:disabled{opacity:.45}.adjcal{display:block;font-size:10px;color:var(--muted);margin-top:1px}
+.cellb.adj{outline:1.5px dashed var(--royal);outline-offset:-3px}
 .krin input{width:90px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--ink)}.krin td,.krin th{padding:6px 8px;text-align:left}
 .krset{display:flex;flex-wrap:wrap;gap:10px}.krset label{display:flex;flex-direction:column;gap:3px;font-size:12px;font-weight:700;color:var(--muted)}.krset input{width:110px;font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:7px}
 .vp{font-size:12px;font-weight:800;border-radius:999px;padding:2px 9px;white-space:nowrap;background:var(--grid);color:var(--muted)}
@@ -1510,6 +1513,15 @@ function loadKR(){if(KR.state==="loading")return;KR.state="loading";
   calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id)+"?$select=id&$expand="+expandQ(P_KR))}).then(function(c){var d=readProp(c);KR.data=d&&d.weeks?d:{weeks:{}};KR.state="ok";render()},function(){KR.data={weeks:{}};KR.state="ok";render()})}
 function saveKR(){var cut=addDays(weekStart(melParts(new Date()).date),-7*40),w={};Object.keys(KR.data.weeks).forEach(function(k){if(k>=cut)w[k]=KR.data.weeks[k]});KR.data.weeks=w;
   return calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id),{method:"PATCH",body:{singleValueExtendedProperties:[{id:P_KR,value:JSON.stringify(KR.data)}]}})}).then(function(){toast("Key results saved.")},function(e){toast("Key results weren\u2019t saved. "+errText(e))})}
+/* manual daily hours: an edited day replaces that day's calendar hours for that rep; other days stay synced */
+var P_ADJ="String "+NS+" Name eamSalesAdj";
+var ADJ={data:null,state:"unknown",edit:false,draft:{}};
+function loadAdj(){if(ADJ.state==="loading")return;ADJ.state="loading";
+  calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id)+"?$select=id&$expand="+expandQ(P_ADJ))}).then(function(c){var d=readProp(c);ADJ.data=d&&d.weeks?d:{v:1,weeks:{}};ADJ.state="ok";render()},function(){ADJ.data={v:1,weeks:{}};ADJ.state="error";render()})}
+function saveAdj(){var cut=addDays(weekStart(melParts(new Date()).date),-7*40),w={};Object.keys(ADJ.data.weeks).forEach(function(k){if(k>=cut)w[k]=ADJ.data.weeks[k]});ADJ.data.weeks=w;
+  return calIdP().then(function(id){return gfetch(BASE+"/calendars/"+encodeURIComponent(id),{method:"PATCH",body:{singleValueExtendedProperties:[{id:P_ADJ,value:JSON.stringify(ADJ.data)}]}})})}
+function adjOf(ws){return (ADJ.data&&ADJ.data.weeks[ws])||{}}
+document.addEventListener("input",function(e){var d=e.target&&e.target.dataset;if(d&&d.adjr!=null)ADJ.draft[d.adjr+"|"+d.adjd]=e.target.value;if(e.target&&e.target.id==="adjNote")ADJ.note=e.target.value});
 function krOf(ws,name){var w=KR.data&&KR.data.weeks[ws];return (w&&w[name])||{}}
 /* status of each key result for a rep: true met, false missed, null not entered */
 function krStatus(r,ws,T){var c=sCfg().kr,e=krOf(ws,r.name),num=function(v){return v===""||v==null||isNaN(+v)?null:+v};
@@ -1552,7 +1564,10 @@ function salesModel(ws){
   var c=sCfg(),T=c.target,all=SALES.data[ws]||[],today=melParts(new Date()).date;
   function share(j,n){return c.split?bookedH(j)/n:bookedH(j)}
   function weekJobs(w){return all.filter(function(j){return j.cDay>=w&&j.cDay<addDays(w,7)})}
-  function tally(w){var m={};weekJobs(w).forEach(function(j){var r=repsFor(j,c);r.forEach(function(n){var x=m[n]||(m[n]={h:0,jobs:0,d:[0,0,0,0,0,0,0],list:[]});var di=dayDiff(w,j.cDay),s=share(j,r.length);x.h+=s;x.jobs+=1;x.d[di]+=s;x.list.push({j:j,s:s,shared:r.length>1})})});return m}
+  function tally(w){var m={};weekJobs(w).forEach(function(j){var r=repsFor(j,c);r.forEach(function(n){var x=m[n]||(m[n]={h:0,jobs:0,d:[0,0,0,0,0,0,0],list:[]});var di=dayDiff(w,j.cDay),s=share(j,r.length);x.h+=s;x.jobs+=1;x.d[di]+=s;x.list.push({j:j,s:s,shared:r.length>1})})});
+    var aw=adjOf(w);Object.keys(aw).forEach(function(n){var x=m[n]||(m[n]={h:0,jobs:0,d:[0,0,0,0,0,0,0],list:[]});x.cal=x.d.slice();x.adj={};
+      Object.keys(aw[n]).forEach(function(k){var e=aw[n][k],di=+k;if(!(di>=0&&di<7)||!(e&&e.h>=0))return;x.h+=e.h-x.d[di];x.d[di]=e.h;x.adj[di]=e})});
+    return m}
   var cur=tally(ws),prev=tally(addDays(ws,-7)),hist=[1,2,3,4].map(function(k){return tally(addDays(ws,-7*k))}),trendW=[5,4,3,2,1,0].map(function(k){return addDays(ws,-7*k)}),trend=trendW.map(tally);
   var names={};Object.keys(cur).forEach(function(n){names[n]=1});Object.keys(prev).forEach(function(n){if(n!=="Not stated")names[n]=1});Object.keys(c.off).forEach(function(n){names[n]=1});
   var gone={};Object.keys(c.alias).forEach(function(k){gone[k.toLowerCase()]=1});c.hide.forEach(function(h){gone[h.toLowerCase()]=1});
@@ -1563,7 +1578,7 @@ function salesModel(ws){
   function repTarget(w,n){var offs=0;for(var d=0;d<7;d++)if(isOffDay(c,w,n,d))offs++;return Math.max(0,WT-T*Math.max(0,offs-1))}
   var R=reps.map(function(n){
     var x=cur[n]||{h:0,jobs:0,d:[0,0,0,0,0,0,0],list:[]},days=[],worked=0,hit=0,poor=[],zero=0,anyOff=false;
-    for(var di=0;di<7;di++){var day=addDays(ws,di),fut=day>today,off=isOffDay(c,ws,n,di);if(off)anyOff=true;days.push({day:day,di:di,h:x.d[di],off:off,future:fut,assumed:false})}
+    for(var di=0;di<7;di++){var day=addDays(ws,di),fut=day>today,off=isOffDay(c,ws,n,di);if(off)anyOff=true;days.push({day:day,di:di,h:x.d[di],cal:x.cal?x.cal[di]:x.d[di],adj:x.adj&&x.adj[di]||null,off:off,future:fut,assumed:false})}
     if(!anyOff){var pd=days.filter(function(d){return !d.future}),pick=null;
       if(!running&&pd.length)pick=pd.slice().sort(function(a,b){return a.h-b.h||b.di-a.di})[0];
       else pick=pd.filter(function(d){return d.h===0})[0]||null;
@@ -1776,10 +1791,11 @@ function renderSales(){
   var ws=S.sWeek||(S.sWeek=weekStart(melParts(new Date()).date));
   if(SALES.cfgState==="unknown")loadSalesCfg();
   if(KR.state==="unknown")loadKR();
+  if(ADJ.state==="unknown")loadAdj();
   loadCreated(ws);
   if(S.quotes===undefined&&!S.qBusy)loadQuotes();
   var head=salesHead(ws);
-  if(SALES.cfgState!=="ok"||!SALES.data[ws]){el.innerHTML=head+'<div class="npanel"><p class="none">'+(SALES.err?esc(SALES.err)+" Press Refresh.":"Loading the jobs added to the calendar this week and the five weeks before\u2026")+'</p></div>';return}
+  if(SALES.cfgState!=="ok"||!SALES.data[ws]||ADJ.state==="unknown"||ADJ.state==="loading"){el.innerHTML=head+'<div class="npanel"><p class="none">'+(SALES.err?esc(SALES.err)+" Press Refresh.":"Loading the jobs added to the calendar this week and the five weeks before\u2026")+'</p></div>';return}
   var m=salesModel(ws),t=m.team,T=m.T,html=head;
   if(m.running)html+='<p class="note">This week is still running. Targets count only shifts up to today. A job counts on the day it was added to the calendar, whatever its move date.</p>';
   else html+='<p class="note">A job counts on the day it was added to the calendar, whatever its move date, and is credited to the name(s) in brackets in its title.</p>';
@@ -1801,10 +1817,16 @@ function renderSales(){
   /* daily grid */
   var lbl={hit:"On target",below:"Under target",poor:"Well under",off:"Day off",offb:"Day off",future:"Still to come"};
   var grid='<div class="tw"><table class="sgrid"><thead><tr><th>Day added</th>'+m.reps.map(function(r){return '<th class="r">'+esc(r.name)+'</th>'}).join("")+'<th class="r">Team</th></tr></thead><tbody>';
-  for(var di=0;di<7;di++){var td=t.days[di];grid+='<tr><td>'+shortDay(addDays(ws,di))+'</td>'+m.reps.map(function(r){var x=r.days[di];
-      return '<td class="r"><button type="button" class="cellb '+x.st+'" data-act="soff" data-rep="'+esc(r.name)+'" data-di="'+di+'" title="'+esc(x.assumed?"Taken as the day off because it was the lowest day. Tap the real day off to change it.":lbl[x.st]+". Tap to mark as "+(x.off?"a working shift":"a day off"))+'">'+(x.off&&x.h===0?(x.assumed?"Off?":"Off"):fh(x.h)+(x.off?(x.assumed?" (off?)":" (off)"):""))+'</button></td>'}).join("")+'<td class="r">'+fh(td.h)+'</td></tr>'}
+  var adjN=0;
+  for(var di=0;di<7;di++){var td=t.days[di];grid+='<tr><td>'+shortDay(addDays(ws,di))+'</td>'+m.reps.map(function(r,ri){var x=r.days[di];if(x.adj)adjN++;
+      if(ADJ.edit){var dv=ADJ.draft[ri+"|"+di],val=dv!==undefined?dv:fh(x.h).replace(/,/g,"");
+        return '<td class="r"><input class="adjin'+(x.adj?" on":"")+'" type="number" inputmode="decimal" min="0" max="24" step="0.25" data-adjr="'+ri+'" data-adjd="'+di+'" value="'+esc(val)+'"'+(x.future?" disabled":"")+' aria-label="'+esc(r.name+", "+dayName(addDays(ws,di))+", hours")+'"><small class="adjcal">cal '+fh(x.cal)+'</small></td>'}
+      var tip=x.adj?"Edited: "+fh(x.h)+" hrs. Calendar shows "+fh(x.cal)+" hrs"+(x.adj.cal!=null&&Math.abs(x.adj.cal-x.cal)>0.01?" (it showed "+fh(x.adj.cal)+" when edited)":"")+". Changed by "+(x.adj.by||"someone")+(x.adj.at?" on "+fDay(x.adj.at.slice(0,10))+", "+fMin(x.adj.at):"")+(x.adj.note?". Reason: "+x.adj.note:"")+". ":"";
+      return '<td class="r"><button type="button" class="cellb '+x.st+(x.adj?" adj":"")+'" data-act="soff" data-rep="'+esc(r.name)+'" data-di="'+di+'" title="'+esc(tip+(x.assumed?"Taken as the day off because it was the lowest day. Tap the real day off to change it.":lbl[x.st]+". Tap to mark as "+(x.off?"a working shift":"a day off")))+'">'+(x.off&&x.h===0?(x.assumed?"Off?":"Off"):fh(x.h)+(x.adj?"*":"")+(x.off?(x.assumed?" (off?)":" (off)"):""))+'</button></td>'}).join("")+'<td class="r">'+fh(td.h)+'</td></tr>'}
   grid+='</tbody><tfoot><tr><td>Total</td>'+m.reps.map(function(r){return '<td class="r"><b>'+fh(r.h)+'</b></td>'}).join("")+'<td class="r"><b>'+fh(t.h)+'</b></td></tr><tr><td>Target'+(m.running?" so far":"")+'</td>'+m.reps.map(function(r){return '<td class="r">'+fh(r.targetToDate)+'</td>'}).join("")+'<td class="r">'+fh(t.targetToDate)+'</td></tr><tr><td>Achieved</td>'+m.reps.map(function(r){return '<td class="r"><b>'+(r.pct==null?"\u2013":Math.round(r.pct*100)+"%")+'</b></td>'}).join("")+'<td class="r"><b>'+(t.pct==null?"\u2013":Math.round(t.pct*100)+"%")+'</b></td></tr></tfoot></table></div>';
-  html+='<div class="npanels">'+panel("Hours booked each day","Green is on the "+T+"-hour shift target, blue under it, orange under half. Tap a cell to mark a day off or back on.",grid+'<div class="lgd" style="margin-top:8px"><span><i style="background:var(--ok-bg);outline:1px solid var(--ok)"></i>On target</span><span><i style="background:var(--job);outline:1px solid var(--s1)"></i>Under target</span><span><i style="background:var(--warn-bg);outline:1px solid var(--warn)"></i>Under half</span><span><i style="background:var(--grid)"></i>Day off</span></div>');
+  var adjBar=ADJ.edit?'<div class="adjbar"><p class="sub">Type the hours each rep is claiming. Leave a box as the calendar figure (or clear it) to keep that day synced with the calendar. “cal” is what the calendar shows.</p><div class="krset"><input type="text" id="adjNote" maxlength="120" placeholder="Reason (optional), e.g. confirmed booking not yet in Outlook" value="'+esc(ADJ.note||"")+'"><button class="btn primary small" type="button" data-act="adjsave">Save hours</button><button class="btn small" type="button" data-act="adjcancel">Cancel</button></div><script type="application/json" id="adjNames">'+JSON.stringify(m.reps.map(function(r){return r.name})).replace(/</g,"\\u003c")+'<\/script></div>'
+    :'<div class="adjbar"><button class="btn small" type="button" data-act="adjedit">Edit hours</button>'+(adjN?'<span class="sub">* '+plural(adjN,"day")+' edited by hand this week. Hover or long-press a cell to see the calendar figure and who changed it.</span>':'<span class="sub">Hours sync from the calendar. Edit a day when the calendar doesn’t match what a rep is claiming.</span>')+'</div>';
+  html+='<div class="npanels">'+panel("Hours booked each day","Green is on the "+T+"-hour shift target, blue under it, orange under half. Tap a cell to mark a day off or back on.",adjBar+grid+'<div class="lgd" style="margin-top:8px"><span><i style="background:var(--ok-bg);outline:1px solid var(--ok)"></i>On target</span><span><i style="background:var(--job);outline:1px solid var(--s1)"></i>Under target</span><span><i style="background:var(--warn-bg);outline:1px solid var(--warn)"></i>Under half</span><span><i style="background:var(--grid)"></i>Day off</span></div>');
   var cols=["var(--s1)","var(--s2)","var(--s3)","#eda100"];
   NCH.sday=function(w){return groupChart(w,[0,1,2,3,4,5,6].map(function(di){return {label:SDAY[di],tip:dayName(addDays(ws,di))+"\n"+m.reps.map(function(r){var x=r.days[di];return r.name+": "+(x.off&&!x.h?"day off":fh(x.h)+" hrs")}).join("\n")}}),m.reps.slice(0,4).map(function(r,k){return {color:cols[k],vals:r.days.map(function(x){return x.h})}}),T,"Hours booked each day")};
   html+=panel("Each day against the shift target","The line marks "+T+" hours.",legend(m.reps.slice(0,4).map(function(r,k){return [r.name,cols[k]]}))+'<div class="chart" data-chart="sday"></div>')+'</div>';
@@ -1853,6 +1875,23 @@ function krPanel(m){
       '<span class="krc '+(pc==null?"n":pc>=1?"g":"b")+'">'+fh(r.h)+' / '+fh(r.targetToDate)+'</span>']});
   var anyMissing=m.rank.some(function(r){return r.kr.known<4&&r.worked});
   return panel("Key results","Green = key result met, red = missed."+(m.running?" Weekly hours count shifts so far.":""),sub+tbl(head,body,"No reps this week.")+'<div class="acts" style="margin-top:10px"><button class="btn '+(anyMissing?"primary ":"")+'small" type="button" data-act="kredit">'+(anyMissing?"Enter this week\u2019s results":"Edit results")+'</button></div>',true);
+}
+function adjSaveForm(){
+  var names=[];try{names=JSON.parse($("adjNames").textContent)}catch(e){}
+  var ws=S.sWeek,m=salesModel(ws),w=ADJ.data.weeks[ws]=ADJ.data.weeks[ws]||{},note=(($("adjNote")||{}).value||"").trim().slice(0,120),bad=false,changes=[],at=melIso(new Date());
+  document.querySelectorAll("[data-adjr]").forEach(function(inp){if(inp.disabled)return;
+    var n=names[+inp.dataset.adjr],di=+inp.dataset.adjd,r=m.reps.filter(function(x){return x.name===n})[0];if(!r)return;
+    var x=r.days[di],raw=inp.value.trim(),v=raw===""?null:+raw,o=w[n]=w[n]||{},had=o[di];
+    if(v!=null&&(isNaN(v)||v<0||v>24)){bad=true;return}
+    if(v==null||Math.abs(v-x.cal)<0.01){if(had){delete o[di];changes.push(n+"’s hours for "+dayName(x.day)+" back to the calendar ("+fh(x.cal)+")")}}
+    else if(!had||Math.abs(had.h-v)>0.001){o[di]={h:Math.round(v*100)/100,cal:Math.round(x.cal*100)/100,by:(typeof ME!=="undefined"&&ME.name)||"",at:at,note:note};changes.push(n+"’s hours for "+dayName(x.day)+": calendar "+fh(x.cal)+", now "+fh(v)+(note?" ("+note+")":""))}
+    if(!Object.keys(o).length)delete w[n];
+  });
+  if(bad){toast("Hours must be between 0 and 24.");return}
+  if(!Object.keys(w).length)delete ADJ.data.weeks[ws];
+  ADJ.edit=false;ADJ.draft={};ADJ.note="";render();
+  if(!changes.length){toast("No hours changed.");return}
+  saveAdj().then(function(){toast(plural(changes.length,"day")+" updated.");changes.forEach(function(cg){actLog("Edited "+cg)})},function(e){toast("The hours weren’t saved. "+errText(e));ADJ.state="unknown";render()});
 }
 function krSaveForm(){
   var names=[];try{names=JSON.parse($("krNames").textContent)}catch(e){}
@@ -1999,7 +2038,8 @@ function buildPdf(m,logo){
   y=cy+ch+9;var lx2=M;doc.setFontSize(8.5);m.reps.slice(0,4).forEach(function(r,k){fill(RC[k]);doc.rect(lx2,y-2.6,3.2,3.2,"F");col(INK);doc.text(pdfTxt(r.name),lx2+4.5,y);lx2+=doc.getTextWidth(pdfTxt(r.name))+12});y+=8;
 
   h2("Hours booked each day");
-  var body=[0,1,2,3,4,5,6].map(function(di){return [shortDay(addDays(m.ws,di))].concat(m.reps.map(function(r){var x=r.days[di];return x.off&&x.h===0?"Off":fh(x.h)+(x.off?" (off)":"")}),[fh(t.days[di].h)])});
+  var body=[0,1,2,3,4,5,6].map(function(di){return [shortDay(addDays(m.ws,di))].concat(m.reps.map(function(r){var x=r.days[di];return x.off&&x.h===0?"Off":fh(x.h)+(x.adj?"*":"")+(x.off?" (off)":"")}),[fh(t.days[di].h)])});
+  var pdfAdj=m.reps.reduce(function(a,r){return a+r.days.filter(function(x){return x.adj}).length},0);
   body.push(["Total"].concat(m.reps.map(function(r){return fh(r.h)}),[fh(t.h)]));
   body.push(["Target"].concat(m.reps.map(function(r){return fh(r.targetToDate)}),[fh(t.targetToDate)]));
   body.push(["Achieved"].concat(m.reps.map(function(r){return r.pct==null?"-":Math.round(r.pct*100)+"%"}),[t.pct==null?"-":Math.round(t.pct*100)+"%"]));
@@ -2010,7 +2050,9 @@ function buildPdf(m,logo){
       var map={hit:[GOODB,GOOD],below:[BLUEB,ROYAL],poor:[WARNB,WARN],off:[GREY,MUT],offb:[GREY,MUT],future:[[255,255,255],MUT]}[x.st];d.cell.styles.fillColor=map[0];d.cell.styles.textColor=map[1];if(x.st==="hit"||x.st==="poor")d.cell.styles.fontStyle="bold"}});
   y=doc.lastAutoTable.finalY+4;
   var lg=[["On target ("+T+"+ hrs)",GOODB,GOOD],["Under target",BLUEB,ROYAL],["Under half ("+fh(T/2)+" hrs)",WARNB,WARN],["Day off",GREY,MUT]],lx=M;
-  doc.setFontSize(8);lg.forEach(function(l){fill(l[1]);draw(l[2]);doc.setLineWidth(0.3);doc.rect(lx,y-2.6,3.2,3.2,"FD");col(MUT);doc.text(pdfTxt(l[0]),lx+4.5,y);lx+=doc.getTextWidth(pdfTxt(l[0]))+11});y+=8;
+  doc.setFontSize(8);lg.forEach(function(l){fill(l[1]);draw(l[2]);doc.setLineWidth(0.3);doc.rect(lx,y-2.6,3.2,3.2,"FD");col(MUT);doc.text(pdfTxt(l[0]),lx+4.5,y);lx+=doc.getTextWidth(pdfTxt(l[0]))+11});y+=5;
+  if(pdfAdj){doc.setFontSize(8);col(MUT);doc.text(pdfTxt("* Hours adjusted by management where the calendar didn't match the hours claimed ("+plural(pdfAdj,"day")+")."),M,y);y+=3}
+  y+=3;
   /* where the hours came from */
   var srcs=t.sources,pcs=function(a,b){return b?Math.round(a/b*100)+"%":"-"};
   need(28+m.rank.length*8);h2("Where the hours came from");
@@ -2530,7 +2572,8 @@ document.addEventListener("keydown",function(e){if(e.key==="Enter"&&e.target&&e.
 function myRep(){
   if(!ME.name)return null;var t=melParts(new Date()).date,ws=weekStart(t);
   if(!SALES.data[ws]){loadCreated(ws);return null}
-  var k=ws+"|"+SALES.data[ws].length+"|"+JSON.stringify(SALES.cfg||{}).length+"|"+t;
+  if(ADJ.state==="unknown")loadAdj();if(ADJ.state==="loading")return null;
+  var k=ws+"|"+SALES.data[ws].length+"|"+JSON.stringify(SALES.cfg||{}).length+"|"+t+"|"+JSON.stringify(ADJ.data||{}).length;
   if(ME.mk!==k){ME.mk=k;ME.model=null;try{ME.model=salesModel(ws)}catch(e){}}
   var m=ME.model;if(!m)return null;
   var me=repName(ME.name).toLowerCase(),first=me.split(" ")[0];
@@ -3058,6 +3101,9 @@ document.addEventListener("click",function(e){
   if(a==="psheet"){copy(sheetText(),"Run sheet");return}
   if(a==="pshare"){shareSheet();return}
   if(a==="kredit"){KR.edit=true;KR.draft={};render();return}
+  if(a==="adjedit"){ADJ.edit=true;ADJ.draft={};ADJ.note="";render();return}
+  if(a==="adjcancel"){ADJ.edit=false;ADJ.draft={};ADJ.note="";render();return}
+  if(a==="adjsave"){adjSaveForm();return}
   if(a==="krcancel"){KR.edit=false;KR.draft={};render();return}
   if(a==="krsave"){krSaveForm();return}
   if(a==="finpdf"){finPdf(t.dataset.ws);return}
@@ -3074,7 +3120,7 @@ document.addEventListener("click",function(e){
   if(a==="ncsv"){exportCsv();return}
   if(a==="spdf"){salesPdf(S.sWeek);return}
   if(a==="spdflast"){salesPdf(addDays(weekStart(melParts(new Date()).date),-7));return}
-  if(a==="sprev"||a==="snext"){S.sWeek=addDays(S.sWeek,a==="snext"?7:-7);render();return}
+  if(a==="sprev"||a==="snext"){S.sWeek=addDays(S.sWeek,a==="snext"?7:-7);ADJ.edit=false;ADJ.draft={};render();return}
   if(a==="sthis"){S.sWeek=weekStart(melParts(new Date()).date);render();return}
   if(a==="srefresh"){delete SALES.data[S.sWeek];SALES.cfgState="unknown";SALES.err="";render();return}
   if(a==="soff"){toggleOff(t.dataset.rep,+t.dataset.di);return}
